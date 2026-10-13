@@ -1,0 +1,86 @@
+# Dry run of the label format on a made-up partner API.
+# One entry per partner field: the correct answer, written by hand.
+# target is a canonical field, NONE (no counterpart) or ASK_PARTNER (docs too unclear to decide).
+# kind is only set when target is a canonical field.
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [bookingRef]
+  target: partner_booking_id
+  kind: direct
+  evidence: "Supplier's unique reference for this booking. Quote it when contacting supplier support."
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [totalPrice]
+  target: total_amount
+  kind: transform
+  transform: minor_units_to_decimal(currencyCode)
+  evidence: 'Total charged for the booking, including all taxes and fees, in the minor unit of currencyCode (e.g. cents for EUR).'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [currencyCode]
+  target: currency
+  kind: direct
+  evidence: 'ISO 4217 code of the currency totalPrice is expressed in.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [guest.firstName]
+  target: lead_traveller_first_name
+  kind: direct
+  evidence: 'Given name of the lead guest, exactly as on their passport.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [guest.lastName]
+  target: lead_traveller_last_name
+  kind: direct
+  evidence: 'Family name of the lead guest, exactly as on their passport.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [stay.checkIn]
+  target: start_date
+  kind: direct
+  evidence: 'Check-in date in YYYY-MM-DD, local to the property.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [stay.nights]
+  target: duration_nights
+  kind: direct
+  evidence: 'Number of nights booked.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [stay.checkIn, stay.nights]
+  target: end_date
+  kind: derived
+  transform: add_days(stay.checkIn, stay.nights)
+  evidence: 'Guests check out on the morning after their final night.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [cancellationDeadline]
+  target: ASK_PARTNER
+  candidate: free_cancellation_until
+  evidence: 'Last moment the booking can be cancelled.'
+  question: 'Is cancellation free until this time, or does a penalty already apply before it? What happens after it?'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: response
+    paths: [internalTraceId]
+  target: NONE
+  evidence: 'Opaque identifier for support requests; not meaningful to clients.'
