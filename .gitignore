@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Tooling caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets: never commit API keys
+.env
+.env.*
+!.env.example
+
+# Third-party partner specs stay under their providers' terms; commit the manifest, not the files
+data/raw/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
