@@ -1,0 +1,363 @@
+# Candidate partner specs for the padan benchmark.
+# Candidates from web search, verified 2026-10-13 by headless browser (logged out) and direct download.
+# Terms were read only where noted; "terms: Not checked/Not found" still needs a human look before publishing results.
+#
+# role:    benchmark (phase 1: activities, cruise) | held_out (hotels, never tuned on)
+# format:  openapi | xsd | html | pdf | graphql
+# usable:  yes | no | unknown   (reason in notes)
+
+# ---------------------------------------------------------------- activities
+
+- id: octo-core
+  provider: OCTO (open standard)
+  vertical: activities
+  role: benchmark
+  spec_family: octo
+  format: openapi
+  url: https://github.com/octotravel/openapi/blob/main/OCTO-API.yaml
+  retrieved:
+  sha256:
+  terms: 'OCTO states the spec is open source and free to use; the repo has no LICENSE file'
+  likely_in_training_data: true
+  usable: 'yes'
+  notes: 'Verified 2026-10-13 (git clone): single-file OpenAPI 3.1.0, ~1 MB, 1,818 description fields; last commit 2023-07-28. Reference spec for the OCTO family; implementations count toward the same family'
+
+- id: octo-zaui
+  provider: Zaui
+  vertical: activities
+  role: benchmark
+  spec_family: octo
+  format: html
+  url: https://docs.zaui.com/octo
+  retrieved:
+  sha256:
+  terms: TODO
+  likely_in_training_data: unknown
+  usable: unknown
+  notes: 'Index page loads; field content is on workflow subpages (not checked). OCTO family already covered by octo-core; low priority'
+
+- id: viator-partner
+  provider: Viator (Tripadvisor)
+  vertical: activities
+  role: benchmark
+  spec_family: viator
+  format: openapi
+  url: https://docs.viator.com/partner-api/merchant/technical/
+  retrieved:
+  sha256:
+  terms: CC BY 4.0 (declared in the spec's info.license)
+  likely_in_training_data: true
+  usable: yes
+  notes: 'Verified 2026-10-13 (headless browser + direct download). OpenAPI 3.0.1 is embedded in the Redoc page (__redoc_state, ~4.4 MB HTML); the Postman download returns 403. Fetch script must extract the embedded spec.'
+
+- id: viator-supplier
+  provider: Viator (Tripadvisor)
+  vertical: activities
+  role: benchmark
+  spec_family: viator
+  format: html
+  url: https://docs.viator.com/supplier-api/technical
+  retrieved:
+  sha256:
+  terms: TODO
+  likely_in_training_data: true
+  usable: unknown
+  notes: 'Not checked separately (first attempt hit bot protection). Same family as viator-partner; low priority'
+
+- id: getyourguide-partner
+  provider: GetYourGuide
+  vertical: activities
+  role: benchmark
+  spec_family: getyourguide
+  format: openapi
+  url: https://github.com/getyourguide/partner-api-spec
+  retrieved:
+  sha256:
+  terms: 'Apache-2.0 (LICENSE file in repository)'
+  likely_in_training_data: true
+  usable: 'yes'
+  notes: 'Verified 2026-10-13 (git clone): OpenAPI 3.0.0 split across files via $ref (spec/api.yaml + paths/ + components/), 389 description fields. Fetch script must bundle $refs. Clearest licence of any candidate'
+
+- id: musement-partner
+  provider: Musement (TUI)
+  vertical: activities
+  role: benchmark
+  spec_family: musement
+  format: openapi
+  url: https://partner-api.musement.com/_bundle/reference/@v3.5.0/openapi.yaml?download
+  retrieved:
+  sha256:
+  terms: Apache-2.0 (linked from the reference as the spec licence)
+  likely_in_training_data: unknown
+  usable: yes
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML download, 425 KB. Pickups, customer info, cancellations'
+
+- id: rezdy-agent
+  provider: Rezdy
+  vertical: activities
+  role: benchmark
+  spec_family: rezdy
+  format: html
+  url: https://developers.rezdy.com/rezdyapi/index-agent.html
+  retrieved:
+  sha256:
+  terms: General website terms of use (https://rezdy.com/terms-of-use/); no specific licence for the docs
+  likely_in_training_data: unknown
+  usable: yes
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Full public reference (~164k chars, OpenAPI 3.0.1 embedded in the page). Supplier API and RezdyConnect are separate specs in the same family'
+
+- id: rezdy-connect
+  provider: Rezdy
+  vertical: activities
+  role: benchmark
+  spec_family: rezdy
+  format: html
+  url: https://developers.rezdy.com/rezdyconnect/index.html
+  retrieved:
+  sha256:
+  terms: General website terms of use (https://rezdy.com/terms-of-use/)
+  likely_in_training_data: unknown
+  usable: yes
+  notes: "Verified 2026-10-13 (headless browser + direct download). Full public reference (~110k chars, OpenAPI 3.0.1 embedded). Inverted direction: Rezdy calls the supplier's endpoints"
+
+- id: bokun-booking
+  provider: Bókun (Tripadvisor)
+  vertical: activities
+  role: benchmark
+  spec_family: bokun
+  format: openapi
+  url: https://api-docs.bokun.dev/rest-v1.yaml
+  retrieved:
+  sha256:
+  terms: "Bókun API Terms (https://www.bokun.io/api-terms) clause 2.3.4: no use of the API or Service 'for any similar benchmarking purposes'; 2.3.8: no derivative works of the Bókun API"
+  likely_in_training_data: unknown
+  usable: unknown
+  notes: "Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.0.1 YAML, 317 KB. Spec is fine; DECISION NEEDED on terms: the clause targets monitoring the API's performance, but read it yourself before including"
+
+- id: headout-partner
+  provider: Headout
+  vertical: activities
+  role: benchmark
+  spec_family: headout
+  format: openapi
+  url: https://partner.headout.com/docs/specs/openapi-v2-api-partner.yaml
+  retrieved:
+  sha256:
+  terms: Not found on the docs site
+  likely_in_training_data: unknown
+  usable: yes
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML, 134 KB. Also openapi-v1, openapi-v2-affiliate and openapi-v2-common (listed in /docs/llms.txt)'
+
+- id: xola
+  provider: Xola
+  vertical: activities
+  role: benchmark
+  spec_family: xola
+  format: html
+  url: https://developers.xola.com/api-reference
+  retrieved:
+  sha256:
+  terms: TODO
+  likely_in_training_data: unknown
+  usable: unknown
+  notes: 'Reference is a JS app; /api-reference loads (~3k chars) but subpages 404 and no spec file found. Check manually in a browser, or drop'
+
+- id: checkfront-v3
+  provider: Checkfront
+  vertical: activities
+  role: benchmark
+  spec_family: checkfront
+  format: html
+  url: https://checkfront-api.readthedocs.io/ref/booking/booking.html
+  retrieved:
+  sha256:
+  terms: Not found on the docs site
+  likely_in_training_data: unknown
+  usable: yes
+  notes: "Verified 2026-10-13 (headless browser + direct download). HTML field definitions, e.g. 'booking_id (string) – The unique booking code identifying a booking in the system.' Good HTML-format specimen. v3 in maintenance mode"
+
+- id: hotelbeds-activities
+  provider: Hotelbeds (APItude)
+  vertical: activities
+  role: benchmark
+  spec_family: hotelbeds
+  format: openapi
+  url: https://d2gsjv9lq0esbh.cloudfront.net/open-api-documentation/OpenAPI-Activity-BookingAPI-3.0.yaml
+  retrieved:
+  sha256:
+  terms: No documentation licence found (only cookie/legal notes)
+  likely_in_training_data: true
+  usable: yes
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.0.0 YAML, 47 KB, linked from the public api-reference page. Same provider as the held-out hotel spec (leak risk)'
+
+- id: holibob
+  provider: Holibob
+  vertical: activities
+  role: benchmark
+  spec_family: holibob
+  format: graphql
+  url: https://partner.documentation.holibob.tech/general-api/Working-version/the-holibob-api-introduction
+  retrieved:
+  sha256:
+  terms: TODO
+  likely_in_training_data: unknown
+  usable: no
+  notes: 'Rejected: documentation site returns 404 (removed). GraphQL format question is moot'
+
+- id: fareharbor-external
+  provider: FareHarbor
+  vertical: activities
+  role: benchmark
+  spec_family: fareharbor
+  format: html
+  url: https://developer.fareharbor.com/api/external/v1/
+  retrieved:
+  sha256:
+  terms: Not checked
+  likely_in_training_data: unknown
+  usable: yes
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Full public reference on one page (~330k chars, ~1,600 typed lines). Keys gated, docs public'
+
+- id: regiondo
+  provider: Regiondo
+  vertical: activities
+  role: benchmark
+  spec_family: regiondo
+  format: pdf
+  url:
+  retrieved:
+  sha256:
+  terms: TODO
+  likely_in_training_data: unknown
+  usable: unknown
+  notes: 'Third party says docs are a PDF plus a Swagger sandbox; only PDF candidate found so far; URL not found'
+
+- id: tiqets
+  provider: Tiqets
+  vertical: activities
+  role: benchmark
+  spec_family: tiqets
+  format: html
+  url: https://www.tiqets.com/en/partner-program/api-program/
+  retrieved:
+  sha256:
+  terms: 'Docs behind partner programme'
+  likely_in_training_data: unknown
+  usable: 'no'
+  notes: 'Rejected: no public endpoint reference found'
+
+# ---------------------------------------------------------------- cruise
+
+- id: hx-swota
+  provider: HX (Hurtigruten Expeditions), Seaware/Versonix
+  vertical: cruise
+  role: benchmark
+  spec_family: opentravel
+  format: html
+  url: https://docs.partner.travelhx.com/HX/swota/index.html
+  retrieved:
+  sha256:
+  terms: 'HX partner T&C (https://docs.partner.travelhx.com/terms-and-conditions.html): confidentiality, no copying/adapting the API or API Data (cl. 2.6); written for API partners. Docs themselves are public'
+  likely_in_training_data: unknown
+  usable: yes
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Public HTML guide per message (sail/fare/cabin availability, booking, cancellation, payments) plus an XSD schema catalogue page listing OTA_*.xsd; whether the XSD files themselves download is unchecked. OTA XML with Versonix extensions'
+
+- id: opentravel-cruise-xsd
+  provider: OpenTravel Alliance
+  vertical: cruise
+  role: benchmark
+  spec_family: opentravel
+  format: xsd
+  url: https://modelviewers.pilotfishtechnology.com/modelviewers/OTA/model/Format.OTA_CruiseSailAvailRQ.html
+  retrieved:
+  sha256:
+  terms: TODO
+  likely_in_training_data: true
+  usable: unknown
+  notes: "Model viewer is a third-party rendering. HX's XSD catalogue may make this redundant (same family); check whether official OpenTravel XSDs download freely"
+
+- id: hx-flatfiles-v3
+  provider: HX (Hurtigruten Expeditions)
+  vertical: cruise
+  role: benchmark
+  spec_family: hx-flatfiles
+  format: html
+  url: https://docs.partner.travelhx.com/HX/flatfiles/v3/index.html
+  retrieved:
+  sha256:
+  terms: TODO
+  likely_in_training_data: unknown
+  usable: unknown
+  notes: 'Loads publicly with field content (~9k chars). Flat-file content feed, not request/response: decide whether it fits the label format'
+
+- id: scenic-group
+  provider: Scenic Group (Scenic, Emerald Cruises)
+  vertical: cruise
+  role: benchmark
+  spec_family: scenic
+  format: html
+  url: https://emerald.cruises/travel-advisor-hub/scenic-group-api
+  retrieved:
+  sha256:
+  terms: TODO
+  likely_in_training_data: unknown
+  usable: no
+  notes: 'Rejected: page is an access-request form (JotForm), no public documentation'
+
+- id: widgety-cruise-v2
+  provider: Widgety
+  vertical: cruise
+  role: benchmark
+  spec_family: widgety
+  format: html
+  url: https://support.widgety.co.uk/hc/en-us/articles/115000951492-Cruises-API-Version-2-Fields-Explained
+  retrieved:
+  sha256:
+  terms: Not checked
+  likely_in_training_data: unknown
+  usable: yes
+  notes: "Verified 2026-10-13 (headless browser + direct download). Public field table with descriptions (e.g. 'starts_on: Date when the cruise starts'), exactly what mapping needs; full endpoint reference needs a test key"
+
+- id: traveltek-cruise
+  provider: Traveltek
+  vertical: cruise
+  role: benchmark
+  spec_family: traveltek
+  format: html
+  url: https://www.traveltek.com/cruise-api/
+  retrieved:
+  sha256:
+  terms:
+  likely_in_training_data: unknown
+  usable: 'no'
+  notes: 'Rejected: marketing pages only, no public reference'
+
+- id: royal-caribbean
+  provider: Royal Caribbean
+  vertical: cruise
+  role: benchmark
+  spec_family: rccl
+  format:
+  url:
+  retrieved:
+  sha256:
+  terms:
+  likely_in_training_data: unknown
+  usable: 'no'
+  notes: 'Rejected: no public API found; partner access via CruisingPower agent portal'
+
+# ---------------------------------------------------------------- hotels (held out; label later, never tune rules on)
+
+- id: hotelbeds-hotels
+  provider: Hotelbeds (APItude)
+  vertical: hotel
+  role: held_out
+  spec_family: hotelbeds
+  format: html
+  url: https://developer.hotelbeds.com/documentation/hotels
+  retrieved:
+  sha256:
+  terms: TODO
+  likely_in_training_data: true
+  usable: unknown
+  notes: 'Public api-reference pages exist (booking, content, cache APIs); spec file not yet downloaded. Same provider as hotelbeds-activities (leak risk)'
