@@ -79,3 +79,72 @@ Answers were recorded after running. Next time the prediction goes in first.
 ### Tomorrow
 
 Finish Day 1 Blocks 1–5: ADR-001, spec sourcing, canonical schema v0, label one spec end to end, timed.
+
+## Day 1 (continued) — Dataset and Decisions
+
+**Goal:** Fix scope, label format and scoring in ADR-001; build and verify the candidate spec list.
+
+### The assumption that was wrong
+
+I expected Royal Caribbean or Disney Cruise to publish an API. Neither does: Royal Caribbean's partner
+access goes through the CruisingPower agent portal. After verification, cruise has only 2 public
+families (HX/OpenTravel and Widgety). Same lesson as Loka, where "naive breaks, locking fixes it" turned
+out wrong once measured: check the premise before building on it. Consequence: cruise is reported as a
+case study, and activities carries the statistics.
+
+### What cost me time
+
+- PR 1 stuck forever: licence-only PR, required checks never reported (no `ci.yml` yet).
+- `brew install uv` started compiling LLVM and Rust; switched to the standalone installer.
+- The cloud environment's network policy blocked the doc sites during verification; had to widen
+  network access before the check could run.
+
+### Decisions
+
+| Decision                                               | Why                                                                                                                                                                              |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 1 = activities, tours and cruise                 | Matches the phase 1 I proposed at Traveloka; flights and hotels later                                                                                                            |
+| All formats, two-stage scoring                         | Partners without Swagger send PDF/HTML; scoring extraction and mapping separately keeps parsing errors out of mapping scores                                                     |
+| Escalation (`ASK_PARTNER`) is a gold label             | From real integration work: when the docs are unclear, you ask the partner. A wrong cancellation mapping costs money; an escalation costs one email                              |
+| Codegen without LLM                                    | Wiring is mechanical; LLM budget goes to mapping only                                                                                                                            |
+| Exclude Bókun                                          | API terms clause 2.3.4 forbids "any similar benchmarking purposes"                                                                                                               |
+| Target lowered from 20 to 12 specs                     | Only 12 of 25 candidates are verifiably public and usable; diversity is measured in families, not spec count. Expand later                                                       |
+| Synthetic PDFs (Checkfront, Widgety printed from HTML) | No public PDF spec survived. Same content and labels as the HTML original, so HTML-vs-PDF extraction becomes a controlled comparison. Upper bound: real partner PDFs are messier |
+
+### What I delegated, and what I decided
+
+Claude found the candidate specs, ran the verification (headless browser, direct downloads), drafted
+the ADR-001 text, the dry-run labels, and these docs. I made the scope and format decisions, the
+escalation rule, the Bókun exclusion and the target size, and corrected the plan where it didn't match
+how integrations actually work.
+
+### Understood
+
+- **The labels are the answer key, not the agent's output.** Same shape so they can be compared, but if
+  the agent wrote them, its mistakes would become "correct" (like generating `expected` by running the
+  code under test).
+- **Precision / recall / F1.** Precision: when padan maps, how often it's right. Recall: of what it should
+  map, how much it found. F1 is only high when both are. Target F1 alone misses the cents bug, so
+  transform accuracy is a separate score.
+- **Explicit `NONE`** is what makes false positives countable.
+- **Generalisation.** In-domain (activities, cruise) vs held-out (hotels, never tuned on). If held-out
+  F1 is close to in-domain F1, it generalises; like ICPC, solving the practice set doesn't prove you'll
+  solve the regional. The held-out set works once: tune on it and it's leaked.
+- Squash-merge ruleset + required checks: until `ci.yml` exists, nothing can merge.
+
+### Plan change
+
+Blocks 4 (canonical schema) and 5 (label one real spec, timed) moved to Day 2. Day 1 ran well over
+its ~6.5 h plan on setup, and Block 5's output is a timing measurement, which would be distorted if
+taken at the end of a long day.
+
+### Still open
+
+- LLM provider choice and the hard spend limit, before any API key exists.
+- Direct-push test against the ruleset; `python --version` vs `uv run python --version`.
+- 7 manifest entries still `unknown`; terms marked "Not checked" before publishing results.
+
+### Tomorrow
+
+Fetch script (direct download, multi-file `$ref`, spec embedded in HTML, HTML pages; hash each), then
+canonical schema v0, then label one real spec, timed.
