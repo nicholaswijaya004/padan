@@ -1,0 +1,140 @@
+from datetime import date
+from decimal import Decimal
+from typing import Any
+
+import pytest
+from pydantic import ValidationError
+
+from padan.schema import Booking, Money, Traveller
+
+
+def valid_booking(**overrides: Any) -> dict[str, Any]:
+    """A minimal valid activity booking; each test overrides only what it is testing."""
+    data: dict[str, Any] = {
+        "our_booking_id": "padan-1",
+        "status": "confirmed",
+        "start_date": "2026-11-02",
+        "contact": {"email": "ana@example.com"},
+        "travellers": [{"given_name": "Ana", "is_lead": True}],
+        "activity": {},
+    }
+    data.update(overrides)
+    return data
+
+
+# --- Money ---------------------------------------------------------------------------------
+
+
+def test_money_float_point_one_becomes_exact_decimal() -> None:
+    # P1: Pydantic converts the float via its shortest repr, so 0.1 arrives as Decimal("0.1").
+    assert Money.model_validate({"amount": 0.1, "currency": "EUR"}).amount == Decimal("0.1")
+
+
+def test_money_float_arithmetic_error_survives_into_decimal() -> None:
+    # P2: the float is already wrong before Pydantic sees it; Decimal faithfully keeps the error.
+    # Lesson: partner amounts must reach the schema as strings or Decimals, never as floats.
+    assert Money.model_validate({"amount": 0.1 + 0.2, "currency": "EUR"}).amount == Decimal(
+        "0.30000000000000004"
+    )
+
+
+def test_money_string_amount_is_exact() -> None:
+    assert Money.model_validate({"amount": "0.30", "currency": "EUR"}).amount == Decimal("0.30")
+
+
+def test_money_rejects_lowercase_currency() -> None:
+    # P3: the pattern ^[A-Z]{3}$ is case-sensitive; normalising "eur" is the mapper's job.
+    with pytest.raises(ValidationError):
+        Money.model_validate({"amount": "1", "currency": "eur"})
+
+
+# --- Dates ---------------------------------------------------------------------------------
+
+
+def test_start_date_accepts_plain_date() -> None:
+    assert Booking.model_validate(valid_booking()).start_date == date(2026, 11, 2)
+
+
+def test_start_date_rejects_datetime_with_time_and_timezone() -> None:
+    # P4: a date field refuses a datetime that carries a non-midnight time: no silent truncation.
+    with pytest.raises(ValidationError):
+        Booking.model_validate(valid_booking(start_date="2026-10-09T14:00:00+07:00"))
+
+
+def test_start_date_rejects_impossible_date() -> None:
+    # P5: Hotelbeds' example "2016-04-31" (April has 30 days) is rejected, not silently fixed.
+    with pytest.raises(ValidationError):
+        Booking.model_validate(valid_booking(start_date="2016-04-31"))
+
+
+# --- Traveller names (J1) ------------------------------------------------------------------
+
+
+def test_traveller_with_no_name_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Traveller(is_lead=True)
+
+
+def test_traveller_with_empty_name_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Traveller(given_name="", is_lead=True)
+
+
+def test_single_name_traveller_is_accepted() -> None:
+    traveller = Traveller(given_name="Sukarno", is_lead=True)
+    assert traveller.family_name is None
+
+
+def test_full_name_only_traveller_is_accepted() -> None:
+    # Headout sends one NAME field; it maps to full_name without splitting.
+    traveller = Traveller(full_name="Siti Nurhaliza", is_lead=True)
+    assert traveller.given_name is None
+
+
+# --- Booking invariants --------------------------------------------------------------------
+
+
+def test_minimal_activity_booking_is_valid() -> None:
+    Booking.model_validate(valid_booking())
+
+
+def test_booking_without_lead_traveller_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Booking.model_validate(valid_booking(travellers=[{"given_name": "Ana", "is_lead": False}]))
+
+
+def test_booking_with_two_lead_travellers_is_rejected() -> None:
+    two_leads = [{"given_name": "Ana", "is_lead": True}, {"given_name": "Budi", "is_lead": True}]
+    with pytest.raises(ValidationError):
+        Booking.model_validate(valid_booking(travellers=two_leads))
+
+
+def test_booking_with_both_activity_and_cruise_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Booking.model_validate(valid_booking(cruise={}))
+
+
+def test_booking_with_neither_activity_nor_cruise_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Booking.model_validate(valid_booking(activity=None))
+
+
+def test_cruise_booking_is_valid() -> None:
+    booking = Booking.model_validate(valid_booking(activity=None, cruise={"voyage_id": "CS21711"}))
+    assert booking.cruise is not None
+    assert booking.cruise.voyage_id == "CS21711"
+
+
+# --- Metadata ------------------------------------------------------------------------------
+
+
+def test_critical_fields_are_marked() -> None:
+    extra = Booking.model_fields["total_price"].json_schema_extra
+    assert isinstance(extra, dict)
+    assert extra["critical"] is True
+
+
+def test_our_booking_id_is_sourced_by_us() -> None:
+    extra = Booking.model_fields["our_booking_id"].json_schema_extra
+    assert isinstance(extra, dict)
+    assert extra["source"] == "ours"
