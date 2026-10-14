@@ -47,7 +47,7 @@
   sha256:
   terms: CC BY 4.0 (declared in the spec's info.license)
   likely_in_training_data: true
-  usable: "yes"
+  usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). OpenAPI 3.0.1 is embedded in the Redoc page (__redoc_state, ~4.4 MB HTML); the Postman download returns 403. Fetch script must extract the embedded spec.'
 
 - id: viator-supplier
@@ -89,7 +89,7 @@
   sha256:
   terms: Apache-2.0 (linked from the reference as the spec licence)
   likely_in_training_data: unknown
-  usable: "yes"
+  usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML download, 425 KB. Pickups, customer info, cancellations'
 
 - id: rezdy-agent
@@ -103,7 +103,7 @@
   sha256:
   terms: General website terms of use (https://rezdy.com/terms-of-use/); no specific licence for the docs
   likely_in_training_data: unknown
-  usable: "yes"
+  usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). Full public reference (~164k chars, OpenAPI 3.0.1 embedded in the page). Supplier API and RezdyConnect are separate specs in the same family'
 
 - id: rezdy-connect
@@ -117,7 +117,7 @@
   sha256:
   terms: General website terms of use (https://rezdy.com/terms-of-use/)
   likely_in_training_data: unknown
-  usable: "yes"
+  usable: 'yes'
   notes: "Verified 2026-10-13 (headless browser + direct download). Full public reference (~110k chars, OpenAPI 3.0.1 embedded). Inverted direction: Rezdy calls the supplier's endpoints"
 
 - id: bokun-booking
@@ -145,8 +145,9 @@
   sha256:
   terms: Not found on the docs site
   likely_in_training_data: unknown
-  usable: "yes"
+  usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML, 134 KB. Also openapi-v1, openapi-v2-affiliate and openapi-v2-common (listed in /docs/llms.txt)'
+  method: direct
 
 - id: xola
   provider: Xola
@@ -173,7 +174,7 @@
   sha256:
   terms: Not found on the docs site
   likely_in_training_data: unknown
-  usable: "yes"
+  usable: 'yes'
   notes: "Verified 2026-10-13 (headless browser + direct download). HTML field definitions, e.g. 'booking_id (string) – The unique booking code identifying a booking in the system.' Good HTML-format specimen. v3 in maintenance mode"
 
 - id: hotelbeds-activities
@@ -187,7 +188,7 @@
   sha256:
   terms: No documentation licence found (only cookie/legal notes)
   likely_in_training_data: true
-  usable: "yes"
+  usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.0.0 YAML, 47 KB, linked from the public api-reference page. Same provider as the held-out hotel spec (leak risk)'
   method: direct
 
@@ -202,7 +203,7 @@
   sha256:
   terms: TODO
   likely_in_training_data: unknown
-  usable: "no"
+  usable: 'no'
   notes: 'Rejected: documentation site returns 404 (removed). GraphQL format question is moot'
 
 - id: fareharbor-external
@@ -216,7 +217,7 @@
   sha256:
   terms: Not checked
   likely_in_training_data: unknown
-  usable: "yes"
+  usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). Full public reference on one page (~330k chars, ~1,600 typed lines). Keys gated, docs public'
 
 - id: regiondo
@@ -260,7 +261,7 @@
   sha256:
   terms: 'HX partner T&C (https://docs.partner.travelhx.com/terms-and-conditions.html): confidentiality, no copying/adapting the API or API Data (cl. 2.6); written for API partners. Docs themselves are public'
   likely_in_training_data: unknown
-  usable: "yes"
+  usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). Public HTML guide per message (sail/fare/cabin availability, booking, cancellation, payments) plus an XSD schema catalogue page listing OTA_*.xsd; whether the XSD files themselves download is unchecked. OTA XML with Versonix extensions'
 
 - id: opentravel-cruise-xsd
@@ -302,7 +303,7 @@
   sha256:
   terms: TODO
   likely_in_training_data: unknown
-  usable: "no"
+  usable: 'no'
   notes: 'Rejected: page is an access-request form (JotForm), no public documentation'
 
 - id: widgety-cruise-v2
@@ -316,7 +317,7 @@
   sha256:
   terms: Not checked
   likely_in_training_data: unknown
-  usable: "yes"
+  usable: 'yes'
   notes: "Verified 2026-10-13 (headless browser + direct download). Public field table with descriptions (e.g. 'starts_on: Date when the cruise starts'), exactly what mapping needs; full endpoint reference needs a test key"
 
 - id: traveltek-cruise
