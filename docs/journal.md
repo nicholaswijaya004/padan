@@ -148,3 +148,70 @@ taken at the end of a long day.
 
 Fetch script (direct download, multi-file `$ref`, spec embedded in HTML, HTML pages; hash each), then
 canonical schema v0, then label one real spec, timed.
+
+## Day 2 — Fetcher and Canonical Schema
+
+**Goal:** Fetch specs reproducibly, then define the schema every partner field maps onto.
+
+### What I built
+
+- `padan.fetch` + `make fetch`: download → reject non-2xx → reject soft 404s → SHA-256 →
+  compare with `data/specs.lock.json`. New specs are recorded, unchanged ones restored,
+  changed ones reported and left untouched (exit code 1).
+- `padan.schema`: canonical `Booking` = shared core + `ActivityDetails` / `CruiseDetails`
+  extensions, with `source` and `critical` metadata on every field.
+
+### Decisions
+
+| Decision                                       | Why                                                                                    |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Hashes in a separate lock file                 | Like `pyproject.toml` vs `uv.lock`: I edit the manifest, the script writes the lock    |
+| Unknown formats fail closed                    | A guard that accepts what it can't check lets error pages through                      |
+| Parse specs with `yaml.BaseLoader`             | Keeps every value as text: no dates, booleans or ints guessed from examples            |
+| Label Headout first, not Hotelbeds             | Headout: 87% of fields described. Hotelbeds: 0%, so labels would be guesses from names |
+| Schema option (b): core + extensions           | 17 of 25 concepts are shared; hotels can be added later as an extension                |
+| J1 names: given / family (optional) / full     | Headout gives one NAME field; single-name travellers exist                             |
+| J2 total price: Headout `bookingPrice`         | `price` is marked deprecated in its own description                                    |
+| J3 `start_date` + optional `start_time`, local | Partners give dates, or local times without timezone                                   |
+| J4 separate `contact` and `travellers`         | Hotelbeds' holder is a customer record, not necessarily a traveller                    |
+
+### What cost me time
+
+- Relearning Python syntax while building (imports, classes, exceptions, pytest).
+- `uv add` for runtime libraries vs stub packages: mypy passed with stubs only,
+  pytest failed because the library itself was missing.
+- A test writing to a shared `/tmp` folder made correct code fail on the next run:
+  the Loka stale-state lesson again. Always use `tmp_path`.
+- Example code left at the top of a module runs on import, and made a real network call.
+- Importing a library through my own module (`from padan.fetch import httpx`) caused a circular import.
+
+### Understood
+
+- **Validate at the boundary.** Once bad bytes pass `download` and `check_looks_like_spec`,
+  every later step trusts them (the empty body hashes to a valid-looking `e3b0…`).
+- **A test only proves the conditions it sets up.** `tmp_path` already exists, so a missing
+  `mkdir` passes; `tmp_path / "raw"` matches reality.
+- **"Must reject" tests can't catch a schema that rejects everything.** Only
+  `test_minimal_activity_booking_is_valid` caught the missing defaults.
+- **Floats can't be fixed later.** `0.1 + 0.2` stays `0.30000000000000004` as a Decimal, so
+  partner JSON must be parsed with `json.loads(text, parse_float=Decimal)`.
+- **Don't store what you can derive** (traveller count = number of travellers).
+- **Each layer of `make check` catches a different class of mistake:** ruff (style, imports),
+  mypy (types, None-safety), pytest (behaviour).
+
+### Predictions
+
+- Second `make fetch` would print `unchanged`: correct.
+- First `make fetch` would "print the sha": wrong, it prints the outcome; the hash goes to the lock.
+- Several predictions were made after running, or skipped. Tomorrow: write them first, every time.
+
+### What I delegated, and what I decided
+
+Claude wrote the concept table from the three specs, the schema skeleton and its fixes,
+`main()`, and `test_schema.py`, and verified spec quality numbers. I wrote the fetch functions and
+their tests with guidance, the validators, and made the decisions above (J1–J4, schema shape,
+fail-closed, Headout first).
+
+### Plan change
+
+Block 3 (label Headout, timed) moved to Day 3 morning, so the timing is measured fresh.

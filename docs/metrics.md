@@ -35,3 +35,40 @@ timing comes from the first real spec (Day 2).
 
 **Caveat:** Spec availability was checked on one day; public docs move and disappear (Holibob's site
 was already gone).
+
+## Day 2
+
+**Goal:** Reproducible spec fetching, and a canonical schema to label against.
+
+### Spec fetching
+
+| Spec                 | Bytes                      | SHA-256 (prefix) | Verified                                                            |
+| -------------------- | -------------------------- | ---------------- | ------------------------------------------------------------------- |
+| hotelbeds-activities | 47,469                     | `a5e3a44e…`      | identical hash from two independent downloads on different machines |
+| headout-partner      | see `data/specs.lock.json` |                  | `new`, then `unchanged` on re-run                                   |
+
+### Spec quality (direct-download OpenAPI specs)
+
+| Spec                 | Operations | Fields | Fields with description | Responses with schema |
+| -------------------- | ---------- | ------ | ----------------------- | --------------------- |
+| Hotelbeds Activities | 13         | 179    | 0 (0%)                  | 0                     |
+| Headout              | 20         | 516    | 453 (87%)               | 19                    |
+| Musement             | 106        | 724    | 554 (76%)               | 129                   |
+
+Hotelbeds' "OpenAPI" is a converted Postman collection: no descriptions, no response schemas.
+Headout chosen as first labelling spec; Hotelbeds kept as the evidence-poor specimen.
+
+### Bugs found by real data (not by synthetic tests)
+
+| Bug                                                     | Found by                                     | Impact if missed                          |
+| ------------------------------------------------------- | -------------------------------------------- | ----------------------------------------- |
+| Unquoted `yes`/`no` in manifest → booleans (15 values)  | Pydantic `Literal` test on the real manifest | `make fetch` would silently fetch 0 specs |
+| Hotelbeds example `2016-04-31` crashed `yaml.safe_load` | first real `make fetch`                      | a valid spec rejected                     |
+| Example `zipCode: 07198` → int `7198` under `safe_load` | spec inspection                              | leading zeros lost in extracted values    |
+
+### Tests
+
+46 passing (fetcher, manifest validation, canonical schema).
+
+**Not measured:** time per block (not recorded, start tracking on Day 3); labelling time per
+field (Block 3 moved to Day 3).
