@@ -2,9 +2,12 @@
 
 import hashlib
 from enum import Enum
+from pathlib import Path
+from typing import Literal
 
 import httpx
 import yaml
+from pydantic import BaseModel
 
 
 class FetchOutcome(Enum):
@@ -15,6 +18,16 @@ class FetchOutcome(Enum):
 
 class NotASpecError(ValueError):
     """The downloaded bytes are not a spec of the expected format."""
+
+
+class SpecEntry(BaseModel):
+    """One manifest entry: only the fields the fetcher needs."""
+
+    id: str
+    url: str | None
+    format: str | None
+    usable: Literal["yes", "no", "unknown"]
+    method: str | None = None
 
 
 def sha256_hex(data: bytes) -> str:
@@ -68,3 +81,10 @@ def check_looks_like_spec(data: bytes, fmt: str) -> None:
         return
 
     raise ValueError(f"no spec check for format {fmt!r}")
+
+
+def load_manifest(path: Path) -> list[SpecEntry]:
+    """Read the manifest YAML into validated SpecEntry objects."""
+    with path.open("r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+    return [SpecEntry.model_validate(entry) for entry in raw]

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import httpx
 import pytest
 
@@ -7,8 +9,11 @@ from padan.fetch import (
     check_looks_like_spec,
     decide,
     download,
+    load_manifest,
     sha256_hex,
 )
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_sha256_of_empty_input_matches_known_value() -> None:
@@ -98,3 +103,20 @@ def test_check_accepts_html() -> None:
 def test_check_rejects_non_html_as_html() -> None:
     with pytest.raises(NotASpecError):
         check_looks_like_spec(b"openapi: 3.0.0\ninfo:\n  title: X\n", "html")
+
+
+def test_load_manifest_reads_entries_and_ignores_extra_fields(tmp_path: Path) -> None:
+    manifest = tmp_path / "manifest.yaml"
+    manifest.write_text(
+        "- id: demo\n  url: https://x.test/a.yaml\n  format: openapi\n"
+        '  usable: "yes"\n  method: direct\n  provider: Demo Inc\n'
+    )
+    entries = load_manifest(manifest)
+    assert len(entries) == 1
+    assert entries[0].id == "demo"
+    assert entries[0].method == "direct"
+
+
+def test_real_manifest_is_valid() -> None:
+    entries = load_manifest(REPO_ROOT / "data" / "manifest.yaml")
+    assert len(entries) > 0
