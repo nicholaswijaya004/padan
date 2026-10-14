@@ -1,6 +1,7 @@
 """Download partner specs listed in data/manifest.yaml, hash them, verify against the lock file."""
 
 import hashlib
+import json
 from enum import Enum
 from pathlib import Path
 from typing import Literal
@@ -63,7 +64,7 @@ def check_looks_like_spec(data: bytes, fmt: str) -> None:
 
     if fmt == "openapi":
         try:
-            doc = yaml.safe_load(data)
+            doc = yaml.load(data, Loader=yaml.BaseLoader)
         except yaml.YAMLError as e:
             raise NotASpecError("not valid YAML/JSON") from e
         if not isinstance(doc, dict):
@@ -115,3 +116,37 @@ def fetch_one(
     return decision
     # CHANGED: do nothing
     return decision
+
+
+MANIFEST = Path("data/manifest.yaml")
+LOCK = Path("data/specs.lock.json")
+RAW_DIR = Path("data/raw")
+
+
+def main() -> int:
+    """Fetch every usable direct-download spec; return 0 if all verified, 1 otherwise."""
+    entries = load_manifest(MANIFEST)
+    lock: dict[str, str] = json.loads(LOCK.read_text()) if LOCK.exists() else {}
+    failures: list[str] = []
+
+    with httpx.Client(timeout=30.0, follow_redirects=True) as client:
+        for entry in entries:
+            if entry.usable != "yes" or entry.method != "direct":
+                continue
+            try:
+                outcome = fetch_one(entry, client, lock, RAW_DIR)
+            except (httpx.HTTPError, NotASpecError, ValueError) as e:
+                print(f"FAIL  {entry.id}: {e}")
+                failures.append(entry.id)
+                continue
+            print(f"{outcome.value:9} {entry.id}")
+            if outcome == FetchOutcome.CHANGED:
+                failures.append(entry.id)
+
+    LOCK.write_text(json.dumps(lock, indent=2, sort_keys=True) + "\n")
+    print(f"{len(failures)} problem(s)")
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -182,3 +182,9 @@ def test_fetch_one_soft_404_raises_and_writes_nothing(tmp_path: Path) -> None:
 
     assert lock == {}
     assert not (raw_dir / "demo.yaml").exists()
+
+
+def test_check_accepts_openapi_with_invalid_example_date() -> None:
+    # Regression: Hotelbeds' spec has an example "to: 2016-04-31" (April has 30 days).
+    # A valid spec must not be rejected because YAML tries to parse example values as dates.
+    check_looks_like_spec(b"openapi: 3.0.0\nexample:\n  to: 2016-04-31\n", "openapi")

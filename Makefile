@@ -1,4 +1,4 @@
-.PHONY: check lint typecheck test fmt
+.PHONY: check lint typecheck test fmt fetch
 
 check: lint typecheck test
 
@@ -15,3 +15,6 @@ test:
 fmt:
 	uv run ruff check --fix .
 	uv run ruff format .
+
+fetch:
+	uv run python -m padan.fetch
