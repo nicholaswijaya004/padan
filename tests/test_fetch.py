@@ -6,12 +6,29 @@ import pytest
 from padan.fetch import (
     FetchOutcome,
     NotASpecError,
+    SpecEntry,
     check_looks_like_spec,
     decide,
     download,
+    fetch_one,
     load_manifest,
     sha256_hex,
 )
+
+
+def client_returning(status: int, body: bytes) -> httpx.Client:
+    """A client whose every request gets the same canned response; no network."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status, content=body)
+
+    return httpx.Client(transport=httpx.MockTransport(handler))
+
+
+ENTRY = SpecEntry(
+    id="demo", url="https://x.test/a.yaml", format="openapi", usable="yes", method="direct"
+)
+BODY = b"openapi: 3.0.0\n"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -120,3 +137,48 @@ def test_load_manifest_reads_entries_and_ignores_extra_fields(tmp_path: Path) ->
 def test_real_manifest_is_valid() -> None:
     entries = load_manifest(REPO_ROOT / "data" / "manifest.yaml")
     assert len(entries) > 0
+
+
+def test_fetch_one_new_saves_file_and_records_hash(tmp_path: Path) -> None:
+    lock: dict[str, str] = {}
+    raw_dir = tmp_path / "raw"
+
+    outcome = fetch_one(ENTRY, client_returning(200, BODY), lock, raw_dir)
+
+    assert outcome == FetchOutcome.NEW
+    assert (raw_dir / "demo.yaml").read_bytes() == BODY
+    assert lock["demo"] == sha256_hex(BODY)
+
+
+def test_fetch_one_unchanged_restores_file(tmp_path: Path) -> None:
+    lock = {"demo": sha256_hex(BODY)}
+    raw_dir = tmp_path / "raw"
+
+    outcome = fetch_one(ENTRY, client_returning(200, BODY), lock, raw_dir)
+
+    assert outcome == FetchOutcome.UNCHANGED
+    assert (raw_dir / "demo.yaml").read_bytes() == BODY
+    assert lock == {"demo": sha256_hex(BODY)}
+
+
+def test_fetch_one_changed_keeps_lock_and_writes_nothing(tmp_path: Path) -> None:
+    lock = {"demo": "old"}
+    raw_dir = tmp_path / "raw"
+
+    outcome = fetch_one(ENTRY, client_returning(200, BODY), lock, raw_dir)
+
+    assert outcome == FetchOutcome.CHANGED
+    assert lock == {"demo": "old"}
+    assert not (raw_dir / "demo.yaml").exists()
+
+
+def test_fetch_one_soft_404_raises_and_writes_nothing(tmp_path: Path) -> None:
+    lock: dict[str, str] = {}
+    raw_dir = tmp_path / "raw"
+    soft_404 = client_returning(200, b"<html><body>Not found</body></html>")
+
+    with pytest.raises(NotASpecError):
+        fetch_one(ENTRY, soft_404, lock, raw_dir)
+
+    assert lock == {}
+    assert not (raw_dir / "demo.yaml").exists()

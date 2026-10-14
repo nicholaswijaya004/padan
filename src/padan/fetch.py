@@ -9,6 +9,8 @@ import httpx
 import yaml
 from pydantic import BaseModel
 
+EXTENSIONS = {"openapi": "yaml", "html": "html", "pdf": "pdf"}
+
 
 class FetchOutcome(Enum):
     NEW = "new"  # no hash recorded for this spec yet → record it
@@ -88,3 +90,28 @@ def load_manifest(path: Path) -> list[SpecEntry]:
     with path.open("r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
     return [SpecEntry.model_validate(entry) for entry in raw]
+
+
+def fetch_one(
+    entry: SpecEntry, client: httpx.Client, lock: dict[str, str], raw_dir: Path
+) -> FetchOutcome:
+    """Download one spec, verify it, and compare its hash with the lock.
+
+    Saves the file on NEW or UNCHANGED; records the hash only on NEW;
+    on CHANGED leaves both the file and the lock untouched.
+    """
+    if entry.url is None or entry.format is None:
+        raise ValueError(f"{entry.id}: no url or format in the manifest")
+
+    data = download(entry.url, client)
+    check_looks_like_spec(data, entry.format)
+    digest = sha256_hex(data)
+    decision = decide(entry.id, digest, lock)
+    if decision in (FetchOutcome.NEW, FetchOutcome.UNCHANGED):
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        (raw_dir / f"{entry.id}.{EXTENSIONS[entry.format]}").write_bytes(data)
+    if decision == FetchOutcome.NEW:
+        lock[entry.id] = digest
+    return decision
+    # CHANGED: do nothing
+    return decision
