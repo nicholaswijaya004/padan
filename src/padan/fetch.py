@@ -4,12 +4,17 @@ import hashlib
 from enum import Enum
 
 import httpx
+import yaml
 
 
 class FetchOutcome(Enum):
     NEW = "new"  # no hash recorded for this spec yet → record it
     UNCHANGED = "unchanged"  # recorded hash matches the fresh one
     CHANGED = "changed"  # recorded hash differs → spec changed upstream
+
+
+class NotASpecError(ValueError):
+    """The downloaded bytes are not a spec of the expected format."""
 
 
 def sha256_hex(data: bytes) -> str:
@@ -34,3 +39,32 @@ def download(url: str, client: httpx.Client) -> bytes:
     response = client.get(url)
     response.raise_for_status()
     return response.content
+
+
+def check_looks_like_spec(data: bytes, fmt: str) -> None:
+    """Raise NotASpecError if the bytes don't look like a spec of the expected format."""
+    if not data:
+        raise NotASpecError("empty body")
+
+    if fmt == "openapi":
+        try:
+            doc = yaml.safe_load(data)
+        except yaml.YAMLError as e:
+            raise NotASpecError("not valid YAML/JSON") from e
+        if not isinstance(doc, dict):
+            raise NotASpecError("not a dictionary")
+        if "openapi" not in doc and "swagger" not in doc:
+            raise NotASpecError("no 'openapi' or 'swagger' key")
+        return
+
+    if fmt == "html":
+        if b"<html" not in data[:500].lower():
+            raise NotASpecError("no <html> tag")
+        return
+
+    if fmt == "pdf":
+        if not data.startswith(b"%PDF-"):
+            raise NotASpecError("no %PDF- header")
+        return
+
+    raise ValueError(f"no spec check for format {fmt!r}")
