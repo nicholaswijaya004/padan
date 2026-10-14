@@ -13,8 +13,8 @@ test:
 	uv run pytest
 
 fmt:
-	uv run ruff check --fix .
 	uv run ruff format .
+	uv run ruff check --fix .
 
 fetch:
 	uv run python -m padan.fetch
