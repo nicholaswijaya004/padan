@@ -1,4 +1,4 @@
-from padan.fetch import sha256_hex
+from padan.fetch import FetchOutcome, decide, sha256_hex
 
 
 def test_sha256_of_empty_input_matches_known_value() -> None:
@@ -17,3 +17,18 @@ def test_one_byte_change_gives_different_hash() -> None:
     hash1 = sha256_hex(b"openapi: 3.0.0")
     hash2 = sha256_hex(b"openapi: 3.0.1")
     assert hash1 != hash2
+
+
+def test_decide_new_when_spec_not_in_lock() -> None:
+    lock: dict[str, str] = {}
+    assert decide("musement-partner", "aaa", lock) == FetchOutcome.NEW
+
+
+def test_decide_unchanged_when_digest_matches() -> None:
+    lock = {"musement-partner": "aaa"}
+    assert decide("musement-partner", "aaa", lock) == FetchOutcome.UNCHANGED
+
+
+def test_decide_changed_when_digest_differs() -> None:
+    lock = {"musement-partner": "aaa"}
+    assert decide("musement-partner", "bbb", lock) == FetchOutcome.CHANGED
