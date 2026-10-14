@@ -3,6 +3,8 @@
 import hashlib
 from enum import Enum
 
+import httpx
+
 
 class FetchOutcome(Enum):
     NEW = "new"  # no hash recorded for this spec yet → record it
@@ -22,3 +24,13 @@ def decide(spec_id: str, digest: str, lock: dict[str, str]) -> FetchOutcome:
     if lock[spec_id] == digest:
         return FetchOutcome.UNCHANGED
     return FetchOutcome.CHANGED
+
+
+def download(url: str, client: httpx.Client) -> bytes:
+    """Fetch the URL. Raise on any non-2xx status.
+
+    Never return an error page as if it were the spec.
+    """
+    response = client.get(url)
+    response.raise_for_status()
+    return response.content

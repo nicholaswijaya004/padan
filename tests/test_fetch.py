@@ -1,4 +1,7 @@
-from padan.fetch import FetchOutcome, decide, sha256_hex
+import httpx
+import pytest
+
+from padan.fetch import FetchOutcome, decide, download, sha256_hex
 
 
 def test_sha256_of_empty_input_matches_known_value() -> None:
@@ -32,3 +35,21 @@ def test_decide_unchanged_when_digest_matches() -> None:
 def test_decide_changed_when_digest_differs() -> None:
     lock = {"musement-partner": "aaa"}
     assert decide("musement-partner", "bbb", lock) == FetchOutcome.CHANGED
+
+
+def test_download_returns_body_on_200() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=b"hello, world!")
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    body = download("https://example.com/spec.yaml", client)
+    assert body == b"hello, world!"
+
+
+def test_download_raises_on_403() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(403, content=b"forbidden")
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    with pytest.raises(httpx.HTTPStatusError):
+        download("https://example.com/spec.yaml", client)
