@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from padan.schema import Booking, Money, Traveller
+from padan.schema import Booking, CustomField, Money, Traveller
 
 
 def valid_booking(**overrides: Any) -> dict[str, Any]:
@@ -138,3 +138,29 @@ def test_our_booking_id_is_sourced_by_us() -> None:
     extra = Booking.model_fields["our_booking_id"].json_schema_extra
     assert isinstance(extra, dict)
     assert extra["source"] == "ours"
+
+
+# --- Schema v1: custom fields and slot ------------------------------------------------------
+
+
+def test_custom_fields_default_to_empty() -> None:
+    booking = Booking.model_validate(valid_booking())
+    assert booking.custom_fields == []
+    assert booking.travellers[0].custom_fields == []
+
+
+def test_custom_field_requires_field_id() -> None:
+    with pytest.raises(ValidationError):
+        CustomField.model_validate({"value": "Hotel Indonesia"})
+
+
+def test_booking_level_custom_field_and_slot_are_kept() -> None:
+    booking = Booking.model_validate(
+        valid_booking(
+            custom_fields=[{"field_id": "PICKUP_LOCATION", "value": "Hotel Indonesia"}],
+            activity={"slot_id": "inv-123"},
+        )
+    )
+    assert booking.custom_fields[0].field_id == "PICKUP_LOCATION"
+    assert booking.activity is not None
+    assert booking.activity.slot_id == "inv-123"

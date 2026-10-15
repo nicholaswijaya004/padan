@@ -24,6 +24,16 @@ class Money(BaseModel):
     currency: str = Field(pattern=r"^[A-Z]{3}$", description="ISO 4217 code, uppercase.")
 
 
+class CustomField(BaseModel):
+    """A partner-specific booking question and its answer (e.g. pickup location, language)."""
+
+    field_id: str = meta("Partner's identifier for the question, e.g. PICKUP_LOCATION.")
+    label: str | None = meta(
+        "Human-readable question text, if the partner gives one.", default=None
+    )
+    value: str | None = meta("The answer given for this booking.", default=None)
+
+
 class Traveller(BaseModel):
     given_name: str | None = meta("Given name(s) as on the travel document.", default=None)
     family_name: str | None = meta("Family name; None for single-name travellers.", default=None)
@@ -35,6 +45,9 @@ class Traveller(BaseModel):
     )
     age: int | None = meta("Age in years at time of travel.", default=None)
     is_lead: bool = meta("True for the lead traveller of the booking.")
+    custom_fields: list[CustomField] = meta(
+        "Partner-specific questions answered per traveller.", default=[]
+    )
 
     @model_validator(mode="after")
     def has_a_name(self) -> "Traveller":
@@ -52,6 +65,9 @@ class Contact(BaseModel):
 class ActivityDetails(BaseModel):
     option_id: str | None = meta("Partner's option / variant / rate identifier.", default=None)
     option_name: str | None = meta("Display name of the option.", default=None)
+    slot_id: str | None = meta(
+        "Partner's identifier of the booked date/time inventory slot.", default=None
+    )
     voucher_url: str | None = meta("URL of the voucher or ticket.", default=None)
     service_language: str | None = meta("Language the activity is delivered in.", default=None)
 
@@ -89,6 +105,9 @@ class Booking(BaseModel):
     )
     cancellation_policy: str | None = meta(
         "Cancellation terms as given by the partner.", default=None, critical=True
+    )
+    custom_fields: list[CustomField] = meta(
+        "Partner-specific questions answered for the whole booking.", default=[]
     )
     activity: ActivityDetails | None = None
     cruise: CruiseDetails | None = None
