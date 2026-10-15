@@ -8,7 +8,7 @@
     direction: request
     paths: ['productId']
   # type: string
-  target: 'partner_product_id'
+  target: 'product_id'
   kind: 'direct'
   evidence: 'The product to book. Obtain from the product listing endpoints.'
 
@@ -17,7 +17,7 @@
     direction: request
     paths: ['variantId']
   # type: string
-  target: 'partner_item_id'
+  target: 'activity.option_id'
   kind: 'direct'
   evidence: "The variant (tour option) to book. Obtain from the product's variants list."
 
@@ -26,7 +26,7 @@
     direction: request
     paths: ['inventoryId']
   # type: string
-  target: 'partner_time_slot_id'
+  target: 'activity.slot_id'
   kind: 'direct'
   evidence: 'The specific inventory slot (time/date) to book. Obtain from the inventory listing endpoint.'
 
@@ -44,8 +44,9 @@
     direction: request
     paths: ['customersDetails.count']
   # type: integer
-  target: 'NONE'
-  kind: ''
+  target: 'travellers[]'
+  kind: 'derived'
+  transform: 'count'
   evidence: 'Total number of customers in this booking.'
 
 - source:
@@ -54,7 +55,8 @@
     paths: ['customersDetails.customers[].personType']
   # type: string
   target: 'travellers[].traveller_type'
-  kind: 'direct'
+  kind: 'transform'
+  transform: 'enum_map(ADULT=adult, CHILD=child, SENIOR=senior)'
   evidence: "Pricing category for this customer (e.g., `ADULT`, `CHILD`, `SENIOR`). Must match a type defined in the variant's pricing. For seatmap products, `personType` is always `ADULT`."
 
 - source:
@@ -71,17 +73,53 @@
     direction: request
     paths: ['customersDetails.customers[].inputFields[].id']
   # type: string
-  target: 'travellers[].given_name, travellers[].family_name, contact.name, contact.email'
-  kind: 'transform: map_travellers_fields_to_input_fields'
+  target: 'NONE'
+  kind: ''
   evidence: 'Field identifier matching an `inputField` defined in the variant (e.g., `NAME`, `EMAIL`, `PHONE`, or a `CUSTOM_*` field).'
 
 - source:
     endpoint: 'POST /api/public/v2/bookings/'
     direction: request
-    paths: ['customersDetails.customers[].inputFields[].value']
+    paths: ['customersDetails.customers[].inputFields[id=CUSTOM_*].id']
   # type: string
-  target: 'travellers[].given_name, travellers[].family_name, contact.name, contact.email'
-  kind: 'transform: map_travellers_values_to_input_fields_values'
+  target: 'travellers[].custom_fields[].field_id'
+  kind: 'direct'
+  evidence: 'Field identifier matching an `inputField` defined in the variant (e.g., `NAME`, `EMAIL`, `PHONE`, or a `CUSTOM_*` field).'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['customersDetails.customers[].inputFields[id=NAME].value']
+  # type: string
+  target: 'travellers[].full_name'
+  kind: 'direct'
+  evidence: "The customer's response for this field. Submit `PHONE` values in international format with a leading `+` and country code (e.g., `+14155551234`)."
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['customersDetails.customers[isPrimary=true].inputFields[id=EMAIL].value']
+  # type: string
+  target: 'contact.email'
+  kind: 'direct'
+  evidence: "The customer's response for this field. Submit `PHONE` values in international format with a leading `+` and country code (e.g., `+14155551234`)."
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['customersDetails.customers[isPrimary=true].inputFields[id=PHONE].value']
+  # type: string
+  target: 'contact.phones[]'
+  kind: 'direct'
+  evidence: "The customer's response for this field. Submit `PHONE` values in international format with a leading `+` and country code (e.g., `+14155551234`)."
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['customersDetails.customers[].inputFields[id=CUSTOM_*].value']
+  # type: string
+  target: 'travellers[].custom_fields[].value'
+  kind: 'direct'
   evidence: "The customer's response for this field. Submit `PHONE` values in international format with a leading `+` and country code (e.g., `+14155551234`)."
 
 - source:
@@ -90,7 +128,7 @@
     paths: ['variantInputFields[].id']
   # type: string
   target: 'custom_fields[].field_id'
-  kind: 'transform: custom_fields_to_variant_input_fields'
+  kind: 'direct'
   evidence: 'Field identifier for a booking-level field defined on the variant (e.g., `PICKUP_LOCATION`, `LANGUAGE_`).'
 
 - source:
@@ -98,8 +136,8 @@
     direction: request
     paths: ['variantInputFields[].value']
   # type: string
-  target: 'custom_fields[].field_value'
-  kind: 'transform: map_custom_fields_values_to_variant_input_fields_values'
+  target: 'custom_fields[].value'
+  kind: 'direct'
   evidence: 'The submitted value for this field.'
 
 - source:
@@ -135,8 +173,8 @@
     direction: response
     paths: ['voucherId']
   # type: string
-  target: 'activity.voucher_url'
-  kind: 'transform: voucher_id_to_voucher_url'
+  target: 'NONE'
+  kind: ''
   evidence: 'Identifier of the voucher issued for this booking. Pass it to [Get a voucher](/api-partner/v2/vouchers/get) to retrieve the structured voucher payload.'
 
 - source:
@@ -153,7 +191,7 @@
     direction: response
     paths: ['variantId']
   # type: string
-  target: 'partner_item_id'
+  target: 'activity.option_id'
   kind: 'direct'
   evidence: 'The variant (tour option) that was booked.'
 
@@ -163,7 +201,8 @@
     paths: ['status']
   # type: string
   target: 'status'
-  kind: 'direct'
+  kind: 'transform'
+  transform: 'enum_map(UNCAPTURED=pending, PENDING=confirmed, COMPLETED=confirmed, CANCELLED=cancelled, FAILED=failed, CAPTURE_TIMEDOUT=failed)'
   evidence: "Current lifecycle state of the booking. See [Booking Status](/guide/enums-and-error-codes#booking-status).\n- `UNCAPTURED`: Created but not yet captured. Does not lock inventory or price. Auto-expires to `CAPTURE_TIMEDOUT` after 1 hour.\n- `PENDING`: Payment captured — confirmed with supplier. Treat as confirmed; show to the customer as a confirmed booking.\n- `COMPLETED`: Fulfilled — tickets are available in the `tickets` array.\n- `CANCELLED`: Cancelled by partner, customer, or Headout.\n- `FAILED`: Booking failed due to a payment or system error.\n- `CAPTURE_TIMEDOUT`: Not captured within 1 hour of creation; can no longer be captured."
 
 - source:
@@ -171,8 +210,19 @@
     direction: response
     paths: ['startDateTime']
   # type: string/date-time
-  target: 'start_date, start_time'
-  kind: 'transform: split_start_datetime_to_date_and_time'
+  target: 'start_date'
+  kind: 'transform'
+  transform: 'date_part'
+  evidence: "Scheduled start time for the experience in local time, with no timezone offset (format `yyyy-MM-dd'T'HH:mm:ss`)."
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['startDateTime']
+  # type: string/date-time
+  target: 'start_time'
+  kind: 'transform'
+  transform: 'time_part'
   evidence: "Scheduled start time for the experience in local time, with no timezone offset (format `yyyy-MM-dd'T'HH:mm:ss`)."
 
 - source:
@@ -180,7 +230,7 @@
     direction: response
     paths: ['product.id']
   # type: string
-  target: 'partner_product_id'
+  target: 'product_id'
   kind: 'direct'
   evidence: 'Headout product ID.'
 
@@ -200,8 +250,8 @@
   # type: string
   target: 'ASK_PARTNER'
   kind: ''
-  candidate: 'partner_item_id'
-  question: 'Is this the same as the variantId in the request? Because there is also a variantId in the response, which is mapped to partner_item_id. If they are the same, we can map this to partner_item_id as well.'
+  candidate: 'activity.option_id'
+  question: 'Is this the same as the variantId in the request? Because there is also a variantId in the response, which is mapped to activity.option_id. If they are the same, we can map this to activity.option_id as well.'
   evidence: 'Headout variant ID.'
 
 - source:
@@ -209,7 +259,7 @@
     direction: response
     paths: ['product.variant.name']
   # type: string
-  target: 'item_name'
+  target: 'activity.option_name'
   kind: 'direct'
   evidence: 'Display name of the variant.'
 
@@ -228,7 +278,8 @@
     paths: ['customersDetails.customers[].personType']
   # type: string
   target: 'travellers[].traveller_type'
-  kind: 'direct'
+  kind: 'transform'
+  transform: 'enum_map(ADULT=adult, CHILD=child, SENIOR=senior)'
   evidence: 'Pricing category for this customer (e.g., `ADULT`, `CHILD`, `SENIOR`).'
 
 - source:
@@ -236,7 +287,7 @@
     direction: response
     paths: ['customersDetails.customers[].isPrimary']
   # type: boolean
-  target: 'travellers[].is_primary'
+  target: 'travellers[].is_lead'
   kind: 'direct'
   evidence: 'Whether this is the lead customer for the booking.'
 
@@ -245,8 +296,17 @@
     direction: response
     paths: ['customersDetails.customers[].inputFields[].id']
   # type: string
-  target: 'travellers[].given_name, travellers[].family_name, contact.name, contact.email'
-  kind: 'transform: map_input_field_ids_to_travellers as the key'
+  target: 'NONE'
+  kind: ''
+  evidence: 'Field identifier (e.g., `NAME`, `EMAIL`, `PHONE`, or `CUSTOM_*`).'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[].inputFields[id=CUSTOM_*].id']
+  # type: string
+  target: 'travellers[].custom_fields[].field_id'
+  kind: 'direct'
   evidence: 'Field identifier (e.g., `NAME`, `EMAIL`, `PHONE`, or `CUSTOM_*`).'
 
 - source:
@@ -261,10 +321,37 @@
 - source:
     endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
     direction: response
-    paths: ['customersDetails.customers[].inputFields[].value']
+    paths: ['customersDetails.customers[].inputFields[id=NAME].value']
   # type: string
-  target: 'travellers[].given_name, travellers[].family_name, contact.name, contact.email'
-  kind: 'transform: map_travellers_values_to_input_fields_values'
+  target: 'travellers[].full_name'
+  kind: 'direct'
+  evidence: 'The submitted value for this field.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[isPrimary=true].inputFields[id=EMAIL].value']
+  # type: string
+  target: 'contact.email'
+  kind: 'direct'
+  evidence: 'The submitted value for this field.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[isPrimary=true].inputFields[id=PHONE].value']
+  # type: string
+  target: 'contact.phones[]'
+  kind: 'direct'
+  evidence: 'The submitted value for this field.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[].inputFields[id=CUSTOM_*].value']
+  # type: string
+  target: 'travellers[].custom_fields[].value'
+  kind: 'direct'
   evidence: 'The submitted value for this field.'
 
 - source:
@@ -273,7 +360,7 @@
     paths: ['variantInputFields[].id']
   # type: string
   target: 'custom_fields[].field_id'
-  kind: 'transform: map_variant_input_field_ids_to_custom_fields'
+  kind: 'direct'
   evidence: 'Field identifier for a booking-level field defined on the variant (e.g., `PICKUP_LOCATION`, `LANGUAGE_`).'
 
 - source:
@@ -281,8 +368,8 @@
     direction: response
     paths: ['variantInputFields[].name']
   # type: string
-  target: 'NONE'
-  kind: ''
+  target: 'custom_fields[].label'
+  kind: 'direct'
   evidence: 'Human-readable label for this field.'
 
 - source:
@@ -290,8 +377,8 @@
     direction: response
     paths: ['variantInputFields[].value']
   # type: string
-  target: 'custom_fields[].field_value'
-  kind: 'transform: map_variant_input_fields_values_to_custom_fields'
+  target: 'custom_fields[].value'
+  kind: 'direct'
   evidence: 'The submitted value for this field.'
 
 - source:
@@ -299,10 +386,8 @@
     direction: response
     paths: ['price.amount']
   # type: number/double
-  target: 'ASK PARTNER'
+  target: 'NONE'
   kind: ''
-  candidate: 'total_price.amount'
-  question: 'Is is better to map from this or bookingPrice.amount as the response?'
   evidence: 'Total price amount for all customers combined.'
 
 - source:
@@ -310,10 +395,8 @@
     direction: response
     paths: ['price.currencyCode']
   # type: string
-  target: 'ASK PARTNER'
+  target: 'NONE'
   kind: ''
-  candidate: 'total_price.currency'
-  question: 'Is is better to map from this or bookingPrice.currencyCode as the response?'
   evidence: 'Currency code for the price amount. See [Currency Codes](/guide/enums-and-error-codes#currency-codes).'
 
 - source:
@@ -348,8 +431,8 @@
     direction: response
     paths: ['tickets[].publicId']
   # type: string
-  target: 'activity.option_name, activity.service_language'
-  kind: 'transform: map to target field if identifier has it'
+  target: 'NONE'
+  kind: ''
   evidence: 'Unique identifier for this ticket, usable for support and lookup.'
 
 - source:
@@ -357,8 +440,8 @@
     direction: response
     paths: ['tickets[].url']
   # type: string|null
-  target: 'activity.ticket_url'
-  kind: 'direct'
+  target: 'NONE'
+  kind: ''
   evidence: 'URL for the ticket. For `PDF_URL`, `HTML_URL`, `APPLE_WALLET_URL` and `GOOGLE_WALLET_URL`, the ticket file or page. For `QRCODE` and `BARCODE`, a JPEG image of the scannable code that can be shown to the customer as is. Null for `TEXT`, which has no image; the code is available only as `ticketCode` from the [Voucher API](/api-partner/v2/vouchers/understanding-the-response#tickets).'
 
 - source:
@@ -366,8 +449,8 @@
     direction: response
     paths: ['tickets[].type']
   # type: string
-  target: 'activity.ticket_format'
-  kind: 'direct'
+  target: 'NONE'
+  kind: ''
   evidence: 'Ticket delivery format.'
 
 - source:
@@ -412,5 +495,6 @@
     paths: ['creationTimestamp']
   # type: integer/int64
   target: 'booked_at'
-  kind: 'direct'
+  kind: 'transform'
+  transform: 'unix_seconds_to_datetime'
   evidence: 'Unix epoch timestamp (seconds) when this booking was first created.'
