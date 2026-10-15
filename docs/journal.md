@@ -223,3 +223,85 @@ Block 3 (label Headout, timed) moved to Day 3 morning, so the timing is measured
 - Start: 16:08
 - End: 17:08
 - Labels: 45
+
+### Day 3 (continued) — Review, schema v1, label validator
+
+**Goal:** Compare my Headout labels with an independent draft, settle the disagreements, and make the
+gold file trustworthy before anything is scored against it.
+
+### The assumption that was wrong
+
+I thought one careful labelling pass gave me a gold file. It didn't:
+
+- The comparison with a sealed Claude draft changed **11 of 45** labels after I reviewed the
+  disagreements (status mapping, unix timestamp, person type, voucher, price fields).
+- The validator then found **23 of 45** labels (51%) with **format** errors that both my pass and the
+  review missed: invented target names (`partner_item_id`, `is_primary`), `kind` and `transform` packed
+  into one string, `ASK PARTNER` with a space, and the file name using `_` instead of the spec id.
+- PR #11 merged that file into `main` unvalidated. Nothing checked it, so nothing stopped it.
+
+Same lesson as Day 1: check the premise. Test data needs tests too.
+
+### What cost me time
+
+- Wrote the validator on a checkout without schema v1 (ADP-12 not merged yet), so a test failed for
+  the wrong reason.
+- Committed on `main` by accident, and `feat/ADP-13` already existed at an old commit. Fixed by moving
+  branch pointers (`git branch -f`), no force-push.
+- An untracked copy of the label file survived `git switch` and made `main` look broken. Git only
+  touches tracked files when switching.
+
+### Decisions
+
+| Decision                                                                     | Why                                                                                                                                                             |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Label by hand, then compare with a sealed Claude draft                       | Gold labels must not come from the model family padan will use (same-family contamination). The sealed draft is only a second opinion, hashed before I labelled |
+| Schema v1: `slot_id`, booking and traveller `custom_fields`                  | Headout has inventory slots and partner-defined questions at both levels; without them those fields become `NONE` and hide real integration data                |
+| Tickets deferred (labels → `NONE`)                                           | One spec is not evidence; add when a second spec needs it                                                                                                       |
+| `inputFields[].id` → `NONE`; the id lives in the path filter                 | `[id=EMAIL]` already says which field it is. Exception: `CUSTOM_*` ids are data and map to `custom_fields[].field_id`                                           |
+| Request `count` → derived `count(travellers)`                                | Don't store what can be derived                                                                                                                                 |
+| Product/variant `ASK_PARTNER` stays                                          | Not wrong to ask when the docs don't say whether two ids are the same                                                                                           |
+| Valid targets are generated from the Pydantic schema                         | One source of truth: renaming a schema field makes every stale label fail CI                                                                                    |
+| Lists (`travellers[]`) are valid targets, containers (`total_price`) are not | `count()` needs a list; a container target hides which leaf is meant                                                                                            |
+| `source="ours"` fields are valid targets                                     | `partnerReferenceId` carries `our_booking_id` to the partner                                                                                                    |
+| One source may feed several targets                                          | `startDateTime` → `start_date` and `start_time`; same source + same target is the real duplicate                                                                |
+| Validator and label fixes in one PR                                          | `main` already had the invalid file; the validator alone would have turned `main` red                                                                           |
+
+### What I delegated, and what I decided
+
+Claude wrote the label scaffold, the sealed comparison draft, the schema v1 change, the validator and
+its tests, and applied the mechanical label fixes. I wrote all 45 labels, adjudicated every
+disagreement, and made the schema decisions. From now on Claude explains the concept and the decisions
+first and only writes code or tests when I ask.
+
+### Understood
+
+- **Agreement is not accuracy.** 47% agreement with the draft says the task is ambiguous, not who is
+  right. The review decides.
+- **Validate the answer key.** A scorer is only as good as its gold set; a 100-line validator caught in
+  under a second what two human passes missed.
+- **Derive the vocabulary, don't copy it.** `VALID_TARGETS` comes from `Booking.model_fields`, so the
+  schema and the labels can't drift silently.
+- **Git:** untracked files follow you across branches; `git branch -f` can't move the branch you're on;
+  a branch behind yours on the remote is a fast-forward push, no force needed.
+
+### Plan change
+
+Block 4 (re-plan labelling from the measured rate) moved to Day 4. The fetch blocks (more specs, GetYourGuide
+multi-file `$ref`) moved after it. The review turned up schema gaps and invalid gold data; fixing those
+was worth more than fetching specs I can't yet label correctly.
+
+### Still open
+
+- Judgement calls: label 31 (`variantInputFields[].name` → `custom_fields[].label`?), label 28 (per-traveller
+  `CUSTOM_*` name → `travellers[].custom_fields[].label`?), request `PHONE` (`direct` or `to_e164`?).
+- Transform names are free text; the scorer needs a fixed vocabulary.
+- Interview question: what happens when `Traveller.is_lead` is renamed?
+- A stash I haven't checked (`git stash list`).
+- From Day 1: direct-push test, spend limit before an API key exists, 7 `unknown` manifest entries.
+
+### Tomorrow
+
+Block 4: re-plan from the measured rate. Decide scope per spec, a dev/test split inside the benchmark
+(ADR-001 Amendment 2), whether the sealed-draft comparison stays for every spec, and which specs are
+dev. Then fetch and label the next dev spec.
