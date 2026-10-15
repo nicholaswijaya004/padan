@@ -95,10 +95,11 @@ LABELS = TypeAdapter(list[LabelEntry])
 def load_labels(path: Path) -> list[LabelEntry]:
     """Parse a label file; a ValidationError lists every bad entry by index."""
     entries = LABELS.validate_python(yaml.safe_load(path.read_text()))
-    seen: set[tuple[str, str, tuple[str, ...]]] = set()
+    seen: set[tuple[str, str, tuple[str, ...], str]] = set()
     for i, entry in enumerate(entries):
-        key = (entry.source.endpoint, entry.source.direction, tuple(entry.source.paths))
+        source = entry.source
+        key = (source.endpoint, source.direction, tuple(source.paths), entry.target)
         if key in seen:
-            raise ValueError(f"entry {i}: source {key} is labelled twice")
+            raise ValueError(f"entry {i}: {key} is labelled twice")
         seen.add(key)
     return entries

@@ -96,9 +96,18 @@ def test_ask_partner_needs_question_and_real_candidate() -> None:
 
 def test_duplicate_source_is_rejected(tmp_path: Path) -> None:
     path = tmp_path / "x.yaml"
-    path.write_text(yaml.safe_dump([label(), label(target="NONE", kind=None)]))
+    path.write_text(yaml.safe_dump([label(), label()]))
     with pytest.raises(ValueError, match="labelled twice"):
         load_labels(path)
+
+
+def test_one_source_may_feed_two_targets(tmp_path: Path) -> None:
+    path = tmp_path / "x.yaml"
+    split = {"kind": "transform", "transform": "date_part"}
+    path.write_text(
+        yaml.safe_dump([label(target="start_date", **split), label(target="start_time", **split)])
+    )
+    assert len(load_labels(path)) == 2
 
 
 @pytest.mark.parametrize("path", GOLD_FILES, ids=lambda p: p.name)
