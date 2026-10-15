@@ -1,0 +1,416 @@
+# Label scaffold for headout-partner, generated from the locked spec.
+# source + evidence are copied verbatim (deterministic extraction).
+# Fill target / kind (and transform, candidate, question) by hand. Do not edit evidence.
+
+# ---------------- V2BookingRequest (request)
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['productId']
+  # type: string
+  target: 'partner_product_id'
+  kind: 'direct'
+  evidence: 'The product to book. Obtain from the product listing endpoints.'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['variantId']
+  # type: string
+  target: 'partner_item_id'
+  kind: 'direct'
+  evidence: "The variant (tour option) to book. Obtain from the product's variants list."
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['inventoryId']
+  # type: string
+  target: 'partner_time_slot_id'
+  kind: 'direct'
+  evidence: 'The specific inventory slot (time/date) to book. Obtain from the inventory listing endpoint.'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['inventorySeatIds[]']
+  # type: array|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'Specific seat IDs to reserve, for seatmap-based products. Omit for non-seatmap products.'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['customersDetails.count']
+  # type: integer
+  target: 'NONE'
+  kind: ''
+  evidence: 'Total number of customers in this booking.'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['customersDetails.customers[].personType']
+  # type: string
+  target: 'travellers[].traveller_type'
+  kind: 'direct'
+  evidence: "Pricing category for this customer (e.g., `ADULT`, `CHILD`, `SENIOR`). Must match a type defined in the variant's pricing. For seatmap products, `personType` is always `ADULT`."
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['customersDetails.customers[].isPrimary']
+  # type: boolean
+  target: 'travellers[].is_lead'
+  kind: 'direct'
+  evidence: 'Marks the lead customer whose contact details (name, email, phone) are used for booking confirmation and voucher delivery.'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['customersDetails.customers[].inputFields[].id']
+  # type: string
+  target: 'travellers[].given_name, travellers[].family_name, contact.name, contact.email'
+  kind: 'transform: map_travellers_fields_to_input_fields'
+  evidence: 'Field identifier matching an `inputField` defined in the variant (e.g., `NAME`, `EMAIL`, `PHONE`, or a `CUSTOM_*` field).'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['customersDetails.customers[].inputFields[].value']
+  # type: string
+  target: 'travellers[].given_name, travellers[].family_name, contact.name, contact.email'
+  kind: 'transform: map_travellers_values_to_input_fields_values'
+  evidence: "The customer's response for this field. Submit `PHONE` values in international format with a leading `+` and country code (e.g., `+14155551234`)."
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['variantInputFields[].id']
+  # type: string
+  target: 'custom_fields[].field_id'
+  kind: 'transform: custom_fields_to_variant_input_fields'
+  evidence: 'Field identifier for a booking-level field defined on the variant (e.g., `PICKUP_LOCATION`, `LANGUAGE_`).'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['variantInputFields[].value']
+  # type: string
+  target: 'custom_fields[].field_value'
+  kind: 'transform: map_custom_fields_values_to_variant_input_fields_values'
+  evidence: 'The submitted value for this field.'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['price.amount']
+  # type: number/double
+  target: 'total_price.amount'
+  kind: 'direct'
+  evidence: 'Total price amount for all customers combined.'
+
+- source:
+    endpoint: 'POST /api/public/v2/bookings/'
+    direction: request
+    paths: ['price.currencyCode']
+  # type: string
+  target: 'total_price.currency'
+  kind: 'direct'
+  evidence: 'Currency code matching the currency used when fetching inventory pricing. See [Currency Codes](/guide/enums-and-error-codes#currency-codes).'
+
+# ---------------- V2Booking (response)
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['bookingId']
+  # type: string
+  target: 'partner_booking_id'
+  kind: 'direct'
+  evidence: "Headout's unique identifier for this booking. Use this for all subsequent operations (capture, cancel, reschedule)."
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['voucherId']
+  # type: string
+  target: 'activity.voucher_url'
+  kind: 'transform: voucher_id_to_voucher_url'
+  evidence: 'Identifier of the voucher issued for this booking. Pass it to [Get a voucher](/api-partner/v2/vouchers/get) to retrieve the structured voucher payload.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['partnerReferenceId']
+  # type: string|null
+  target: 'our_booking_id'
+  kind: 'direct'
+  evidence: 'Your own reference ID for this booking, set when capturing via [Update Booking](/api-partner/v2/bookings/update).'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['variantId']
+  # type: string
+  target: 'partner_item_id'
+  kind: 'direct'
+  evidence: 'The variant (tour option) that was booked.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['status']
+  # type: string
+  target: 'status'
+  kind: 'direct'
+  evidence: "Current lifecycle state of the booking. See [Booking Status](/guide/enums-and-error-codes#booking-status).\n- `UNCAPTURED`: Created but not yet captured. Does not lock inventory or price. Auto-expires to `CAPTURE_TIMEDOUT` after 1 hour.\n- `PENDING`: Payment captured — confirmed with supplier. Treat as confirmed; show to the customer as a confirmed booking.\n- `COMPLETED`: Fulfilled — tickets are available in the `tickets` array.\n- `CANCELLED`: Cancelled by partner, customer, or Headout.\n- `FAILED`: Booking failed due to a payment or system error.\n- `CAPTURE_TIMEDOUT`: Not captured within 1 hour of creation; can no longer be captured."
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['startDateTime']
+  # type: string/date-time
+  target: 'start_date, start_time'
+  kind: 'transform: split_start_datetime_to_date_and_time'
+  evidence: "Scheduled start time for the experience in local time, with no timezone offset (format `yyyy-MM-dd'T'HH:mm:ss`)."
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['product.id']
+  # type: string
+  target: 'partner_product_id'
+  kind: 'direct'
+  evidence: 'Headout product ID.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['product.name']
+  # type: string
+  target: 'product_name'
+  kind: 'direct'
+  evidence: 'Display name of the product.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['product.variant.id']
+  # type: string
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'partner_item_id'
+  question: 'Is this the same as the variantId in the request? Because there is also a variantId in the response, which is mapped to partner_item_id. If they are the same, we can map this to partner_item_id as well.'
+  evidence: 'Headout variant ID.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['product.variant.name']
+  # type: string
+  target: 'item_name'
+  kind: 'direct'
+  evidence: 'Display name of the variant.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.count']
+  # type: integer
+  target: 'NONE'
+  kind: ''
+  evidence: 'Total number of customers across all person types.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[].personType']
+  # type: string
+  target: 'travellers[].traveller_type'
+  kind: 'direct'
+  evidence: 'Pricing category for this customer (e.g., `ADULT`, `CHILD`, `SENIOR`).'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[].isPrimary']
+  # type: boolean
+  target: 'travellers[].is_primary'
+  kind: 'direct'
+  evidence: 'Whether this is the lead customer for the booking.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[].inputFields[].id']
+  # type: string
+  target: 'travellers[].given_name, travellers[].family_name, contact.name, contact.email'
+  kind: 'transform: map_input_field_ids_to_travellers as the key'
+  evidence: 'Field identifier (e.g., `NAME`, `EMAIL`, `PHONE`, or `CUSTOM_*`).'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[].inputFields[].name']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Human-readable label for this field.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[].inputFields[].value']
+  # type: string
+  target: 'travellers[].given_name, travellers[].family_name, contact.name, contact.email'
+  kind: 'transform: map_travellers_values_to_input_fields_values'
+  evidence: 'The submitted value for this field.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['variantInputFields[].id']
+  # type: string
+  target: 'custom_fields[].field_id'
+  kind: 'transform: map_variant_input_field_ids_to_custom_fields'
+  evidence: 'Field identifier for a booking-level field defined on the variant (e.g., `PICKUP_LOCATION`, `LANGUAGE_`).'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['variantInputFields[].name']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Human-readable label for this field.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['variantInputFields[].value']
+  # type: string
+  target: 'custom_fields[].field_value'
+  kind: 'transform: map_variant_input_fields_values_to_custom_fields'
+  evidence: 'The submitted value for this field.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['price.amount']
+  # type: number/double
+  target: 'ASK PARTNER'
+  kind: ''
+  candidate: 'total_price.amount'
+  question: 'Is is better to map from this or bookingPrice.amount as the response?'
+  evidence: 'Total price amount for all customers combined.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['price.currencyCode']
+  # type: string
+  target: 'ASK PARTNER'
+  kind: ''
+  candidate: 'total_price.currency'
+  question: 'Is is better to map from this or bookingPrice.currencyCode as the response?'
+  evidence: 'Currency code for the price amount. See [Currency Codes](/guide/enums-and-error-codes#currency-codes).'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['bookingPrice.amount']
+  # type: number/double
+  target: 'total_price.amount'
+  kind: 'direct'
+  evidence: 'Total price amount for all customers combined, in the client currency.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['bookingPrice.currencyCode']
+  # type: string
+  target: 'total_price.currency'
+  kind: 'direct'
+  evidence: 'Client currency code for the amount. See [Currency Codes](/guide/enums-and-error-codes#currency-codes).'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['voucherUrl']
+  # type: string
+  target: 'activity.voucher_url'
+  kind: 'direct'
+  evidence: 'URL to the booking voucher PDF. Available once the booking reaches `PENDING` or `COMPLETED` status.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['tickets[].publicId']
+  # type: string
+  target: 'activity.option_name, activity.service_language'
+  kind: 'transform: map to target field if identifier has it'
+  evidence: 'Unique identifier for this ticket, usable for support and lookup.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['tickets[].url']
+  # type: string|null
+  target: 'activity.ticket_url'
+  kind: 'direct'
+  evidence: 'URL for the ticket. For `PDF_URL`, `HTML_URL`, `APPLE_WALLET_URL` and `GOOGLE_WALLET_URL`, the ticket file or page. For `QRCODE` and `BARCODE`, a JPEG image of the scannable code that can be shown to the customer as is. Null for `TEXT`, which has no image; the code is available only as `ticketCode` from the [Voucher API](/api-partner/v2/vouchers/understanding-the-response#tickets).'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['tickets[].type']
+  # type: string
+  target: 'activity.ticket_format'
+  kind: 'direct'
+  evidence: 'Ticket delivery format.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['seatInfo[].section']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Section name within the venue (e.g., "Orchestra", "Mezzanine").'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['seatInfo[].row']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Row identifier within the section.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['seatInfo[].seatNumber']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Seat number within the row.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['seatInfo[].seatCode']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Unique code identifying the specific seat.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['creationTimestamp']
+  # type: integer/int64
+  target: 'booked_at'
+  kind: 'direct'
+  evidence: 'Unix epoch timestamp (seconds) when this booking was first created.'

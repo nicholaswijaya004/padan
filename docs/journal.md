@@ -215,3 +215,11 @@ fail-closed, Headout first).
 ### Plan change
 
 Block 3 (label Headout, timed) moved to Day 3 morning, so the timing is measured fresh.
+
+## Day 3
+
+### Block 1 — Label Headout (timed)
+
+- Start: 16:08
+- End: 17:08
+- Labels: 45
