@@ -72,3 +72,33 @@ Headout chosen as first labelling spec; Hotelbeds kept as the evidence-poor spec
 
 **Not measured:** time per block (not recorded, start tracking on Day 3); labelling time per
 field (Block 3 moved to Day 3).
+
+## Day 3
+
+**Goal:** Label the first real spec by hand, timed, and measure how reliable that label set is.
+
+### Headout labelling (2026-10-15)
+
+| Measure                                             | Value                                                                                |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Fields labelled (booking create + get)              | 45                                                                                   |
+| Time (judgement only, with scaffold)                | 60 min → **1.33 min/field**                                                          |
+| Same target as the sealed Claude draft              | 21/45 (47%)                                                                          |
+| Same concept, different name                        | 7                                                                                    |
+| Both flagged a schema gap                           | 3                                                                                    |
+| Real disagreements                                  | 14                                                                                   |
+| Labels changed after review                         | **11/45 (24%)**                                                                      |
+| Labels with format errors (caught by the validator) | **23/45 (51%)**, plus the file name                                                  |
+| Final gold set                                      | 54 entries: 38 canonical, 15 `NONE`, 1 `ASK_PARTNER`                                 |
+| Schema gaps found                                   | 3 added (slot, booking custom fields, traveller custom fields), 1 deferred (tickets) |
+| Tests                                               | 67                                                                                   |
+
+**What it showed:** a single labelling pass is not a gold set. Review changed a quarter of the labels
+and the validator found format errors in half. Both steps stay in the process.
+
+**Not measured:** time for the comparison, adjudication and fixes. Tomorrow's plan assumes the full
+cost is about twice the judgement time (2.5–3 min/field); time the next spec end to end to check.
+
+**Caveats:** one spec, one labeller. Agreement is with a model draft, not with a second human, so it
+measures ambiguity, not accuracy. Headout is well documented (87% descriptions); a weakly documented
+spec will be slower.
