@@ -127,6 +127,22 @@ spend goes only to mapping and to HTML/PDF extraction.
 - Whether the transform vocabulary is a closed list.
 - Single-name travellers: the canonical schema cannot assume a last name exists.
 
+## Amendment 1 — 2026-10-13: dataset size, PDF, Bókun
+
+Verification of 25 candidate specs (`data/manifest.yaml`) left 12 usable: 10 activities specs across
+9 families, and 2 cruise specs across 2 families. Accordingly:
+
+- **Target lowered from 20 specs to the 12 verified ones**, to be expanded later. Results are reported
+  per spec family, so the family count, not the spec count, is the honest measure of diversity.
+- **No public PDF spec survived verification.** PDF is evaluated with synthetic variants: two HTML specs
+  (Checkfront v3, Widgety) printed to PDF. They share their originals' labels, are not counted as extra
+  specs, and are reported as an HTML-vs-PDF extraction comparison on identical content. Printed PDFs are
+  cleaner than real partner PDFs, so these results are an upper bound.
+- **Bókun excluded:** its API Terms (clause 2.3.4) forbid use "for any similar benchmarking purposes".
+- **Cruise is reported as a case study** (2 families), not as statistics.
+
+_Restored 2026-10-16: drafted and agreed on Day 1, but missing from the merged ADR._
+
 ## Amendment 2 — 2026-10-16: dev/test split
 
 Day 3 measured labelling at 1.33 min/field for judgement alone; with review, adjudication and validator
@@ -177,3 +193,29 @@ storing and retrieving bookings publicly (OpenTravel messages).
 - HX labelling scope: "Storing a Booking" and "Retrieving Bookings".
 - HX partner terms restrict copying the API or API data (cl. 2.6): raw HX pages are never committed,
   only their hashes.
+
+## Amendment 4 — 2026-10-16: labelling method by role, catalogue objects out of scope
+
+Day 3 measured hand-labelling at 1.33 min/field for judgement alone, with review changing 24% of labels
+and the validator finding format errors in 51%. At that cost the remaining 11 specs (about 900 fields
+before scoping) would take 25–35 hours of labelling. The cost of protecting a label set should follow
+what the labels are used for. Accordingly, §7 ("gold labels written by hand") now applies by role:
+
+- **Dev labels: model-drafted, human-reviewed.** Claude drafts every entry for a dev spec; the labeller
+  reviews and corrects each one. Dev labels are only used to write and tune rules; no reported headline
+  number comes from them. To measure anchoring (accepting a wrong draft because it is already written),
+  each dev spec starts with a **blind sample**: 10 entries chosen by a fixed random seed, labelled by hand
+  before the draft is seen. Reported per spec: blind-sample agreement with the draft, and the share of
+  draft entries the review changed. `headout-partner` stays hand-labelled (Day 3).
+- **Test labels: human-only, labelled from the canonical side.** For each canonical field the labeller
+  finds the partner field(s) that carry it, or records `ASK_PARTNER`. Every partner field not chosen is
+  set to `NONE` mechanically by a script, with no model, and the labeller then reviews that `NONE` list.
+  The label file format is unchanged, so the validator and the scorer are unchanged. The sealed-draft
+  comparison (Amendment 2) continues for test specs and catches mappings the labeller missed.
+- **Embedded catalogue objects are out of scope.** When a booking response repeats catalogue definitions
+  (e.g. OCTO's `product.*`, `option.*`, `unitItems[].unit.*`), those fields are not labelled; their
+  identifiers at booking level (e.g. `productId`, `optionId`, `unitItems[].unitId`) are. The rule
+  applies to every spec, so the extraction and mapping stages are scored on the same scoped field list.
+- **Known limitation: one labeller.** There is no second human annotator, so inter-annotator agreement is
+  not measured; the sealed model draft is a second opinion, not a second human. Before results are
+  published, a second person labels a 20% sample of one test spec.
