@@ -135,8 +135,8 @@
   sha256:
   terms: "Bókun API Terms (https://www.bokun.io/api-terms) clause 2.3.4: no use of the API or Service 'for any similar benchmarking purposes'; 2.3.8: no derivative works of the Bókun API"
   likely_in_training_data: unknown
-  usable: unknown
-  notes: "Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.0.1 YAML, 317 KB. Spec is fine; DECISION NEEDED on terms: the clause targets monitoring the API's performance, but read it yourself before including"
+  usable: 'no'
+  notes: "Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.0.1 YAML, 317 KB. Excluded (ADR-001 Amendment 1): API Terms clause 2.3.4 forbids use 'for any similar benchmarking purposes'"
 
 - id: headout-partner
   provider: Headout
@@ -257,7 +257,7 @@
 - id: hx-swota
   provider: HX (Hurtigruten Expeditions), Seaware/Versonix
   vertical: cruise
-  role: test
+  role: dev
   spec_family: opentravel
   format: html
   url: https://docs.partner.travelhx.com/HX/swota/index.html
@@ -275,7 +275,7 @@
 - id: opentravel-cruise-xsd
   provider: OpenTravel Alliance
   vertical: cruise
-  role: test
+  role: dev
   spec_family: opentravel
   format: xsd
   url: https://modelviewers.pilotfishtechnology.com/modelviewers/OTA/model/Format.OTA_CruiseSailAvailRQ.html
@@ -317,7 +317,7 @@
 - id: widgety-cruise-v2
   provider: Widgety
   vertical: cruise
-  role: dev
+  role: test
   spec_family: widgety
   format: html
   url: https://support.widgety.co.uk/hc/en-us/articles/115000951492-Cruises-API-Version-2-Fields-Explained
@@ -370,4 +370,4 @@
   terms: TODO
   likely_in_training_data: true
   usable: 'no'
-  notes: 'Public api-reference pages exist (booking, content, cache APIs); spec file not yet downloaded. Same provider as hotelbeds-activities (leak risk)'
+  notes: 'Public api-reference pages exist (booking, content, cache APIs); spec file not yet downloaded. Same provider as hotelbeds-activities (leak risk). Not usable as held-out: hotelbeds family is dev (ADR-001 Amendment 2)'

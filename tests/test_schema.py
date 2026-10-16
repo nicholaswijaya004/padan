@@ -220,3 +220,25 @@ def test_new_critical_fields_are_marked() -> None:
         extra = Booking.model_fields[name].json_schema_extra
         assert isinstance(extra, dict)
         assert extra["critical"] is True, name
+
+
+# --- Schema v2.1: redemption time -----------------------------------------------------------
+
+
+def test_redemption_time_is_kept_per_booking_and_per_ticket() -> None:
+    booking = Booking.model_validate(
+        valid_booking(
+            redeemed_at="2026-11-02T09:15:00Z",
+            fulfilment=[
+                {
+                    "kind": "ticket",
+                    "format": "qrcode",
+                    "value": "!1|El3f0w",
+                    "redeemed_at": "2026-11-02T09:15:00Z",
+                },
+                {"kind": "ticket", "format": "qrcode", "value": "!1|Xk9a2p"},
+            ],
+        )
+    )
+    assert booking.redeemed_at is not None
+    assert [f.redeemed_at is not None for f in booking.fulfilment] == [True, False]
