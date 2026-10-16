@@ -305,3 +305,112 @@ was worth more than fetching specs I can't yet label correctly.
 Block 4: re-plan from the measured rate. Decide scope per spec, a dev/test split inside the benchmark
 (ADR-001 Amendment 2), whether the sealed-draft comparison stays for every spec, and which specs are
 dev. Then fetch and label the next dev spec.
+
+## Day 4 — Re-plan, dev/test split, schema v2, OCTO
+
+**Goal:** Turn the measured labelling rate into a plan that fits M1, fetch the dev specs, and label the
+next dev spec end to end.
+
+### Block 5 — Review OCTO draft (timed)
+
+- Start: 17:32
+- End: 17:43
+- Entries reviewed: 92
+
+### The assumptions that were wrong
+
+- **"The project takes about 12 days."** That was an estimate by analogy with Loka, made before anything
+  was measured. Rate × volume says otherwise: about 500 fields at 2.5–3 min/field is 3–4 days of
+  labelling alone. Re-estimated from components: about 22–25 working days left (about 28 with buffer),
+  with a defensible stopping point at the end of M2 (around Day 18–20).
+- **Widgety as a dev spec.** I picked it without reading its content: its public docs cover cruise
+  _search_ only, not booking. HX, which documents storing and retrieving bookings, replaced it
+  (Amendment 3).
+- **Schema v0/v1 choices.** `voucher_url` sat inside `activity`, but cruise sends documents too, and
+  a URL field cannot hold a QR code. `total_price` did not say _whose_ price. `status` merged "on
+  hold" (expires unless we confirm) with "pending" (we confirmed, partner has not). Fixed in schema v2.
+
+### What cost me time
+
+- **What a PR contained versus what I thought it contained.** Three things reached `main` incomplete:
+  ADP-19 had no tests for the `pages` method, the Amendment 3 roles stayed unapplied through three
+  PRs, and ADR Amendment 1 (Day 1) never landed at all. A stale local copy of the ADR would also have
+  deleted Amendments 1 and 4 if committed. `make check` was green every time, because it only proves
+  that existing tests pass, not that the change is complete.
+- **Snippet files saved into `tests/`.** pytest collects every `test_*.py`, so they ran as broken
+  modules.
+- Working on the wrong branch, and a branch created from a stale `main`.
+
+**Habits from now on:** `git log --oneline origin/main..HEAD` and `git show --stat HEAD` before every
+push; after every merge, `git switch main && git pull && make check`; compare the test count before
+and after a PR.
+
+### Decisions
+
+| Decision                                                                                                                                                                                                                    | Why                                                                                                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Label booking create and get only (D1)                                                                                                                                                                                      | The canonical schema is a booking; wider scope doubles labelling time and token cost                                   |
+| Dev/test split inside the benchmark (Amendment 2)                                                                                                                                                                           | Reporting F1 on the specs the rules were written against is training-set accuracy                                      |
+| A spec family never crosses roles; a test enforces it                                                                                                                                                                       | A same-family spec in test would score rules on conventions they were tuned on                                         |
+| HX replaces Widgety in dev (Amendment 3)                                                                                                                                                                                    | Widgety has no public booking endpoints; HX does                                                                       |
+| Dev labels model-drafted and reviewed; test labels human-only (Amendment 4)                                                                                                                                                 | Labelling cost; dev labels are only used for tuning, the headline number comes from test                               |
+| Blind sample of 10 before each review                                                                                                                                                                                       | Measures anchoring instead of assuming it away                                                                         |
+| Embedded catalogue objects out of scope (Amendment 4)                                                                                                                                                                       | OCTO repeats the full product inside a booking: 71 of 161 fields                                                       |
+| Schema designed from dev specs, standards and non-benchmark OTAs only                                                                                                                                                       | Shaping the schema around test specs would make test mappings easier                                                   |
+| OCTO pinned to a commit, not `main`                                                                                                                                                                                         | The content at that URL can never change; the lock only detects change                                                 |
+| Accept the Headout upstream change after a diff                                                                                                                                                                             | One description changed, outside the labelled endpoints; a permanent "changed" warning would hide the next real one    |
+| `fetch_file` refactor before `fetch_pages`                                                                                                                                                                                  | Existing tests passing unchanged proves the refactor changed no behaviour                                              |
+| Schema v2: `fulfilment[]`, `on_hold` + `hold_expires_at`, gross `total_price` + `net_price`, split `contact`, `partner_confirmation_code`, `cancellable`, `end_time`, wider traveller types, `date_of_birth`, `nationality` | Each has evidence in a dev spec (Headout, OCTO, HX)                                                                    |
+| `fulfilment[]`, not `documents[]`                                                                                                                                                                                           | In OpenTravel and HX, `Document` means a passport or ID                                                                |
+| Headout prices → `ASK_PARTNER` (net or gross?)                                                                                                                                                                              | Under v2 the docs don't say which one `bookingPrice` is; guessing a critical money field is what escalation exists for |
+| No `item_id` / `items[]` yet                                                                                                                                                                                                | `activity.option_id` covers "Disneyland 6h vs 12h"; multi-item bookings wait for evidence                              |
+| Schema v2.1: `redeemed_at` on booking and fulfilment                                                                                                                                                                        | My proposal from support work: a refund dispute needs the redemption time in seconds, not a 10-minute log search       |
+| `availabilityId` and `availability.id` both `direct`                                                                                                                                                                        | The docs say they hold the same value; `ASK_PARTNER` on clear docs lowers escalation precision                         |
+
+### What I delegated, and what I decided
+
+Claude drafted ADR Amendments 2–4 (and restored 1), wrote schema v2/v2.1, the `pages` fetch method and
+its tests, the family test, the scaffolds, the OCTO draft and the re-labelled Headout file. I decided
+the scope, the split, the labelling method (after asking whether an interviewer would see it as a
+liability), the fulfilment design and the rejection of `item_id`, proposed the redemption time, and
+reviewed every OCTO row. Three Headout label calls were applied on Claude's recommendation at my
+request; they are recorded as Claude-decided (3 of 56).
+
+### Understood
+
+- **Leakage has levels:** test vs dev specs, spec families, and the sources the schema is designed from.
+- **Anchoring is measurable:** 6/10 blind agreement against 1% of rows changed in review, at 7 s per row.
+- **Docs drift and docs are wrong:** Headout changed in two days; OCTO's `deliveryValue` has the
+  description of `deliveryFormat`.
+- **A field's meaning can depend on another field:** `deliveryValue` is a URL or a QR code depending on
+  `deliveryFormat`; Headout `inputFields[id=…]` is the same pattern.
+- **YAML traps:** comments are invisible to the loader; PyYAML silently keeps the last of two duplicate
+  keys.
+- **Green CI is not "complete":** it cannot see a missing test or an unapplied decision.
+
+### Plan change
+
+Days 1–3 each pushed blocks forward; today's labelling (Block 5) fitted only because of Amendment 4.
+Fetching test specs (GetYourGuide `$ref` bundling, Viator embedded spec) moves after M1: test specs are
+not needed until the rule engine exists.
+
+### Still open
+
+- Interview question: what breaks when `Traveller.is_lead` is renamed, and why that is the outcome I want.
+- The validator does not check field names inside a target filter (`travellers[is_lead=true]`).
+- Coverage check: every scaffold field has at least one label.
+- Label files should record the `spec_sha256` they were labelled against, so drift is caught by a test.
+- A YAML loader that rejects duplicate keys, for the manifest and label files.
+- Transform names are free text; the scorer needs a fixed vocabulary.
+- The scaffold generator lives in Claude's scratch folder; it is Stage 1 extraction and belongs in the repo, with tests.
+- OCTO gaps: no price in OCTO core, no lead-traveller flag. Headout: no price mapping until the partner answers.
+- Later schema work: multi-item bookings, structured cancellation penalties, `HotelDetails` before M3.
+- A second labeller on a 20% sample of one test spec before publishing results.
+- Synthetic PDFs (Checkfront, Widgety) and their manifest entries.
+- From Day 1: direct-push test, spend limit before an API key exists, `unknown` manifest entries, terms checks.
+
+### Tomorrow
+
+Move the scaffold generator into the repo as Stage 1 extraction (deterministic, tested). Then label the
+remaining dev specs, Hotelbeds and HX, with the Amendment 4 method, timed with the blind sample. Then
+the scorer.
