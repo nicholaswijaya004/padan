@@ -2,7 +2,10 @@
 # Candidates from web search, verified 2026-10-13 by headless browser (logged out) and direct download.
 # Terms were read only where noted; "terms: Not checked/Not found" still needs a human look before publishing results.
 #
-# role:    benchmark (phase 1: activities, cruise) | held_out (hotels, never tuned on)
+# role:    dev (rules written and tuned while reading these labels)
+#          | test (labels not opened until measurement)
+#          | held_out (hotels, never tuned on)
+#          A spec_family never appears in more than one role (ADR-001 Amendment 2).
 # format:  openapi | xsd | html | pdf | graphql
 # usable:  yes | no | unknown   (reason in notes)
 
@@ -11,7 +14,7 @@
 - id: octo-core
   provider: OCTO (open standard)
   vertical: activities
-  role: benchmark
+  role: dev
   spec_family: octo
   format: openapi
   url: https://github.com/octotravel/openapi/blob/main/OCTO-API.yaml
@@ -25,7 +28,7 @@
 - id: octo-zaui
   provider: Zaui
   vertical: activities
-  role: benchmark
+  role: dev
   spec_family: octo
   format: html
   url: https://docs.zaui.com/octo
@@ -39,7 +42,7 @@
 - id: viator-partner
   provider: Viator (Tripadvisor)
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: viator
   format: openapi
   url: https://docs.viator.com/partner-api/merchant/technical/
@@ -53,7 +56,7 @@
 - id: viator-supplier
   provider: Viator (Tripadvisor)
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: viator
   format: html
   url: https://docs.viator.com/supplier-api/technical
@@ -67,7 +70,7 @@
 - id: getyourguide-partner
   provider: GetYourGuide
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: getyourguide
   format: openapi
   url: https://github.com/getyourguide/partner-api-spec
@@ -81,7 +84,7 @@
 - id: musement-partner
   provider: Musement (TUI)
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: musement
   format: openapi
   url: https://partner-api.musement.com/_bundle/reference/@v3.5.0/openapi.yaml?download
@@ -95,7 +98,7 @@
 - id: rezdy-agent
   provider: Rezdy
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: rezdy
   format: html
   url: https://developers.rezdy.com/rezdyapi/index-agent.html
@@ -109,7 +112,7 @@
 - id: rezdy-connect
   provider: Rezdy
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: rezdy
   format: html
   url: https://developers.rezdy.com/rezdyconnect/index.html
@@ -123,7 +126,7 @@
 - id: bokun-booking
   provider: Bókun (Tripadvisor)
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: bokun
   format: openapi
   url: https://api-docs.bokun.dev/rest-v1.yaml
@@ -137,7 +140,7 @@
 - id: headout-partner
   provider: Headout
   vertical: activities
-  role: benchmark
+  role: dev
   spec_family: headout
   format: openapi
   url: https://partner.headout.com/docs/specs/openapi-v2-api-partner.yaml
@@ -152,7 +155,7 @@
 - id: xola
   provider: Xola
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: xola
   format: html
   url: https://developers.xola.com/api-reference
@@ -166,7 +169,7 @@
 - id: checkfront-v3
   provider: Checkfront
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: checkfront
   format: html
   url: https://checkfront-api.readthedocs.io/ref/booking/booking.html
@@ -180,7 +183,7 @@
 - id: hotelbeds-activities
   provider: Hotelbeds (APItude)
   vertical: activities
-  role: benchmark
+  role: dev
   spec_family: hotelbeds
   format: openapi
   url: https://d2gsjv9lq0esbh.cloudfront.net/open-api-documentation/OpenAPI-Activity-BookingAPI-3.0.yaml
@@ -195,7 +198,7 @@
 - id: holibob
   provider: Holibob
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: holibob
   format: graphql
   url: https://partner.documentation.holibob.tech/general-api/Working-version/the-holibob-api-introduction
@@ -209,7 +212,7 @@
 - id: fareharbor-external
   provider: FareHarbor
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: fareharbor
   format: html
   url: https://developer.fareharbor.com/api/external/v1/
@@ -223,7 +226,7 @@
 - id: regiondo
   provider: Regiondo
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: regiondo
   format: pdf
   url:
@@ -237,7 +240,7 @@
 - id: tiqets
   provider: Tiqets
   vertical: activities
-  role: benchmark
+  role: test
   spec_family: tiqets
   format: html
   url: https://www.tiqets.com/en/partner-program/api-program/
@@ -253,7 +256,7 @@
 - id: hx-swota
   provider: HX (Hurtigruten Expeditions), Seaware/Versonix
   vertical: cruise
-  role: benchmark
+  role: test
   spec_family: opentravel
   format: html
   url: https://docs.partner.travelhx.com/HX/swota/index.html
@@ -267,7 +270,7 @@
 - id: opentravel-cruise-xsd
   provider: OpenTravel Alliance
   vertical: cruise
-  role: benchmark
+  role: test
   spec_family: opentravel
   format: xsd
   url: https://modelviewers.pilotfishtechnology.com/modelviewers/OTA/model/Format.OTA_CruiseSailAvailRQ.html
@@ -281,7 +284,7 @@
 - id: hx-flatfiles-v3
   provider: HX (Hurtigruten Expeditions)
   vertical: cruise
-  role: benchmark
+  role: test
   spec_family: hx-flatfiles
   format: html
   url: https://docs.partner.travelhx.com/HX/flatfiles/v3/index.html
@@ -295,7 +298,7 @@
 - id: scenic-group
   provider: Scenic Group (Scenic, Emerald Cruises)
   vertical: cruise
-  role: benchmark
+  role: test
   spec_family: scenic
   format: html
   url: https://emerald.cruises/travel-advisor-hub/scenic-group-api
@@ -309,7 +312,7 @@
 - id: widgety-cruise-v2
   provider: Widgety
   vertical: cruise
-  role: benchmark
+  role: dev
   spec_family: widgety
   format: html
   url: https://support.widgety.co.uk/hc/en-us/articles/115000951492-Cruises-API-Version-2-Fields-Explained
@@ -323,7 +326,7 @@
 - id: traveltek-cruise
   provider: Traveltek
   vertical: cruise
-  role: benchmark
+  role: test
   spec_family: traveltek
   format: html
   url: https://www.traveltek.com/cruise-api/
@@ -337,7 +340,7 @@
 - id: royal-caribbean
   provider: Royal Caribbean
   vertical: cruise
-  role: benchmark
+  role: test
   spec_family: rccl
   format:
   url:
@@ -361,5 +364,5 @@
   sha256:
   terms: TODO
   likely_in_training_data: true
-  usable: unknown
+  usable: 'no'
   notes: 'Public api-reference pages exist (booking, content, cache APIs); spec file not yet downloaded. Same provider as hotelbeds-activities (leak risk)'

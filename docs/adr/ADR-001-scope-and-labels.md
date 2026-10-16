@@ -126,3 +126,40 @@ spend goes only to mapping and to HTML/PDF extraction.
 - Canonical schema v0 (Block 4): one shared core plus vertical extensions for cruise and activities?
 - Whether the transform vocabulary is a closed list.
 - Single-name travellers: the canonical schema cannot assume a last name exists.
+
+## Amendment 2 — 2026-10-16: dev/test split
+
+Day 3 measured labelling at 1.33 min/field for judgement alone; with review, adjudication and validator
+fixes the full cost is estimated at about twice that. Labelling all 12 specs before building rules would
+take 3–4 working days, and every rule written while reading those labels would then be scored on them.
+That is training-set accuracy, the same leakage the hotel held-out set exists to prevent, one level down.
+Accordingly:
+
+- **The benchmark is split into `dev` and `test`.** `role` in `data/manifest.yaml` is now
+  `dev | test | held_out` (replacing `benchmark`).
+  - **dev:** rules are written and tuned while reading these labels.
+  - **test:** labels are not opened until measurement. No rule is changed because of a test result.
+  - **held_out:** unchanged (hotels, never tuned on).
+- **The split**, chosen for diversity so rules do not fit one documentation style:
+
+  | Role | Specs                                                                                                                            | Why                                                                     |
+  | ---- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+  | dev  | headout-partner                                                                                                                  | Well documented (87% field descriptions); already labelled              |
+  | dev  | octo-core                                                                                                                        | An open standard; conventions shared by its implementations             |
+  | dev  | hotelbeds-activities                                                                                                             | Weakly documented (0% descriptions, no response schemas): the hard case |
+  | dev  | widgety-cruise-v2                                                                                                                | Cruise, HTML format                                                     |
+  | test | viator-partner, getyourguide-partner, musement-partner, rezdy-agent, rezdy-connect, checkfront-v3, fareharbor-external, hx-swota | 8 specs, 7 families, both verticals, OpenAPI, HTML and PDF              |
+
+- **A `spec_family` never appears in more than one role.** A spec sharing a family with a dev spec would
+  test the rules on conventions they were tuned on. So synthetic PDF twins, once created, take their original's role,
+  `octo-zaui` is dev if it becomes usable, and `hotelbeds-hotels` is no longer usable as held-out
+  (hotelbeds family is dev). Held-out hotel specs must come from families not in dev. A test over the
+  manifest enforces this rule.
+- **Order of work:** dev specs are labelled before M1; test specs after rule engine v1. Labelling test
+  specs after the rules exist also prevents labelling them towards the rules.
+- **Reporting:** the headline is F1 on **test**. Dev F1 is reported beside it; the gap between them is
+  overfitting, made visible. Cruise has one family in each role and stays a case study.
+- **Labelling scope per spec: booking create and booking get only.** The canonical schema is a booking;
+  cancellation and availability need their own schemas and are out of phase 1.
+- **The sealed-draft comparison continues for every spec.** It changed 11 of 45 Headout labels (24%).
+  Re-checked after 3 specs: below about 10% changes, it continues for dev specs only.
