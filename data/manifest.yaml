@@ -17,13 +17,14 @@
   role: dev
   spec_family: octo
   format: openapi
-  url: https://github.com/octotravel/openapi/blob/main/OCTO-API.yaml
+  url: https://raw.githubusercontent.com/octotravel/openapi/2f2c3a01f96667109602169c6a5cdf78ca7ab033/OCTO-API.yaml
   retrieved:
   sha256:
   terms: 'OCTO states the spec is open source and free to use; the repo has no LICENSE file'
   likely_in_training_data: true
   usable: 'yes'
   notes: 'Verified 2026-10-13 (git clone): single-file OpenAPI 3.1.0, ~1 MB, 1,818 description fields; last commit 2023-07-28. Reference spec for the OCTO family; implementations count toward the same family'
+  method: direct
 
 - id: octo-zaui
   provider: Zaui
@@ -149,7 +150,7 @@
   terms: Not found on the docs site
   likely_in_training_data: unknown
   usable: 'yes'
-  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML, 134 KB. Also openapi-v1, openapi-v2-affiliate and openapi-v2-common (listed in /docs/llms.txt)'
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML, 134 KB. Also openapi-v1, openapi-v2-affiliate and openapi-v2-common (listed in /docs/llms.txt). Upstream changed 2026-10-16: one description in V2Voucher.ticketSection, outside the labelled endpoints; accepted after diff.'
   method: direct
 
 - id: xola
