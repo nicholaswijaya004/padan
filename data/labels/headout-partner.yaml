@@ -110,7 +110,8 @@
     paths: ['customersDetails.customers[isPrimary=true].inputFields[id=PHONE].value']
   # type: string
   target: 'contact.phones[]'
-  kind: 'direct'
+  kind: 'transform'
+  transform: 'to_e164'
   evidence: "The customer's response for this field. Submit `PHONE` values in international format with a leading `+` and country code (e.g., `+14155551234`)."
 
 - source:
@@ -316,6 +317,15 @@
   # type: string
   target: 'NONE'
   kind: ''
+  evidence: 'Human-readable label for this field.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['customersDetails.customers[].inputFields[id=CUSTOM_*].name']
+  # type: string
+  target: 'travellers[].custom_fields[].label'
+  kind: 'direct'
   evidence: 'Human-readable label for this field.'
 
 - source:
