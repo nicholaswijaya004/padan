@@ -1,0 +1,852 @@
+# Gold labels for octo-core (dev spec), generated from the locked spec (sha256 02a6de6a...).
+# Method (ADR-001 Amendment 4): entries drafted by Claude against schema v2, reviewed and corrected
+# by Nicholas Daniel Wijaya. Blind sample of 10 entries (seed 20261016) labelled by hand before review.
+# source + evidence are copied verbatim (deterministic extraction). Do not edit evidence.
+# Scope: booking create (POST /bookings, POST /bookings/{uuid}/confirm) and get (GET /bookings/{uuid}).
+# Embedded catalogue objects echoed in the booking (product.*, option.*, unitItems[].unit.*) are out of scope;
+# their ids at booking level (productId, optionId, unitItems[].unitId) are labelled.
+
+# ---------------- POST /bookings (request)
+- source:
+    endpoint: 'POST /bookings'
+    direction: request
+    paths: ['uuid']
+  # type: string/uuid
+  target: 'NONE'
+  kind: ''
+  evidence: 'A unique UUID to identify the booking. Setting this value acts like an idempotency key preventing you from double booking.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: request
+    paths: ['productId']
+  # type: string
+  target: 'product_id'
+  kind: 'direct'
+  evidence: 'The product ID for this booking.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: request
+    paths: ['optionId']
+  # type: string
+  target: 'activity.option_id'
+  kind: 'direct'
+  evidence: 'The option ID for this booking.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: request
+    paths: ['availabilityId']
+  # type: string
+  target: 'activity.slot_id'
+  kind: 'direct'
+  evidence: 'The availability ID for the selected timeslot.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: request
+    paths: ['expirationMinutes']
+  # type: integer
+  target: 'NONE'
+  kind: ''
+  evidence: 'How many minutes to reserve the availability, otherwise defaults to the supplier default amount.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: request
+    paths: ['notes']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Optional notes for the booking.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: request
+    paths: ['unitItems[].uuid']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'A unique UUID to identify the unit, same as the booking uuid except per unit.'
+
+- source:
+    endpoint: 'POST /bookings'
+    direction: request
+    paths: ['unitItems[].unitId']
+  # type: string
+  target: 'travellers[].traveller_type'
+  kind: 'derived'
+  transform: 'unit_type_of(unitId, option.units[])'
+  evidence: 'The unit item unit ID.'
+
+# ---------------- POST /bookings/{uuid}/confirm (request)
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['emailReceipt']
+  # type: boolean
+  target: 'NONE'
+  kind: ''
+  evidence: 'Whether you want OCTO Cloud to email the guest a copy of their receipt and tickets. (defaults to false)'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['resellerReference']
+  # type: string
+  target: 'our_booking_id'
+  kind: 'direct'
+  evidence: 'Your reference for this booking. Also known as a Voucher Number.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['contact.fullName']
+  # type: string
+  target: 'contact.full_name'
+  kind: 'direct'
+  evidence: 'The full name of the booking holder. Can also be retrieved as an alias for the concatenation of firstName and lastName.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['contact.firstName']
+  # type: string
+  target: 'contact.given_name'
+  kind: 'direct'
+  evidence: 'The first name of the booking holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['contact.lastName']
+  # type: string
+  target: 'contact.family_name'
+  kind: 'direct'
+  evidence: 'The last name of the booking holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['contact.emailAddress']
+  # type: string/email
+  target: 'contact.email'
+  kind: 'direct'
+  evidence: 'The email address of the booking holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['contact.phoneNumber']
+  # type: string
+  target: 'contact.phones[]'
+  kind: 'direct'
+  evidence: 'The phone number of the booking holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['contact.locales[]']
+  # type: array
+  target: 'NONE'
+  kind: ''
+  evidence: 'An array of locale values, equivalent to `navigator.languages` in a browsers environment.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['contact.postalCode']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'The PO Box of the booking holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['contact.country']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'The country of the booking holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['contact.notes']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Optional notes for the booking holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].uuid']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'A unique UUID to identify the unit, same as the booking uuid except per unit.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].unitId']
+  # type: string
+  target: 'travellers[].traveller_type'
+  kind: 'derived'
+  transform: 'unit_type_of(unitId, option.units[])'
+  evidence: 'The unit item unit ID.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].resellerReference']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'A reference the reseller uses to identify the unit within all bookings.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].contact.fullName']
+  # type: string
+  target: 'travellers[].full_name'
+  kind: 'direct'
+  evidence: 'The full name of the ticket holder. Can also be retrieved as an alias for the concatenation of firstName and lastName.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].contact.firstName']
+  # type: string
+  target: 'travellers[].given_name'
+  kind: 'direct'
+  evidence: 'The first name of the ticket holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].contact.lastName']
+  # type: string
+  target: 'travellers[].family_name'
+  kind: 'direct'
+  evidence: 'The last name of the ticket holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].contact.emailAddress']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'The email address of the ticket holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].contact.phoneNumber']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'The phone number of the ticket holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].contact.locales[]']
+  # type: array
+  target: 'NONE'
+  kind: ''
+  evidence: 'An array of locale values, equivalent to `navigator.languages` in a browsers environment.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].contact.postalCode']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'The PO Box of the ticket holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].contact.country']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'The country of the ticket holder.'
+
+- source:
+    endpoint: 'POST /bookings/{uuid}/confirm'
+    direction: request
+    paths: ['unitItems[].contact.notes']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Optional notes for the ticket holder.'
+
+# ---------------- GET /bookings/{uuid} (response)
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['id']
+  # type: string
+  target: 'partner_booking_id'
+  kind: 'direct'
+  evidence: 'A unique ID / UUID generated by the supplier system to identify the booking.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['uuid']
+  # type: string/uuid
+  target: 'NONE'
+  kind: ''
+  evidence: 'A UUID you can set when generating the booking to use as an idempotency key.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['testMode']
+  # type: boolean
+  target: 'NONE'
+  kind: ''
+  evidence: 'If `TRUE`, booking was created on test mode'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['resellerReference']
+  # type: string|null
+  target: 'our_booking_id'
+  kind: 'direct'
+  evidence: 'The reference set by the Reseller. A mandatory field for resellers to be set in the booking confirmation request.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['supplierReference']
+  # type: string|null
+  target: 'partner_confirmation_code'
+  kind: 'direct'
+  evidence: "The Supplier's / booking platform reference."
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['status']
+  # type: string
+  target: 'status'
+  kind: 'transform'
+  transform: 'enum_map(ON_HOLD=on_hold, PENDING=pending, CONFIRMED=confirmed, REDEEMED=confirmed, CANCELLED=cancelled, EXPIRED=failed, REJECTED=failed)'
+  evidence: 'The status of the booking, possible values are: `ON_HOLD` The booking is pending confirmation, this is the default value when you first create the booking. `EXPIRED` If the booking is not confirmed before the expiration hold expires, it goes into an expired state. `CONFIRMED` Once the confirmation call is made the booking is ready to be used. `CANCELLED` If the booking is cancelled. `PENDING` If the booking is pending outside availability confirmation. `REDEEMED` If the booking is already redeemed.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['utcCreatedAt']
+  # type: string
+  target: 'booked_at'
+  kind: 'direct'
+  evidence: 'An ISO8601 date time in UTC when the booking was created.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['utcUpdatedAt']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'An ISO8601 date time in UTC when the booking was updated.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['utcExpiresAt']
+  # type: string|null
+  target: 'hold_expires_at'
+  kind: 'direct'
+  evidence: 'An ISO8601 date times in UTC for when this booking is due to expire if the status is `ON_HOLD`.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['utcRedeemedAt']
+  # type: string|null
+  target: 'redeemed_at'
+  kind: 'direct'
+  # changed: schema v2.1, redemption time (raised in review)
+  evidence: 'An ISO8601 date time in UTC at when the booking was redeemed.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['utcConfirmedAt']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'An ISO8601 date time in UTC when the booking was confirmed.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['productId']
+  # type: string
+  target: 'product_id'
+  kind: 'direct'
+  evidence: 'The product ID that identifies the product in the booking system to make this reservation.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['optionId']
+  # type: string
+  target: 'activity.option_id'
+  kind: 'direct'
+  evidence: 'The product ID that identifies the product option in the booking system to make this reservation.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['cancellable']
+  # type: boolean
+  target: 'cancellable'
+  kind: 'direct'
+  evidence: 'A boolean field indicating whether this booking can be cancelled.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['cancellation.refund']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'Whether the booking was refunded as part of the cancellation. Possible values are `FULL`, `PARTIAL` or `NONE`'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['cancellation.reason']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'A text value describing why the cancellation happened.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['cancellation.utcCancelledAt']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'An ISO8601 date time in UTC indicating when the booking was cancelled.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['freesale']
+  # type: boolean
+  target: 'NONE'
+  kind: ''
+  evidence: 'Whether the booking was made as freesale (without checking availability first).'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['availabilityId']
+  # type: string
+  target: 'activity.slot_id'
+  kind: 'direct'
+  evidence: 'The availability id that was used in the request.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['availability.id']
+  # type: string
+  target: 'activity.slot_id'
+  kind: 'direct'
+  evidence: 'The availability id that was used in the request.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['availability.localDateTimeStart']
+  # type: string
+  target: 'start_date'
+  kind: 'transform'
+  transform: 'date_part'
+  evidence: 'The `localDateTimeStart` value from the original availability object.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['availability.localDateTimeStart']
+  # type: string
+  target: 'start_time'
+  kind: 'transform'
+  transform: 'time_part'
+  evidence: 'The `localDateTimeStart` value from the original availability object.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['availability.localDateTimeEnd']
+  # type: string
+  target: 'end_date'
+  kind: 'transform'
+  transform: 'date_part'
+  evidence: 'The `localDateTimeEnd` value from the original availability object.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['availability.localDateTimeEnd']
+  # type: string
+  target: 'end_time'
+  kind: 'transform'
+  transform: 'time_part'
+  evidence: 'The `localDateTimeEnd` value from the original availability object.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['availability.allDay']
+  # type: boolean
+  target: 'NONE'
+  kind: ''
+  evidence: 'A boolean value indicating whether the availability is all day.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['availability.openingHours[].from']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'When this product opens (HH:MM)'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['availability.openingHours[].to']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'When this product closes (HH:MM)'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['contact.fullName']
+  # type: string|null
+  target: 'contact.full_name'
+  kind: 'direct'
+  evidence: 'The full name of the booking holder or the ticket holder. Can also be retrieved as an alias for the concatenation of `firstName` and `lastName`'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['contact.firstName']
+  # type: string|null
+  target: 'contact.given_name'
+  kind: 'direct'
+  evidence: 'The first name of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['contact.lastName']
+  # type: string|null
+  target: 'contact.family_name'
+  kind: 'direct'
+  evidence: 'The last name of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['contact.emailAddress']
+  # type: string|null/email
+  target: 'contact.email'
+  kind: 'direct'
+  evidence: 'The email address of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['contact.phoneNumber']
+  # type: string|null
+  target: 'contact.phones[]'
+  kind: 'direct'
+  evidence: 'The phone number of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['contact.locales[]']
+  # type: array
+  target: 'NONE'
+  kind: ''
+  evidence: 'An array of locale values, equivalent to navigator.languages in a browsers environment.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['contact.postalCode']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'The PO Box of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['contact.country']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'The country of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['contact.notes']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'Optional notes for the booking.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['notes']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Optional notes for the booking]'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['deliveryMethods[]']
+  # type: array
+  target: 'NONE'
+  kind: ''
+  evidence: 'An array of delivery methods available for this booking.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['voucher.redemptionMethod']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'How the voucher can be redeemed. Possible values are: `MANIFEST` The guest name will be written down and they just need to show up `DIGITAL` The tickets/voucher must be scanned but can be on mobile `PRINT` The tickets/voucher must be printed and presented on arrival'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['voucher.utcRedeemedAt']
+  # type: string|null
+  target: 'fulfilment[kind=voucher].redeemed_at'
+  kind: 'direct'
+  # changed: schema v2.1, redemption time (raised in review)
+  evidence: 'The ISO8601 date in UTC indicating when the ticket was used at the attraction.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['voucher.deliveryOptions[].deliveryFormat']
+  # type: string
+  target: 'fulfilment[kind=voucher].format'
+  kind: 'transform'
+  transform: 'enum_map(PDF_URL=pdf_url, QRCODE=qrcode)'
+  evidence: 'The format for the delivery option possible values are: `QRCODE` You should generate the QR Code yourself on a ticket. `PDF_URL` Where you use the generated tickets as a PDF.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['voucher.deliveryOptions[].deliveryValue']
+  # type: string
+  target: 'fulfilment[kind=voucher].value'
+  kind: 'direct'
+  evidence: 'The format for the delivery option possible values are: `QRCODE` You should generate the QR Code yourself on a ticket. `PDF_URL` Where you use the generated tickets as a PDF.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].uuid']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'The id of the unit, this will be unique to the option.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].resellerReference']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'A reference the reseller uses to identify the unit within all bookings.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].supplierReference']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'A reference the supplier uses to identify the unit within all bookings.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].unitId']
+  # type: string
+  target: 'travellers[].traveller_type'
+  kind: 'derived'
+  transform: 'unit_type_of(unitId, option.units[])'
+  evidence: '[no description; example: youth_f6446706-885a-437c-8461-efd6d7080910]'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].status']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'The status of the booking, possible values are: `ON_HOLD` The booking is pending confirmation, this is the default value when you first create the booking. `EXPIRED` If the booking is not confirmed before the expiration hold expires, it goes into an expired state. `CONFIRMED` Once the confirmation call is made the booking is ready to be used. `CANCELLED` If the booking is cancelled. `PENDING` If the booking is pending outside availability confirmation. `REDEEMED` If the booking is already redeemed.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].utcRedeemedAt']
+  # type: string|null
+  target: 'fulfilment[kind=ticket].redeemed_at'
+  kind: 'direct'
+  # changed: schema v2.1, redemption time (raised in review)
+  evidence: 'The ISO8601 date in UTC indicating when the ticket was used at the attraction.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].contact.fullName']
+  # type: string|null
+  target: 'travellers[].full_name'
+  kind: 'direct'
+  evidence: 'The full name of the booking holder or the ticket holder. Can also be retrieved as an alias for the concatenation of `firstName` and `lastName`'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].contact.firstName']
+  # type: string|null
+  target: 'travellers[].given_name'
+  kind: 'direct'
+  evidence: 'The first name of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].contact.lastName']
+  # type: string|null
+  target: 'travellers[].family_name'
+  kind: 'direct'
+  evidence: 'The last name of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].contact.emailAddress']
+  # type: string|null/email
+  target: 'NONE'
+  kind: ''
+  evidence: 'The email address of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].contact.phoneNumber']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'The phone number of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].contact.locales[]']
+  # type: array
+  target: 'NONE'
+  kind: ''
+  evidence: 'An array of locale values, equivalent to navigator.languages in a browsers environment.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].contact.postalCode']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'The PO Box of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].contact.country']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'The country of the booking holder or the ticket holder.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].contact.notes']
+  # type: string|null
+  target: 'NONE'
+  kind: ''
+  evidence: 'Optional notes for the booking.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].ticket.redemptionMethod']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: 'How the voucher can be redeemed. Possible values are: `MANIFEST` The guest name will be written down and they just need to show up `DIGITAL` The tickets/voucher must be scanned but can be on mobile `PRINT` The tickets/voucher must be printed and presented on arrival'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].ticket.utcRedeemedAt']
+  # type: string|null
+  target: 'fulfilment[kind=ticket].redeemed_at'
+  kind: 'direct'
+  # changed: schema v2.1, redemption time (raised in review)
+  evidence: 'The ISO8601 date in UTC indicating when the ticket was used at the attraction.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].ticket.deliveryOptions[].deliveryFormat']
+  # type: string
+  target: 'fulfilment[kind=ticket].format'
+  kind: 'transform'
+  transform: 'enum_map(PDF_URL=pdf_url, QRCODE=qrcode)'
+  evidence: 'The format for the delivery option possible values are: `QRCODE` You should generate the QR Code yourself on a ticket. `PDF_URL` Where you use the generated tickets as a PDF.'
+
+- source:
+    endpoint: 'GET /bookings/{uuid}'
+    direction: response
+    paths: ['unitItems[].ticket.deliveryOptions[].deliveryValue']
+  # type: string
+  target: 'fulfilment[kind=ticket].value'
+  kind: 'direct'
+  evidence: 'The format for the delivery option possible values are: `QRCODE` You should generate the QR Code yourself on a ticket. `PDF_URL` Where you use the generated tickets as a PDF.'
