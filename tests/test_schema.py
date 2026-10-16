@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from padan.schema import Booking, CustomField, Money, Traveller
+from padan.schema import Booking, Contact, CustomField, Fulfilment, Money, Traveller
 
 
 def valid_booking(**overrides: Any) -> dict[str, Any]:
@@ -164,3 +164,59 @@ def test_booking_level_custom_field_and_slot_are_kept() -> None:
     assert booking.custom_fields[0].field_id == "PICKUP_LOCATION"
     assert booking.activity is not None
     assert booking.activity.slot_id == "inv-123"
+
+
+# --- Schema v2: fulfilment, hold, net price, split contact ---------------------------------
+
+
+def test_fulfilment_keeps_qr_codes_and_urls_apart() -> None:
+    booking = Booking.model_validate(
+        valid_booking(
+            fulfilment=[
+                {"kind": "voucher", "format": "pdf_url", "value": "https://x.test/v.pdf"},
+                {"kind": "ticket", "format": "qrcode", "value": "!1|El3f0w", "partner_id": "t-1"},
+            ]
+        )
+    )
+    assert [f.format for f in booking.fulfilment] == ["pdf_url", "qrcode"]
+
+
+def test_fulfilment_rejects_unknown_kind() -> None:
+    with pytest.raises(ValidationError):
+        Fulfilment.model_validate({"kind": "passport", "format": "text", "value": "X1"})
+
+
+def test_on_hold_booking_keeps_its_expiry() -> None:
+    booking = Booking.model_validate(
+        valid_booking(status="on_hold", hold_expires_at="2026-11-01T10:00:00Z")
+    )
+    assert booking.status == "on_hold"
+    assert booking.hold_expires_at is not None
+
+
+def test_gross_and_net_price_are_separate() -> None:
+    booking = Booking.model_validate(
+        valid_booking(
+            total_price={"amount": "120.00", "currency": "USD"},
+            net_price={"amount": "100.00", "currency": "USD"},
+        )
+    )
+    assert booking.total_price is not None and booking.net_price is not None
+    assert booking.total_price.amount - booking.net_price.amount == Decimal("20.00")
+
+
+def test_contact_name_can_be_split() -> None:
+    contact = Contact.model_validate({"given_name": "Ana", "family_name": "Lim"})
+    assert contact.full_name is None
+
+
+def test_nationality_must_be_alpha_2() -> None:
+    with pytest.raises(ValidationError):
+        Traveller.model_validate({"given_name": "Ana", "is_lead": True, "nationality": "IDN"})
+
+
+def test_new_critical_fields_are_marked() -> None:
+    for name in ("net_price", "hold_expires_at", "fulfilment"):
+        extra = Booking.model_fields[name].json_schema_extra
+        assert isinstance(extra, dict)
+        assert extra["critical"] is True, name

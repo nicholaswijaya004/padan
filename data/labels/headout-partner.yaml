@@ -146,8 +146,10 @@
     direction: request
     paths: ['price.amount']
   # type: number/double
-  target: 'total_price.amount'
-  kind: 'direct'
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'net_price.amount'
+  question: 'Is this the amount Headout charges us (net) or the customer retail price (gross)?'
   evidence: 'Total price amount for all customers combined.'
 
 - source:
@@ -155,8 +157,10 @@
     direction: request
     paths: ['price.currencyCode']
   # type: string
-  target: 'total_price.currency'
-  kind: 'direct'
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'net_price.currency'
+  question: 'Is this the amount Headout charges us (net) or the customer retail price (gross)?'
   evidence: 'Currency code matching the currency used when fetching inventory pricing. See [Currency Codes](/guide/enums-and-error-codes#currency-codes).'
 
 # ---------------- V2Booking (response)
@@ -203,7 +207,7 @@
   # type: string
   target: 'status'
   kind: 'transform'
-  transform: 'enum_map(UNCAPTURED=pending, PENDING=confirmed, COMPLETED=confirmed, CANCELLED=cancelled, FAILED=failed, CAPTURE_TIMEDOUT=failed)'
+  transform: 'enum_map(UNCAPTURED=on_hold, PENDING=confirmed, COMPLETED=confirmed, CANCELLED=cancelled, FAILED=failed, CAPTURE_TIMEDOUT=failed)'
   evidence: "Current lifecycle state of the booking. See [Booking Status](/guide/enums-and-error-codes#booking-status).\n- `UNCAPTURED`: Created but not yet captured. Does not lock inventory or price. Auto-expires to `CAPTURE_TIMEDOUT` after 1 hour.\n- `PENDING`: Payment captured — confirmed with supplier. Treat as confirmed; show to the customer as a confirmed booking.\n- `COMPLETED`: Fulfilled — tickets are available in the `tickets` array.\n- `CANCELLED`: Cancelled by partner, customer, or Headout.\n- `FAILED`: Booking failed due to a payment or system error.\n- `CAPTURE_TIMEDOUT`: Not captured within 1 hour of creation; can no longer be captured."
 
 - source:
@@ -414,8 +418,10 @@
     direction: response
     paths: ['bookingPrice.amount']
   # type: number/double
-  target: 'total_price.amount'
-  kind: 'direct'
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'net_price.amount'
+  question: 'Is this the amount Headout charges us (net) or the customer retail price (gross)?'
   evidence: 'Total price amount for all customers combined, in the client currency.'
 
 - source:
@@ -423,8 +429,10 @@
     direction: response
     paths: ['bookingPrice.currencyCode']
   # type: string
-  target: 'total_price.currency'
-  kind: 'direct'
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'net_price.currency'
+  question: 'Is this the amount Headout charges us (net) or the customer retail price (gross)?'
   evidence: 'Client currency code for the amount. See [Currency Codes](/guide/enums-and-error-codes#currency-codes).'
 
 - source:
@@ -432,8 +440,9 @@
     direction: response
     paths: ['voucherUrl']
   # type: string
-  target: 'activity.voucher_url'
-  kind: 'direct'
+  target: 'fulfilment[kind=voucher].value'
+  kind: 'transform'
+  transform: 'fulfilment(kind=voucher, format=pdf_url)'
   evidence: 'URL to the booking voucher PDF. Available once the booking reaches `PENDING` or `COMPLETED` status.'
 
 - source:
@@ -441,8 +450,8 @@
     direction: response
     paths: ['tickets[].publicId']
   # type: string
-  target: 'NONE'
-  kind: ''
+  target: 'fulfilment[kind=ticket].partner_id'
+  kind: 'direct'
   evidence: 'Unique identifier for this ticket, usable for support and lookup.'
 
 - source:
@@ -450,8 +459,8 @@
     direction: response
     paths: ['tickets[].url']
   # type: string|null
-  target: 'NONE'
-  kind: ''
+  target: 'fulfilment[kind=ticket].value'
+  kind: 'direct'
   evidence: 'URL for the ticket. For `PDF_URL`, `HTML_URL`, `APPLE_WALLET_URL` and `GOOGLE_WALLET_URL`, the ticket file or page. For `QRCODE` and `BARCODE`, a JPEG image of the scannable code that can be shown to the customer as is. Null for `TEXT`, which has no image; the code is available only as `ticketCode` from the [Voucher API](/api-partner/v2/vouchers/understanding-the-response#tickets).'
 
 - source:
@@ -459,8 +468,9 @@
     direction: response
     paths: ['tickets[].type']
   # type: string
-  target: 'NONE'
-  kind: ''
+  target: 'fulfilment[kind=ticket].format'
+  kind: 'transform'
+  transform: 'enum_map(PDF_URL=pdf_url, HTML_URL=html_url, APPLE_WALLET_URL=wallet_url, GOOGLE_WALLET_URL=wallet_url, QRCODE=qrcode, BARCODE=barcode, TEXT=text)'
   evidence: 'Ticket delivery format.'
 
 - source:
@@ -507,4 +517,14 @@
   target: 'booked_at'
   kind: 'transform'
   transform: 'unix_seconds_to_datetime'
+  evidence: 'Unix epoch timestamp (seconds) when this booking was first created.'
+
+- source:
+    endpoint: 'GET /api/public/v2/bookings/{bookingId}/'
+    direction: response
+    paths: ['creationTimestamp']
+  # type: integer/int64
+  target: 'hold_expires_at'
+  kind: 'derived'
+  transform: 'unix_seconds_to_datetime(+1h) while status=UNCAPTURED'
   evidence: 'Unix epoch timestamp (seconds) when this booking was first created.'
