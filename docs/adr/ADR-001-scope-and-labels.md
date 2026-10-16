@@ -163,3 +163,17 @@ Accordingly:
   cancellation and availability need their own schemas and are out of phase 1.
 - **The sealed-draft comparison continues for every spec.** It changed 11 of 45 Headout labels (24%).
   Re-checked after 3 specs: below about 10% changes, it continues for dev specs only.
+
+## Amendment 3 — 2026-10-16: HX replaces Widgety in dev
+
+Widgety's public documentation (Cruises API v2, "Fields Explained") covers only content requests
+(cruise search, fare sets, port visits); its booking endpoints need a test key. Under Amendment 2's
+booking-only scope it cannot teach the rules anything about cruise bookings. HX SWOTA documents
+storing and retrieving bookings publicly (OpenTravel messages).
+
+- `hx-swota` moves to dev, with `opentravel-cruise-xsd` (same family).
+- `widgety-cruise-v2` moves to test. It has no booking endpoints, so it is labelled on all documented
+  fields; most are expected to be `NONE`, which measures over-mapping on a content API.
+- HX labelling scope: "Storing a Booking" and "Retrieving Bookings".
+- HX partner terms restrict copying the API or API data (cl. 2.6): raw HX pages are never committed,
+  only their hashes.
