@@ -5,10 +5,11 @@ import json
 from enum import Enum
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 import httpx
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 EXTENSIONS = {"openapi": "yaml", "html": "html", "pdf": "pdf"}
 
@@ -23,6 +24,11 @@ class NotASpecError(ValueError):
     """The downloaded bytes are not a spec of the expected format."""
 
 
+def page_name(url: str) -> str:
+    """File name a page is saved under: the last segment of the URL path (query ignored)."""
+    return urlsplit(url).path.rsplit("/", 1)[-1]
+
+
 class SpecEntry(BaseModel):
     """One manifest entry: only the fields the fetcher needs."""
 
@@ -30,7 +36,21 @@ class SpecEntry(BaseModel):
     url: str | None
     format: str | None
     usable: Literal["yes", "no", "unknown"]
-    method: str | None = None
+    method: Literal["direct", "pages"] | None = None
+    urls: list[str] = []
+
+    @model_validator(mode="after")
+    def pages_are_consistent(self) -> "SpecEntry":
+        if self.method == "pages" and not self.urls:
+            raise ValueError(f"{self.id}: method 'pages' needs urls")
+        if self.urls and self.method != "pages":
+            raise ValueError(f"{self.id}: urls given but method is {self.method!r}")
+        names = [page_name(url) for url in self.urls]
+        if "" in names:
+            raise ValueError(f"{self.id}: a page URL has no file name")
+        if len(set(names)) != len(names):
+            raise ValueError(f"{self.id}: page file names are not unique")
+        return self
 
 
 def sha256_hex(data: bytes) -> str:
@@ -93,29 +113,52 @@ def load_manifest(path: Path) -> list[SpecEntry]:
     return [SpecEntry.model_validate(entry) for entry in raw]
 
 
-def fetch_one(
-    entry: SpecEntry, client: httpx.Client, lock: dict[str, str], raw_dir: Path
+def fetch_file(
+    key: str, url: str, fmt: str, client: httpx.Client, lock: dict[str, str], path: Path
 ) -> FetchOutcome:
-    """Download one spec, verify it, and compare its hash with the lock.
+    """Download one file, verify it, and compare its hash with lock[key].
 
     Saves the file on NEW or UNCHANGED; records the hash only on NEW;
     on CHANGED leaves both the file and the lock untouched.
     """
+    data = download(url, client)
+    check_looks_like_spec(data, fmt)
+    digest = sha256_hex(data)
+    decision = decide(key, digest, lock)
+
+    if decision in (FetchOutcome.NEW, FetchOutcome.UNCHANGED):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    if decision == FetchOutcome.NEW:
+        lock[key] = digest
+    return decision
+
+
+def fetch_one(
+    entry: SpecEntry, client: httpx.Client, lock: dict[str, str], raw_dir: Path
+) -> FetchOutcome:
+    """Fetch a single-file spec (method: direct) to raw_dir/<id>.<ext>, locked under its id."""
     if entry.url is None or entry.format is None:
         raise ValueError(f"{entry.id}: no url or format in the manifest")
 
-    data = download(entry.url, client)
-    check_looks_like_spec(data, entry.format)
-    digest = sha256_hex(data)
-    decision = decide(entry.id, digest, lock)
-    if decision in (FetchOutcome.NEW, FetchOutcome.UNCHANGED):
-        raw_dir.mkdir(parents=True, exist_ok=True)
-        (raw_dir / f"{entry.id}.{EXTENSIONS[entry.format]}").write_bytes(data)
-    if decision == FetchOutcome.NEW:
-        lock[entry.id] = digest
-    return decision
-    # CHANGED: do nothing
-    return decision
+    path = raw_dir / f"{entry.id}.{EXTENSIONS[entry.format]}"
+    return fetch_file(entry.id, entry.url, entry.format, client, lock, path)
+
+
+def fetch_pages(
+    entry: SpecEntry, client: httpx.Client, lock: dict[str, str], raw_dir: Path
+) -> dict[str, FetchOutcome]:
+    """Fetch a multi-page spec (method: pages) to raw_dir/<id>/<page>, locked per page."""
+    if entry.format is None:
+        raise ValueError(f"{entry.id}: no format in the manifest")
+
+    outcomes: dict[str, FetchOutcome] = {}
+    for url in entry.urls:
+        name = page_name(url)
+        key = f"{entry.id}/{name}"
+        path = raw_dir / entry.id / name
+        outcomes[key] = fetch_file(key, url, entry.format, client, lock, path)
+    return outcomes
 
 
 MANIFEST = Path("data/manifest.yaml")
@@ -124,24 +167,28 @@ RAW_DIR = Path("data/raw")
 
 
 def main() -> int:
-    """Fetch every usable direct-download spec; return 0 if all verified, 1 otherwise."""
+    """Fetch every usable spec that has a method; return 0 if all verified, 1 otherwise."""
     entries = load_manifest(MANIFEST)
     lock: dict[str, str] = json.loads(LOCK.read_text()) if LOCK.exists() else {}
     failures: list[str] = []
 
     with httpx.Client(timeout=30.0, follow_redirects=True) as client:
         for entry in entries:
-            if entry.usable != "yes" or entry.method != "direct":
+            if entry.usable != "yes" or entry.method is None:
                 continue
             try:
-                outcome = fetch_one(entry, client, lock, RAW_DIR)
+                if entry.method == "pages":
+                    outcomes = fetch_pages(entry, client, lock, RAW_DIR)
+                else:
+                    outcomes = {entry.id: fetch_one(entry, client, lock, RAW_DIR)}
             except (httpx.HTTPError, NotASpecError, ValueError) as e:
                 print(f"FAIL  {entry.id}: {e}")
                 failures.append(entry.id)
                 continue
-            print(f"{outcome.value:9} {entry.id}")
-            if outcome == FetchOutcome.CHANGED:
-                failures.append(entry.id)
+            for key, outcome in outcomes.items():
+                print(f"{outcome.value:9} {key}")
+                if outcome == FetchOutcome.CHANGED:
+                    failures.append(key)
 
     LOCK.write_text(json.dumps(lock, indent=2, sort_keys=True) + "\n")
     print(f"{len(failures)} problem(s)")
