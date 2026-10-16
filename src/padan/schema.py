@@ -1,4 +1,4 @@
-"""Canonical booking schema v2: the target every partner field maps onto (ADR-001)."""
+"""Canonical booking schema v2.1: the target every partner field maps onto (ADR-001)."""
 
 from datetime import date, datetime, time
 from decimal import Decimal
@@ -47,6 +47,10 @@ class Fulfilment(BaseModel):
     )
     value: str = meta("The URL, or the code itself (QR payload, barcode, text code).")
     partner_id: str | None = meta("Partner's identifier for this document, if any.", default=None)
+    redeemed_at: datetime | None = meta(
+        "When this voucher or ticket was used at the venue, if the partner reports it.",
+        default=None,
+    )
 
 
 class Traveller(BaseModel):
@@ -127,6 +131,10 @@ class Booking(BaseModel):
         "When an on_hold booking expires if not confirmed.", default=None, critical=True
     )
     booked_at: datetime | None = meta("When the partner created the booking.", default=None)
+    redeemed_at: datetime | None = meta(
+        "When the booking was used at the venue, if the partner reports it (support, refunds).",
+        default=None,
+    )
     product_id: str | None = meta("Partner's product (or sailing) identifier.", default=None)
     product_name: str | None = meta("Display name of the product.", default=None)
     start_date: date = meta("Local start date of the experience or sailing.", critical=True)
