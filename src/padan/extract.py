@@ -82,7 +82,7 @@ def walk(
     """
     leaves: list[tuple[str, Node]] = []
     for name, raw in properties(node, schemas).items():
-        path = f"{prefix}.{name}" if prefix else f"{name}"
+        path = f"{prefix}.{name}" if prefix else name
         resolved = resolve(raw, schemas)
         is_array = "array" in types_of(resolved)
         child = resolved.get("items", {}) if is_array else raw
@@ -115,26 +115,45 @@ def type_label(raw: Node, schemas: dict[str, Node]) -> str:
     return label + (f"/{node['format']}" if "format" in node else "")
 
 
-def evidence_of(raw: Node, schemas: dict[str, Node]) -> str:
-    """The description, whitespace collapsed; the example when there is none."""
+def example_at(example: Any, path: str) -> Any:
+    """The value at `path` in an example body; for `name[]`, the first element. None if absent."""
+    value = example
+    for part in path.split("."):
+        is_list = part.endswith("[]")
+        name = part[:-2] if is_list else part
+        if not isinstance(value, dict) or name not in value:
+            return None
+        value = value[name]
+        if is_list:
+            if not isinstance(value, list) or not value:
+                return None
+            value = value[0]
+    return value
+
+
+def evidence_of(raw: Node, schemas: dict[str, Node], body_example: Any = None) -> str:
+    """The description, whitespace collapsed; else the field's own example; else its value in the
+    operation's example body (`body_example`, already looked up at this field's path)."""
     node = resolve(raw, schemas)
     text = str(raw.get("description") or node.get("description") or "")
     if text.strip():
         return " ".join(text.split())
     example = raw.get("example", node.get("example"))
-    return f"[no description; example: {example}]" if example else "[no description]"
+    if example is None:
+        example = body_example
+    return f"[no description; example: {example}]" if example is not None else "[no description]"
 
 
-def operation_schema(spec: Node, endpoint: str, direction: str) -> Node:
-    """The JSON request body (request) or 200 response (response) schema of `METHOD /path`."""
+def operation_content(spec: Node, endpoint: str, direction: str) -> Node:
+    """The JSON media object (schema + example) of a request body or a 200 response."""
     method, path = endpoint.split(" ", 1)
     operation = spec["paths"][path][method.lower()]
     if direction == "request":
         content = operation["requestBody"]["content"]
     else:
         content = operation["responses"]["200"]["content"]
-    schema: Node = content["application/json"]["schema"]
-    return schema
+    media: Node = content["application/json"]
+    return media
 
 
 def extract(spec: Node, scope: list[str], exclude: list[str]) -> list[ExtractedField]:
@@ -144,7 +163,8 @@ def extract(spec: Node, scope: list[str], exclude: list[str]) -> list[ExtractedF
     for item in scope:
         method, path, direction = item.split(" ")
         endpoint = f"{method} {path}"
-        for leaf, raw in walk(operation_schema(spec, endpoint, direction), schemas):
+        media = operation_content(spec, endpoint, direction)
+        for leaf, raw in walk(media["schema"], schemas):
             if any(leaf.startswith(prefix) for prefix in exclude):
                 continue
             fields.append(
@@ -153,7 +173,7 @@ def extract(spec: Node, scope: list[str], exclude: list[str]) -> list[ExtractedF
                     direction="request" if direction == "request" else "response",
                     path=leaf,
                     type=type_label(raw, schemas),
-                    evidence=evidence_of(raw, schemas),
+                    evidence=evidence_of(raw, schemas, example_at(media.get("example"), leaf)),
                 )
             )
     return fields
