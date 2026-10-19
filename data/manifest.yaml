@@ -276,11 +276,15 @@
   terms: 'HX partner T&C (https://docs.partner.travelhx.com/terms-and-conditions.html): confidentiality, no copying/adapting the API or API Data (cl. 2.6); written for API partners. Docs themselves are public'
   likely_in_training_data: unknown
   usable: 'yes'
-  notes: 'Verified 2026-10-13 (headless browser + direct download). Public HTML guide per message (sail/fare/cabin availability, booking, cancellation, payments) plus an XSD schema catalogue page listing OTA_*.xsd; whether the XSD files themselves download is unchecked. OTA XML with Versonix extensions'
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Public HTML guide per message (sail/fare/cabin availability, booking, cancellation, payments) plus an XSD schema catalogue page listing OTA_*.xsd; whether the XSD files themselves download is unchecked. OTA XML with Versonix extensions. Fields come from XML examples only; the get-response example is mostly [..] placeholders, so the create response (OTA_CruiseBookRS) is in scope too'
   method: pages
   urls:
     - https://docs.partner.travelhx.com/HX/swota/development/messages/storing-booking.html
     - https://docs.partner.travelhx.com/HX/swota/development/messages/retrieving.html
+  scope:
+    - OTA_CruiseBookRQ request
+    - OTA_CruiseBookRS response
+    - OTA_ResRetrieveRS response
 
 - id: opentravel-cruise-xsd
   provider: OpenTravel Alliance

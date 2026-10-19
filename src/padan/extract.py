@@ -4,13 +4,20 @@ The core walk (`resolve`, `properties`, `walk`) turns one JSON Schema into leaf 
 picks the schemas the manifest puts in scope and renders the label scaffold.
 """
 
+import html
 import json
+import re
 import sys
+from collections import Counter
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from pathlib import Path
 from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel
+
+from padan.fetch import page_name
 
 Node = dict[str, Any]
 
@@ -31,6 +38,7 @@ class ScopedSpec(BaseModel):
     """The manifest keys extraction needs; other keys are ignored."""
 
     id: str
+    urls: list[str] = []
     scope: list[str] = []
     exclude: list[str] = []
 
@@ -210,6 +218,135 @@ def write_scaffold(spec_id: str, fields: list[ExtractedField]) -> str:
     return "\n".join(lines).rstrip("\n") + "\n"
 
 
+# --- XML examples in HTML pages (e.g. HX / OpenTravel) -----------------------------------------
+
+
+@dataclass
+class XmlElement:
+    """A parsed XML element: namespace prefixes dropped, xmlns attributes ignored."""
+
+    name: str
+    attrs: dict[str, str]
+    children: list["XmlElement"] = dataclass_field(default_factory=list)
+    text: str = ""
+
+
+@dataclass
+class XmlBlock:
+    """One XML example on a page, with the endpoint named by the nearest `POST https://...` line."""
+
+    endpoint: str | None
+    root: XmlElement
+
+
+CODE_BLOCK = re.compile(r"<code([^>]*)>(.*?)</code>", re.S)
+REQUEST_LINE = re.compile(r"(GET|POST|PUT|PATCH|DELETE)\s+https?://[^/\s]+(\S+)")
+XML_TOKEN = re.compile(
+    r"<(/?)([A-Za-z_][\w:.-]*)((?:\s+[\w:.-]+\s*=\s*\"[^\"]*\")*)\s*(/?)>|([^<]+)"
+)
+XML_ATTR = re.compile(r"([\w:.-]+)\s*=\s*\"([^\"]*)\"")
+PLACEHOLDER = "[.."
+
+
+def local_name(name: str) -> str:
+    """`vx:ReservationID` → `ReservationID`."""
+    return name.rsplit(":", 1)[-1]
+
+
+def parse_xml(text: str) -> XmlElement:
+    """Parse an XML example tolerantly and return its root element.
+
+    Documentation examples are not always well-formed: a `[..]` placeholder can swallow a closing
+    tag. Repair rule: when an element closes, any child still open inside it closes too.
+    """
+    top = XmlElement("#document", {})
+    stack = [top]
+    for match in XML_TOKEN.finditer(text):
+        closing, name, attrs, self_closing, chars = match.groups()
+        if chars is not None:
+            stack[-1].text += chars
+            continue
+        name = local_name(name)
+        if closing:
+            if any(open_el.name == name for open_el in stack[1:]):
+                while stack[-1].name != name:
+                    stack.pop()
+                stack.pop()
+            continue
+        element = XmlElement(
+            name, {k: v for k, v in XML_ATTR.findall(attrs) if not k.startswith("xmlns")}
+        )
+        stack[-1].children.append(element)
+        if not self_closing:
+            stack.append(element)
+    if len(top.children) != 1:
+        raise ValueError(f"expected one root element, found {len(top.children)}")
+    return top.children[0]
+
+
+def xml_blocks(page: str) -> list[XmlBlock]:
+    """Every `lang-xml` code block on an HTML page, in order."""
+    endpoint = None
+    blocks: list[XmlBlock] = []
+    for match in CODE_BLOCK.finditer(page):
+        text = html.unescape(match.group(2)).strip()
+        request = REQUEST_LINE.match(text)
+        if request:
+            endpoint = f"{request.group(1)} {request.group(2)}"
+        elif "lang-xml" in match.group(1) and text.startswith("<"):
+            blocks.append(XmlBlock(endpoint, parse_xml(text)))
+    return blocks
+
+
+def xml_leaves(element: XmlElement, prefix: str = "") -> list[tuple[str, str]]:
+    """Every attribute (`path@Name`) and leaf text (`path`) under `element`, with its value.
+
+    Repeated child names add `[]`; a path seen twice keeps its first value; placeholder text
+    (starting with "[..") is skipped.
+    """
+    rows = [(f"{prefix}@{name}", value) for name, value in element.attrs.items()]
+    text = element.text.strip()
+    if text and not element.children and not text.startswith(PLACEHOLDER):
+        rows.append((prefix, text))
+    counts = Counter(child.name for child in element.children)
+    seen: set[str] = set()
+    for child in element.children:
+        path = f"{prefix}.{child.name}" if prefix else child.name
+        if counts[child.name] > 1:
+            path += "[]"
+        for row in xml_leaves(child, path):
+            if row[0] not in seen:
+                rows.append(row)
+                seen.add(row[0])
+    return rows
+
+
+def extract_pages(pages: list[str], scope: list[str], exclude: list[str]) -> list[ExtractedField]:
+    """Fields of the XML examples whose root the scope names, e.g. "OTA_CruiseBookRS response"."""
+    blocks = [block for page in pages for block in xml_blocks(page)]
+    fields: list[ExtractedField] = []
+    for item in scope:
+        root_name, direction = item.split(" ")
+        matches = [block for block in blocks if block.root.name == root_name]
+        if len(matches) != 1:
+            raise ValueError(f"{root_name}: expected one example, found {len(matches)}")
+        block = matches[0]
+        endpoint = block.endpoint or root_name
+        for path, value in xml_leaves(block.root):
+            if any(path.startswith(prefix) for prefix in exclude):
+                continue
+            fields.append(
+                ExtractedField(
+                    endpoint=endpoint,
+                    direction="request" if direction == "request" else "response",
+                    path=path,
+                    type="xml attribute" if "@" in path else "xml text",
+                    evidence=f"[no description; example: {value}]",
+                )
+            )
+    return fields
+
+
 MANIFEST = Path("data/manifest.yaml")
 RAW_DIR = Path("data/raw")
 SCAFFOLD_DIR = Path("data/scaffolds")
@@ -238,7 +375,11 @@ def main(argv: list[str]) -> int:
     if not entry.scope:
         print(f"{entry.id}: no scope in the manifest")
         return 1
-    fields = extract(load_spec(RAW_DIR / f"{entry.id}.yaml"), entry.scope, entry.exclude)
+    if entry.urls:
+        pages = [(RAW_DIR / entry.id / page_name(url)).read_text() for url in entry.urls]
+        fields = extract_pages(pages, entry.scope, entry.exclude)
+    else:
+        fields = extract(load_spec(RAW_DIR / f"{entry.id}.yaml"), entry.scope, entry.exclude)
     SCAFFOLD_DIR.mkdir(parents=True, exist_ok=True)
     out = SCAFFOLD_DIR / f"{entry.id}.yaml"
     out.write_text(write_scaffold(entry.id, fields))

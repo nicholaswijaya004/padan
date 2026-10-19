@@ -8,6 +8,7 @@ import pytest
 from padan.extract import (
     ExtractedField,
     evidence_of,
+    example_at,
     extract,
     load_scoped,
     load_spec,
@@ -186,9 +187,64 @@ def test_scaffold_quotes_and_leaves_target_blank() -> None:
     assert "target: ''" in text
 
 
+# --- example bodies (Hotelbeds: no descriptions, one example per operation) -------------------
+
+BODY = {
+    "holder": {"name": "Ana", "zipCode": "07198", "telephones": ["123", "456"]},
+    "activities": [{"from": "2016-07-01", "paxes": [{"type": "ADULT"}, {"type": "CHILD"}]}],
+}
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("holder.zipCode", "07198"),
+        ("holder.telephones[]", "123"),
+        ("activities[].paxes[].type", "ADULT"),
+        ("holder.fax", None),
+        ("holder.name[]", None),
+    ],
+)
+def test_example_at(path: str, expected: Any) -> None:
+    assert example_at(BODY, path) == expected
+
+
+def test_example_at_without_a_body() -> None:
+    assert example_at(None, "holder.name") is None
+
+
+def test_evidence_prefers_description_then_field_example_then_body() -> None:
+    assert evidence_of({"description": "Zip."}, {}, "07198") == "Zip."
+    assert evidence_of({"example": "1"}, {}, "07198") == "[no description; example: 1]"
+    assert evidence_of({}, {}, "07198") == "[no description; example: 07198]"
+
+
+def test_extract_takes_evidence_from_the_operation_example() -> None:
+    spec = {
+        "paths": {
+            "/bookings": {
+                "put": {
+                    "requestBody": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {"holder": {"properties": {"zipCode": {}}}}
+                                },
+                                "example": BODY,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    [field] = extract(spec, ["PUT /bookings request"], [])
+    assert field.evidence == "[no description; example: 07198]"
+
+
 # --- real gold files (needs data/raw/, so skipped in CI) ---------------------------------------
 
-SCOPED = ["headout-partner", "octo-core"]
+SCOPED = ["headout-partner", "octo-core", "hotelbeds-activities"]
 
 
 @pytest.mark.parametrize("spec_id", SCOPED)
