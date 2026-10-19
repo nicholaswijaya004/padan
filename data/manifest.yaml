@@ -25,6 +25,11 @@
   usable: 'yes'
   notes: 'Verified 2026-10-13 (git clone): single-file OpenAPI 3.1.0, ~1 MB, 1,818 description fields; last commit 2023-07-28. Reference spec for the OCTO family; implementations count toward the same family'
   method: direct
+  scope:
+    - POST /bookings request
+    - POST /bookings/{uuid}/confirm request
+    - GET /bookings/{uuid} response
+  exclude: ['product.', 'option.', 'unitItems[].unit.']
 
 - id: octo-zaui
   provider: Zaui
@@ -152,6 +157,9 @@
   usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML, 134 KB. Also openapi-v1, openapi-v2-affiliate and openapi-v2-common (listed in /docs/llms.txt). Upstream changed 2026-10-16: one description in V2Voucher.ticketSection, outside the labelled endpoints; accepted after diff.'
   method: direct
+  scope:
+    - POST /api/public/v2/bookings/ request
+    - GET /api/public/v2/bookings/{bookingId}/ response
 
 - id: xola
   provider: Xola
