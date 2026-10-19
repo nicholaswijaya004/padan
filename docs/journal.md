@@ -414,3 +414,81 @@ not needed until the rule engine exists.
 Move the scaffold generator into the repo as Stage 1 extraction (deterministic, tested). Then label the
 remaining dev specs, Hotelbeds and HX, with the Amendment 4 method, timed with the blind sample. Then
 the scorer.
+
+## Day 5 — Stage 1 extraction, Hotelbeds, XML examples
+
+**Goal:** Turn the scaffold script into tested pipeline code (Stage 1 extraction) and finish the dev
+labels, so M1 needs only the scorer and the rule engine.
+
+### The assumptions that were wrong
+
+- **The project estimate, again.** The Day 1 "12 days" was copied from Loka, and Loka's own "12 days"
+  was an undercount: half of Loka happened outside Claude Code and it took more than a month. Today's
+  estimate (22–28 working days from Day 5) is built from components, but calibrated against my own
+  history it is the optimistic end. Estimates for projects that depend on outside data are worth little
+  before the first measurement.
+- **Hotelbeds would have response examples instead of schemas.** It has neither: its booking responses
+  are empty. Labels cover the booking request only.
+- **Documentation examples are valid XML.** HX's create-response example is not: a `[..]` placeholder
+  swallowed a closing tag, and a standard XML parser rejects it.
+
+### What cost me time
+
+- **ADP-25 merged with 2 of its 4 files** (no Hotelbeds labels, no new tests): the third incomplete PR
+  in two days. Restored in ADP-26. ADP-26 was the first multi-commit PR checked file by file before merge.
+- A `git switch main && git pull` that failed on local changes, while the next line still created the
+  new branch from the old one.
+- A second download with the same name saved as `… (1).yaml`, so a `cp` silently copied nothing.
+- Python syntax after months of Java: `Node` vs `node`, a type written as a statement, indexing a list
+  with a name.
+
+### Decisions
+
+| Decision                                                                                        | Why                                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Label scope (`scope`, `exclude`) lives in the manifest                                          | One source of truth for the extractor, the coverage check and the scorer                                |
+| `extract()` is pure; `write_scaffold()` only renders                                            | Extraction is tested on data; rendering is a detail                                                     |
+| Scaffolds are not committed (`data/scaffolds/` ignored)                                         | They are derived from the spec plus the code; two copies would drift                                    |
+| Fixture tests in CI, plus regression tests against the gold files (skipped without `data/raw/`) | The regression proves the extractor reproduces every gold field and evidence string                     |
+| Coverage counts a field split by filter as covered                                              | `inputFields[id=EMAIL].value` covers `inputFields[].value`; the check found that case on its first run  |
+| Stage 1 on OpenAPI is not reported as a score                                                   | Its gold field list came from this extractor, so it would be 100% by construction                       |
+| Evidence: description, else the field's example, else the operation's example body              | Hotelbeds has 0% descriptions; the example value (`ADULT`, `07198`) is the only evidence                |
+| Hotelbeds: request only                                                                         | Its booking responses have no schema and no example                                                     |
+| Multi-activity bookings: label the first (`activities[0]`), the rest is a gap                   | Precise with the existing path syntax; the `items[]` redesign needs its own block before test labelling |
+| Hotelbeds hand-labelled (all 21), then adjudicated against a sealed draft                       | Stronger than a model draft; `preferedLanguage` escalated as `ASK_PARTNER`                              |
+| HX scope includes the create response                                                           | The get-response example is mostly `[..]` placeholders                                                  |
+| Tolerant XML parser with one repair rule: when an element closes, children left open close too  | Real docs are malformed; the rule is tested and its side effect recorded                                |
+| Lists in XML only where the example repeats an element                                          | One example cannot tell more; the XSD would                                                             |
+
+### What I delegated, and what I decided
+
+I wrote the core of Stage 1: `resolve`, `properties` and `walk`, and `example_at`, with Claude's
+guidance and corrections. Claude wrote `xml_leaves` at my request, the plumbing around the core,
+the tolerant parser, all test files, the sealed Hotelbeds draft and the manifest changes. I labelled
+all 21 Hotelbeds fields by hand and decided the 8 disagreements with the draft.
+
+### Understood
+
+- **Walking a schema:** `$ref` pointers, `allOf` composition, arrays, and a `seen` set per branch so a
+  self-referencing schema expands once while two siblings pointing at the same schema both expand.
+- **Test-first with a reference implementation:** the tests were proven achievable before I wrote a line.
+- **Interview answer (`is_lead` rename):** valid targets are derived from the schema at import time, so
+  a rename makes every stale gold label fail validation and CI blocks the PR; silently stale labels
+  would corrupt F1. Known gap: names inside filters are not checked.
+- **Evidence-poor specs make hand labels less reliable:** 38% of my Hotelbeds labels changed after
+  comparison, against 24% on well-documented Headout.
+
+### Still open
+
+- HX labels (70 fields).
+- `items[]` (multi-item bookings): design before any test spec is labelled; Hotelbeds is dev evidence.
+- HX paths and lists come from one example; the OpenTravel XSD would give exact structure.
+- Stage 1 for HTML needs an independent gold field list before any extraction score is reported.
+- Log start and end times per block: today's were not recorded.
+- Carried: filter-field validation, `spec_sha256` in label files, duplicate-key YAML loader, transform
+  vocabulary, OCTO/Headout price gaps, second labeller, synthetic PDFs, Day 1 leftovers.
+
+### Tomorrow
+
+HX labels first (sealed draft, blind sample of 10, timed review), then the scorer: concept, decisions,
+code. M1 (rule engine measured on dev) is then the rule engine itself.
