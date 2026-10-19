@@ -168,3 +168,58 @@ known weakness; the headline number stays on human-only test labels.
 **Caveats:** one labeller; one reviewed dev spec so far, so the 7 s/entry and anchoring numbers come
 from a single spec. OCTO is well documented and likely in training data, so the draft may be better
 here than on Hotelbeds or HX.
+
+## Day 5
+
+**Goal:** Stage 1 extraction as tested code; dev labels for Hotelbeds; extraction from XML examples.
+
+### Stage 1 extraction (2026-10-19)
+
+| Spec                 | Source of fields                           | Fields in scope                                     | Matches gold labels                  |
+| -------------------- | ------------------------------------------ | --------------------------------------------------- | ------------------------------------ |
+| headout-partner      | OpenAPI schemas                            | 45                                                  | yes: every field and evidence string |
+| octo-core            | OpenAPI schemas (inline)                   | 90 (161 before catalogue exclusion)                 | yes                                  |
+| hotelbeds-activities | OpenAPI request schema + operation example | 21                                                  | yes                                  |
+| hx-swota             | XML examples in 2 HTML pages               | 70 (request 7, create response 50, get response 13) | labels tomorrow                      |
+
+### Spec quality found by extraction
+
+| Measure                                                  | Value                                                              |
+| -------------------------------------------------------- | ------------------------------------------------------------------ |
+| Hotelbeds booking operations with a documented response  | 0 of 10 (no schema, no example)                                    |
+| Hotelbeds fields whose evidence is only an example value | 21/21                                                              |
+| HX in-scope XML examples that are not well-formed        | 1 of 3 (`OTA_CruiseBookRS`)                                        |
+| HX get-response fields hidden behind `[..]` placeholders | most of the message (13 fields shown vs 50 in the create response) |
+
+### Hotelbeds labelling (dev, hand-labelled, adjudicated against a sealed draft)
+
+| Measure                           | Value                                                                                                          |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Entries                           | 21: 13 canonical, 7 `NONE`, 1 `ASK_PARTNER`                                                                    |
+| Agreement with the sealed draft   | 13/21 (62%); blind-sample subset 6/10                                                                          |
+| Labels changed after adjudication | 8/21 (38%): 2 slips (surname → given name), 2 joined names despite a separate surname field, 4 judgement calls |
+| Time                              | not measured                                                                                                   |
+
+**What it showed:** on an evidence-poor spec, hand labels without a second opinion change much more
+(38%) than on a well-documented one (Headout, 24%).
+
+### Gold set so far (dev)
+
+| Spec                 | Entries | Canonical | `NONE` | `ASK_PARTNER` | Method            |
+| -------------------- | ------- | --------- | ------ | ------------- | ----------------- |
+| headout-partner      | 56      | 39        | 12     | 5             | hand, reviewed    |
+| octo-core            | 92      | 46        | 46     | 0             | drafted, reviewed |
+| hotelbeds-activities | 21      | 13        | 7      | 1             | hand, adjudicated |
+| hx-swota             | —       | —         | —      | —             | tomorrow          |
+
+### Process
+
+| Measure           | Value                                        |
+| ----------------- | -------------------------------------------- |
+| PRs merged        | 3 (ADP-24 to ADP-26)                         |
+| Incomplete merges | 1 (ADP-25: 2 of 4 files; restored in ADP-26) |
+| Tests             | 88 → **129**                                 |
+| Block times       | not measured                                 |
+
+**Caveats:** HX field paths come from single examples (lists only detected where repeated, one
+repaired structure). Stage 1 extraction is not independently scored for OpenAPI.
