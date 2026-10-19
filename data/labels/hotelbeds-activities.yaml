@@ -1,0 +1,200 @@
+# Gold labels for hotelbeds-activities (dev spec), generated from the locked spec (sha256 a5e3a44e...).
+# Method: all 21 entries labelled by hand by Nicholas Daniel Wijaya, then compared with a sealed Claude
+# draft (sha256 ec2217c6...). 13/21 agreed; the 8 disagreements were adjudicated by Nicholas (all
+# resolved as in the draft; preferedLanguage escalated as ASK_PARTNER).
+# source + evidence are copied verbatim (deterministic extraction). Do not edit evidence.
+# Scope: booking confirm request (PUT /bookings). Booking responses are not documented in this spec.
+# A booking may hold several activities[]; labels map the first one (activities[0]); the rest are a gap.
+
+# ---------------- PUT /bookings (request)
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['language']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: en]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['clientReference']
+  # type: string
+  target: 'our_booking_id'
+  kind: 'direct'
+  evidence: '[no description; example: TestAgenciaXisco]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.name']
+  # type: string
+  target: 'contact.given_name'
+  kind: 'direct'
+  evidence: '[no description; example: TESTXisco]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.title']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Mr]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.email']
+  # type: string
+  target: 'contact.email'
+  kind: 'direct'
+  evidence: '[no description; example: x.bibiloni@hotelbeds.com]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.address']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Avenida de Cid]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.zipCode']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 07198]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.mailing']
+  # type: boolean
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: true]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.mailUpdDate']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 2014-06-06]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.country']
+  # type: string
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: ES]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.surname']
+  # type: string
+  target: 'contact.family_name'
+  kind: 'direct'
+  evidence: '[no description; example: BibiloniTest]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['holder.telephones[]']
+  # type: array
+  target: 'contact.phones[]'
+  kind: 'direct'
+  evidence: '[no description; example: 123456789]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['activities[0].preferedLanguage']
+  # type: string
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'activity.service_language'
+  question: 'What is the difference between preferedLanguage and serviceLanguage? Which one sets the language the activity is delivered in?'
+  evidence: '[no description; example: en]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['activities[0].serviceLanguage']
+  # type: string
+  target: 'activity.service_language'
+  kind: 'direct'
+  evidence: '[no description; example: en]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['activities[0].rateKey']
+  # type: string
+  target: 'activity.slot_id'
+  kind: 'direct'
+  evidence: '[no description; example: qceel3tq3nujin53vosiqpeaij]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['activities[0].from']
+  # type: string
+  target: 'start_date'
+  kind: 'direct'
+  evidence: '[no description; example: 2016-07-01]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['activities[0].to']
+  # type: string
+  target: 'end_date'
+  kind: 'direct'
+  evidence: '[no description; example: 2016-07-01]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['activities[0].paxes[].age']
+  # type: integer/int32
+  target: 'travellers[].age'
+  kind: 'direct'
+  evidence: '[no description; example: 30]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['activities[0].paxes[].name']
+  # type: string
+  target: 'travellers[].given_name'
+  kind: 'direct'
+  evidence: '[no description; example: XiscoTEst]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['activities[0].paxes[].type']
+  # type: string
+  target: 'travellers[].traveller_type'
+  kind: 'transform'
+  transform: 'enum_map(ADULT=adult, CHILD=child)'
+  evidence: '[no description; example: ADULT]'
+
+- source:
+    endpoint: 'PUT /bookings'
+    direction: request
+    paths: ['activities[0].paxes[].surname']
+  # type: string
+  target: 'travellers[].family_name'
+  kind: 'direct'
+  evidence: '[no description; example: TestBibiloni]'
