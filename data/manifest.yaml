@@ -201,8 +201,10 @@
   terms: No documentation licence found (only cookie/legal notes)
   likely_in_training_data: true
   usable: 'yes'
-  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.0.0 YAML, 47 KB, linked from the public api-reference page. Same provider as the held-out hotel spec (leak risk)'
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.0.0 YAML, 47 KB, linked from the public api-reference page. Same provider as the held-out hotel spec (leak risk). Booking responses are not documented (no schema, no example): labels cover the booking request only'
   method: direct
+  scope:
+    - PUT /bookings request
 
 - id: holibob
   provider: Holibob
