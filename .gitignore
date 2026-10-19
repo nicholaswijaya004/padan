@@ -25,3 +25,6 @@ data/raw/
 .vscode/
 .idea/
 .DS_Store
+
+# Generated label scaffolds (padan.extract); derived from data/raw + code
+data/scaffolds/

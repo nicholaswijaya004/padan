@@ -18,3 +18,6 @@ fmt:
 
 fetch:
 	uv run python -m padan.fetch
+
+scaffold:
+	uv run python -m padan.extract $(SPEC)
