@@ -9,6 +9,7 @@ import yaml
 from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
 from padan.schema import Booking
+from padan.transforms import parse_transform
 
 NONE = "NONE"
 ASK_PARTNER = "ASK_PARTNER"
@@ -80,6 +81,8 @@ class LabelEntry(BaseModel):
             raise ValueError(f"{self.target} takes no kind")
         if (self.kind in ("transform", "derived")) != (self.transform is not None):
             raise ValueError("transform is required for transform/derived, and only for them")
+        if self.kind == "transform" and self.transform is not None:
+            parse_transform(self.transform)
         if self.target == ASK_PARTNER and self.question is None:
             raise ValueError("ASK_PARTNER needs a question for the partner")
         if self.target != ASK_PARTNER and (self.question or self.candidate):
