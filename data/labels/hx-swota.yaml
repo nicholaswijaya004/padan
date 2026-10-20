@@ -1,0 +1,653 @@
+# Gold labels for hx-swota (dev spec), from the locked pages storing-booking.html (cc629e92...) and
+# retrieving.html (4b4d8ccc...). Method (ADR-001 Amendment 4): drafted by Claude against schema v2.1,
+# reviewed and corrected by Nicholas Daniel Wijaya. Blind sample of 10 entries (seed 20261020) labelled
+# before the draft was seen: 4/10 agreement. Review changed 4 draft rows: VoyageID -> product_id (x2) and
+# PolicyInfo.Text -> ASK_PARTNER (labeller), Payment@DueDate -> ASK_PARTNER (Claude, merging a filtered split).
+# source + evidence are copied verbatim from the XML examples (deterministic extraction). Do not edit evidence.
+# Scope: OTA_CruiseBookRQ (create request), OTA_CruiseBookRS (create response), OTA_ResRetrieveRS (get
+# response; mostly [..] placeholders in the docs). Paths come from single examples: lists only where repeated.
+# ASK_PARTNER is used where the meaning depends on an undocumented code (StatusCode, PriceTypeCode,
+# PaymentNumber) or on content the example hides ([..], PolicyInfo sections).
+
+# ---------------- POST /ota/rest/OTA_CruiseBookRQ (request)
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: request
+    paths: ['@CorrelationID']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 3cd7d503-8df2-4b69-a683-736afe428d2e]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: request
+    paths: ['@Version']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 1.00]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: request
+    paths: ['SailingInfo.SelectedSailing@VoyageID']
+  # type: xml attribute
+  target: 'product_id'
+  kind: 'direct'
+  evidence: '[no description; example: CS21711JUNKTN]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: request
+    paths: ['SailingInfo.SelectedCategory@PricedCategoryCode']
+  # type: xml attribute
+  target: 'cruise.fare_category_code'
+  kind: 'direct'
+  evidence: '[no description; example: A]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: request
+    paths: ['ReservationInfo.GuestDetails.GuestDetail.ContactInfo.PersonName.GivenName']
+  # type: xml text
+  target: 'travellers[].given_name'
+  kind: 'direct'
+  evidence: '[no description; example: Guest Name #1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: request
+    paths: ['ReservationInfo.GuestDetails.GuestDetail.ContactInfo.PersonName.MiddleName']
+  # type: xml text
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Guest Middle Name #1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: request
+    paths: ['ReservationInfo.GuestDetails.GuestDetail.ContactInfo.PersonName.Surname']
+  # type: xml text
+  target: 'travellers[].family_name'
+  kind: 'direct'
+  evidence: '[no description; example: Guest SurName #1]'
+
+# ---------------- POST /ota/rest/OTA_CruiseBookRQ (response)
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['@CorrelationID']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 3cd7d503-8df2-4b69-a683-736afe428d2e]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['@TargetName']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: SW_OTA_TEST@ORADEV]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['@TimeStamp']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 2021-08-27T14:27:27.377]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['@Version']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 1.999]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['ReservationID@BookedDate']
+  # type: xml attribute
+  target: 'booked_at'
+  kind: 'direct'
+  evidence: '[no description; example: 2021-08-27T14:27:25]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['ReservationID@ID']
+  # type: xml attribute
+  target: 'partner_booking_id'
+  kind: 'direct'
+  evidence: '[no description; example: 10277]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['ReservationID@ID_Context']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: SEAWARE]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['ReservationID@StatusCode']
+  # type: xml attribute
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'status'
+  question: 'What do the ReservationID StatusCode values mean (e.g. 42), and which ones are on hold, confirmed, cancelled or failed?'
+  evidence: '[no description; example: 42]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['ReservationID@Type']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 14]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['ReservationID.CompanyName']
+  # type: xml text
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: OPENTRAVEL]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['ReservationID.TPA_Extensions.AgencyInfo@Contact']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Cruise Line Name Here]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['ReservationID.TPA_Extensions.AgencyInfo@ContactID']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['ReservationID.TPA_Extensions.TWReferralInfo@TWReferralCode']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 702678D4-0C61-4B9E-BDD1-67F62491275A]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing@Duration']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: P0D]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing@End']
+  # type: xml attribute
+  target: 'end_date'
+  kind: 'direct'
+  evidence: '[no description; example: 2023-01-30]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing@Start']
+  # type: xml attribute
+  target: 'start_date'
+  kind: 'direct'
+  evidence: '[no description; example: 2023-01-30]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing@VoyageID']
+  # type: xml attribute
+  target: 'product_id'
+  kind: 'direct'
+  evidence: '[no description; example: CS21711JUNKTN]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory@PricedCategoryCode']
+  # type: xml attribute
+  target: 'cruise.fare_category_code'
+  kind: 'direct'
+  evidence: '[no description; example: A]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory@WaitlistIndicator']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: false]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@CabinCategoryCode']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: A]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@CabinCategoryStatusCode']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 36]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@CabinNumber']
+  # type: xml attribute
+  target: 'cruise.cabin_number'
+  kind: 'direct'
+  evidence: '[no description; example: 1002]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@CabinRanking']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@DeckName']
+  # type: xml attribute
+  target: 'cruise.deck'
+  kind: 'direct'
+  evidence: '[no description; example: Deck #1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@DeckNumber']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@GuestRefNumbers']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@MaxOccupancy']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 2]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@Status']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 36]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin.Remark']
+  # type: xml text
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Cabin description]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.Information[]@Name']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: PKGTYPECOMMENT]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.Information[].Text@Formatted']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: false]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['SailingInfo.SelectedSailing.Information[].Text']
+  # type: xml text
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Long Cruise]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['PolicyInfo@Name']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: TERMSANDCONDITIONS]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['PolicyInfo.Text@Formatted']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: false]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['PolicyInfo.Text']
+  # type: xml text
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'cancellation_policy'
+  question: 'Is the cancellation policy returned as a PolicyInfo section, and under which Name? The example only shows TERMSANDCONDITIONS.'
+  evidence: '[no description; example: The full Terms and Conditions information located at the cruise lines web-site.]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.BookingPrices.BookingPrice@Amount']
+  # type: xml attribute
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'total_price.amount'
+  question: 'Which BookingPrice PriceTypeCode is the gross total the guest pays, and which is the net amount owed to the cruise line?'
+  evidence: '[no description; example: 225.120]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.BookingPrices.BookingPrice@CodeDetail']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Balance due]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.BookingPrices.BookingPrice@PriceTypeCode']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 3]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.PaymentSchedule.Payment@Amount']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 225.12]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.PaymentSchedule.Payment@CurrencyCode']
+  # type: xml attribute
+  target: 'total_price.currency'
+  kind: 'direct'
+  evidence: '[no description; example: USD]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.PaymentSchedule.Payment@DueDate']
+  # type: xml attribute
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'cruise.balance_due_date'
+  question: 'Which PaymentSchedule payment is the final balance? Is PaymentNumber=50 a fixed code for it, or is it the payment with the highest PaymentNumber?'
+  evidence: '[no description; example: 2023-01-29T23:59:59]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.PaymentSchedule.Payment@PaymentNumber']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 50]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.GuestPrices.GuestPrice@GuestRefNumber']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.GuestPrices.GuestPrice@LoyaltyMembershipID']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 465]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.GuestPrices.GuestPrice.GuestName.GivenName']
+  # type: xml text
+  target: 'travellers[].given_name'
+  kind: 'direct'
+  evidence: '[no description; example: GUEST NAME #1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.GuestPrices.GuestPrice.GuestName.MiddleName']
+  # type: xml text
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: GUEST MIDDLE NAME #1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.GuestPrices.GuestPrice.GuestName.Surname']
+  # type: xml text
+  target: 'travellers[].family_name'
+  kind: 'direct'
+  evidence: '[no description; example: GUEST SURNAME #1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.GuestPrices.GuestPrice.PriceInfos.PriceInfo@Amount']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 225.120]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.GuestPrices.GuestPrice.PriceInfos.PriceInfo@CodeDetail']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Gross totals]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_CruiseBookRQ'
+    direction: response
+    paths: ['BookingPayment.GuestPrices.GuestPrice.PriceInfos.PriceInfo@PriceTypeCode']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 8]'
+
+# ---------------- POST /ota/rest/OTA_ReadRQ (response)
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['@CorrelationID']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: fbab88a3-5ce9-463d-83d9-5685bcfcb7a9]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['@TargetName']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: SW_OTA_TEST@ORADEV]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['@TimeStamp']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 2021-09-04T14:05:18.293]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['@Version']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 1.999]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['ReservationsList.CruiseReservation.ReservationInfo.ReservationID@BookedDate']
+  # type: xml attribute
+  target: 'booked_at'
+  kind: 'direct'
+  evidence: '[no description; example: 2021-09-04T14:05:14]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['ReservationsList.CruiseReservation.ReservationInfo.ReservationID@ID']
+  # type: xml attribute
+  target: 'partner_booking_id'
+  kind: 'direct'
+  evidence: '[no description; example: 10201]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['ReservationsList.CruiseReservation.ReservationInfo.ReservationID@ID_Context']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: SEAWARE]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['ReservationsList.CruiseReservation.ReservationInfo.ReservationID@StatusCode']
+  # type: xml attribute
+  target: 'ASK_PARTNER'
+  kind: ''
+  candidate: 'status'
+  question: 'What do the ReservationID StatusCode values mean (e.g. 42), and which ones are on hold, confirmed, cancelled or failed?'
+  evidence: '[no description; example: 42]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['ReservationsList.CruiseReservation.ReservationInfo.ReservationID@Type']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 14]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['ReservationsList.CruiseReservation.ReservationInfo.ReservationID.CompanyName']
+  # type: xml text
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: OPENTRAVEL]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['ReservationsList.CruiseReservation.ReservationInfo.ReservationID.TPA_Extensions.AgencyInfo@Contact']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: Cruise Line Name Here]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['ReservationsList.CruiseReservation.ReservationInfo.ReservationID.TPA_Extensions.AgencyInfo@ContactID']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: 1]'
+
+- source:
+    endpoint: 'POST /ota/rest/OTA_ReadRQ'
+    direction: response
+    paths: ['ReservationsList.CruiseReservation.ReservationInfo.ReservationID.TPA_Extensions.TWReferralInfo@TWReferralCode']
+  # type: xml attribute
+  target: 'NONE'
+  kind: ''
+  evidence: '[no description; example: AC13F4D6-D4AB-438F-9C34-2FDCE0D264F2]'
