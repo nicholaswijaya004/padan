@@ -43,6 +43,7 @@ def test_counts_are_none_when_undefined() -> None:
     empty = Counts()
     assert (empty.precision, empty.recall, empty.f1) == (None, None, None)
     assert Counts(tp=0, fp=0, fn=3).recall == 0.0
+    assert Counts(tp=0, fp=0, fn=3).f1 == 0.0
     assert Counts(tp=3, fp=1, fn=0).f1 == pytest.approx(6 / 7)
 
 

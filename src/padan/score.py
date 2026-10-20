@@ -85,10 +85,9 @@ class Counts:
 
     @property
     def f1(self) -> float | None:
-        p, r = self.precision, self.recall
-        if p is None or r is None:
-            return None
-        return 2 * p * r / (p + r) if p + r else 0.0
+        """2PR / (P + R), written so it is 0 (not undefined) when nothing is predicted."""
+        pairs = 2 * self.tp + self.fp + self.fn
+        return 2 * self.tp / pairs if pairs else None
 
 
 @dataclass
