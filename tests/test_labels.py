@@ -58,6 +58,17 @@ def test_filter_in_target_is_accepted() -> None:
     LabelEntry.model_validate(label(target="travellers[is_lead=true].full_name"))
 
 
+def test_transform_must_be_in_the_vocabulary() -> None:
+    with pytest.raises(ValidationError, match="unknown transform"):
+        LabelEntry.model_validate(label(kind="transform", transform="add_days(checkIn, nights)"))
+
+
+def test_derived_keeps_a_free_text_recipe() -> None:
+    LabelEntry.model_validate(
+        label(target="hold_expires_at", kind="derived", transform="createdAt + 1h while ON_HOLD")
+    )
+
+
 @pytest.mark.parametrize(
     "overrides",
     [

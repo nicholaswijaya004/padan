@@ -442,7 +442,7 @@
   # type: string
   target: 'fulfilment[kind=voucher].value'
   kind: 'transform'
-  transform: 'fulfilment(kind=voucher, format=pdf_url)'
+  transform: 'construct(kind=voucher, format=pdf_url)'
   evidence: 'URL to the booking voucher PDF. Available once the booking reaches `PENDING` or `COMPLETED` status.'
 
 - source:
