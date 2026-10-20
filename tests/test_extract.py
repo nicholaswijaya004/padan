@@ -10,6 +10,7 @@ from padan.extract import (
     evidence_of,
     example_at,
     extract,
+    extract_pages,
     load_scoped,
     load_spec,
     properties,
@@ -17,6 +18,7 @@ from padan.extract import (
     walk,
     write_scaffold,
 )
+from padan.fetch import page_name
 from padan.labels import load_labels, normalise
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -244,16 +246,26 @@ def test_extract_takes_evidence_from_the_operation_example() -> None:
 
 # --- real gold files (needs data/raw/, so skipped in CI) ---------------------------------------
 
-SCOPED = ["headout-partner", "octo-core", "hotelbeds-activities"]
+SCOPED = ["headout-partner", "octo-core", "hotelbeds-activities", "hx-swota"]
+
+
+def scoped_fields(spec_id: str) -> list[ExtractedField]:
+    """Extract a spec's labelled scope: an OpenAPI file, or XML examples in HTML pages (urls)."""
+    entry = load_scoped(spec_id, REPO_ROOT / "data" / "manifest.yaml")
+    if entry.urls:
+        files = [REPO_ROOT / "data" / "raw" / entry.id / page_name(url) for url in entry.urls]
+    else:
+        files = [REPO_ROOT / "data" / "raw" / f"{spec_id}.yaml"]
+    if not all(f.exists() for f in files):
+        pytest.skip(f"data/raw/ has no {spec_id} (run make fetch)")
+    if entry.urls:
+        return extract_pages([f.read_text() for f in files], entry.scope, entry.exclude)
+    return extract(load_spec(files[0]), entry.scope, entry.exclude)
 
 
 @pytest.mark.parametrize("spec_id", SCOPED)
 def test_gold_labels_cover_every_extracted_field_with_the_same_evidence(spec_id: str) -> None:
-    raw = REPO_ROOT / "data" / "raw" / f"{spec_id}.yaml"
-    if not raw.exists():
-        pytest.skip(f"{raw.relative_to(REPO_ROOT)} not fetched (run make fetch)")
-    entry = load_scoped(spec_id, REPO_ROOT / "data" / "manifest.yaml")
-    fields = extract(load_spec(raw), entry.scope, entry.exclude)
+    fields = scoped_fields(spec_id)
     labels = load_labels(REPO_ROOT / "data" / "labels" / f"{spec_id}.yaml")
     # A field split by filter (e.g. inputFields[id=EMAIL].value) is covered by its split entries.
     labelled = {
