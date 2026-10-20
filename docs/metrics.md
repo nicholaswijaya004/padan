@@ -223,3 +223,65 @@ here than on Hotelbeds or HX.
 
 **Caveats:** HX field paths come from single examples (lists only detected where repeated, one
 repaired structure). Stage 1 extraction is not independently scored for OpenAPI.
+
+## Day 6
+
+**Goal:** Dev gold set complete (HX); scorer and baselines.
+
+### HX labelling (dev: model-drafted, human-reviewed, Amendment 4)
+
+| Measure                                      | Value                                                                                  |
+| -------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Entries                                      | 70: 17 canonical, 5 `ASK_PARTNER`, 48 `NONE`                                           |
+| Blind sample agreement with the sealed draft | **4/10** (all 4 on `NONE`); OCTO 6/10, Hotelbeds 6/10                                  |
+| Blind disagreements resolved to the draft    | 6/6                                                                                    |
+| Blind entries that would fail the validator  | 5/10                                                                                   |
+| Draft rows changed by the review             | 4/71: 3 by me (`VoyageID` ×2, `PolicyInfo.Text`), 1 by Claude (`DueDate` split merged) |
+| Critical gap found in review                 | 1: `cancellation_policy` unmapped in the draft                                         |
+| Time                                         | not measured                                                                           |
+
+**What it showed:** blind agreement was lowest on the spec with no descriptions, and the review still
+found a critical gap the draft missed. `ASK_PARTNER` share is highest here (5/70) because HX meanings
+depend on undocumented codes.
+
+### Gold set (dev, complete)
+
+| Spec                 | Entries | Canonical | `NONE`  | `ASK_PARTNER` | Method            |
+| -------------------- | ------- | --------- | ------- | ------------- | ----------------- |
+| headout-partner      | 56      | 39        | 12      | 5             | hand, reviewed    |
+| octo-core            | 92      | 46        | 46      | 0             | drafted, reviewed |
+| hotelbeds-activities | 21      | 13        | 7       | 1             | hand, adjudicated |
+| hx-swota             | 70      | 17        | 48      | 5             | drafted, reviewed |
+| **total**            | **239** | **115**   | **113** | **11**        |                   |
+
+### Baselines (dev, schema v2.1)
+
+| Baseline   | Map P | Map R | Map F1 (macro) | Map F1 (micro) | Esc R | Transforms | Critical errors |
+| ---------- | ----- | ----- | -------------- | -------------- | ----- | ---------- | --------------- |
+| all_none   | —     | 0.00  | 0.00           | 0.00           | 0.00  | —          | 0               |
+| name_match | 0.78  | 0.12  | **0.20**       | 0.18           | 0.00  | 0/2        | **4**           |
+
+| name_match per spec  | Map F1 | Critical errors                                                 |
+| -------------------- | ------ | --------------------------------------------------------------- |
+| headout-partner      | 0.10   | 1 (`status` without `enum_map`)                                 |
+| hotelbeds-activities | 0.38   | 0                                                               |
+| hx-swota             | 0.10   | 1 (cabin `Status` → booking `status`)                           |
+| octo-core            | 0.23   | 2 (`status` without `enum_map`; ticket status → booking status) |
+
+**M1 target (set before any rule exists):** macro F1 above 0.20, fewer than 4 critical errors (goal 0),
+escalation recall above 0.
+
+### Process
+
+| Measure                                       | Value                                          |
+| --------------------------------------------- | ---------------------------------------------- |
+| PRs merged                                    | 2 (ADP-28, ADP-29)                             |
+| Incomplete merges                             | 0 (both checked file by file before merge)     |
+| Tests                                         | 129 → **175**                                  |
+| Transform labels rewritten for the vocabulary | 1 (estimate was 22)                            |
+| Scorer bugs found after the first real run    | 1 (Claude's helper: F1 undefined instead of 0) |
+| Block times / predictions                     | not measured / not made                        |
+
+**Caveats:** baselines are scored on dev only, against single-labeller gold; the baseline field list
+comes from the gold files (equal to Stage 1's by the coverage test). Scores will shift on Day 7 when
+schema v3 renames item-level targets.
