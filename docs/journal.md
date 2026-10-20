@@ -492,3 +492,92 @@ all 21 Hotelbeds fields by hand and decided the 8 disagreements with the draft.
 
 HX labels first (sealed draft, blind sample of 10, timed review), then the scorer: concept, decisions,
 code. M1 (rule engine measured on dev) is then the rule engine itself.
+
+## Day 6 — HX labels, the scorer, first baselines
+
+**Goal:** Finish the dev gold set (HX), then build the scorer, so M1 needs only the rule engine.
+
+### The assumptions that were wrong
+
+- **"Name matching gets you a fair way."** Name-match maps 12 of about 115 gold pairs (macro F1 0.20).
+  Partners and our schema rarely share a word (`ReservationID@ID`, `uuid` → `partner_booking_id`).
+- **"A correct-looking match is a safe match."** Every one of name-match's 4 silent critical errors is
+  a perfect name match on `status`: a raw partner code copied without `enum_map`, a ticket's status
+  and a cabin's status written into the booking's status. High precision (0.78) did not mean safe.
+- **"A dead schema target is harmless."** `cruise.voyage_id`, unused since the HX review, attracted a
+  false positive from name-match on its first run.
+- **"About 22 transform labels need rewriting."** Claude's estimate; it was 1. Once the rule became
+  "the vocabulary applies to `kind: transform` only; `derived` keeps a free-text recipe", every other
+  label already fitted.
+- **"No other field holds an amount"** (my first view on HX #43). There are three, the one I wanted
+  is labelled "Balance due", and `[..]` hides the other rows of an itemized invoice.
+
+### What cost me time
+
+- **Python syntax, again:** `&` used as "and" (in Python it is set intersection, and binds tighter
+  than `==`); a loop variable used after the loop (Python keeps it, holding the last value, or never
+  assigns it); passing a whole dict where one entry `d[key]` was needed.
+- **"Either" vs "neither" written as code.** The first version skipped exactly the transform case that
+  had to be scored. A truth table over the four kind combinations found it.
+- **My blind-sample format:** 5 of 10 entries would have failed the validator (invented target names,
+  two targets in one entry), because I labelled from memory instead of from `schema.py`.
+
+### Decisions
+
+| Decision                                                                                               | Why                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| HX `VoyageID` → `product_id`, not `cruise.voyage_id`                                                   | The schema already defines `product_id` as product _or sailing_; otherwise HX has no product key                                         |
+| HX `PolicyInfo.Text` → `ASK_PARTNER` (`cancellation_policy`)                                           | My catch: the draft had no mapping for a critical field, and the docs say policy sections vary                                           |
+| `ASK_PARTNER` when a meaning depends on an undocumented code                                           | My rule for status; applied consistently it also decided booking price (`PriceTypeCode`) and balance due date (`PaymentNumber`)          |
+| No schema change for my Traveloka product/item model during labelling                                  | A label change fixed the urgent part; the rest belongs to the multi-item design                                                          |
+| Canonical schema stores facts; composite IDs are views generated per consumer                          | `ANTHEM_OF_THE_SEAS_3D2N_SG-PENANG-SG` can be built from parts; parsing it back breaks                                                   |
+| S1: gold `ASK_PARTNER` + predicted candidate = mapping FP, escalation FN, critical if the candidate is | Guessing where the docs do not support it is what escalation exists to prevent                                                           |
+| S2: gold canonical + predicted `ASK_PARTNER` = FN and escalation FP, not critical                      | Asking costs a question, not a wrong value                                                                                               |
+| S3: exact paths with filters; only `[0]` ≡ `[]`                                                        | The filter is the mapping logic                                                                                                          |
+| S4: micro per spec, macro across specs as the headline, micro total too                                | OCTO's 92 entries must not drown Hotelbeds' 21                                                                                           |
+| S5: fixed transform vocabulary (7 names) for `kind: transform`; `derived` scored on target only        | Transforms become comparable; `enum_map` ignores order but not values                                                                    |
+| S6: `all_none` and `name_match` baselines before any rule                                              | Proves the scorer, and turns M1 into "rules vs name-match"                                                                               |
+| S7: CLI table + JSON with a per-pair error list                                                        | The error list is the input for writing rules                                                                                            |
+| Critical errors judged on the predicted target                                                         | Damage is decided by where a value is written; a missed critical field is visible, a wrong one is silent                                 |
+| API credit moves to after M1 (about Day 9)                                                             | Nothing before M2 calls an LLM                                                                                                           |
+| Multi-item bookings: `Booking.items[]` (option B), schema v3 on Day 7                                  | One root cause behind `activities[0]`, cabins, `option_id` in two places and the dead `voyage_id`; cheapest now (0 test labels, 0 rules) |
+
+### What I delegated, and what I decided
+
+I labelled the HX blind sample, made the review decisions (cancellation policy, `VoyageID`), kept
+booking price as `ASK_PARTNER` after the evidence, and wrote `score_spec` (mapping, escalation,
+transforms, critical errors) from a fill-in-the-blank skeleton. Claude drafted and sealed the HX
+labels, wrote the HX coverage test, the transform vocabulary, the scorer's helpers and all its tests,
+the baselines and the report, and found its own bug (F1 shown as undefined instead of 0). Scorer
+decisions S1–S7 and option B were Claude's recommendations, accepted by me.
+
+### Understood
+
+- **Sets as an evaluation tool:** gold and prediction as sets of (field → target) pairs; TP = `g & p`,
+  FP = `p - g`, FN = `g - p`. A wrong target is two errors: we wrote something wrong and missed the
+  right thing.
+- **Why F1 is not the headline** (answer written after the results, not before): F1 counts a missed
+  middle name and a wrong booking status the same. Silent critical errors and escalation recall decide
+  whether the system can run unattended.
+- **The scorer compares transforms; it never runs them.** Running `date_part` belongs to codegen (M3);
+  the vocabulary is the contract between labels, rules, the LLM and generated code.
+- **Blind samples and reviews catch different things:** my 4 disagreements on mapped fields were all
+  wrong, but my one note found a critical gap the draft missed.
+
+### Still open
+
+- Day 7: schema v3 (`items[]`, `option_id` moved, `voyage_id` and `fare_category_code` removed), ADR-001
+  Amendment 5, mechanical relabel of the 4 dev files, baselines re-run.
+- My M1 prediction (rule-engine F1 and critical errors on dev) before any rule exists.
+- Validate `enum_map` values against the target's allowed values (`on-hold` would pass today).
+- Measurement habits: block times and predictions were skipped again today.
+- Missing final newline in `.gitignore` and `Makefile`.
+- Carried: filter-field validation, `spec_sha256` in label files, duplicate-key YAML loader, OpenTravel
+  XSD for HX structure, an independent gold for HTML Stage 1, second labeller, synthetic PDFs, Day 1
+  leftovers.
+
+### Tomorrow
+
+Schema v3 with Amendment 5 and the relabel, re-run the baselines, then the rule engine design: rules
+for mapping, transforms and escalation triggers, measured against name-match (macro F1 0.20, 4 critical
+errors).
