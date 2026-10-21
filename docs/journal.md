@@ -581,3 +581,90 @@ decisions S1–S7 and option B were Claude's recommendations, accepted by me.
 Schema v3 with Amendment 5 and the relabel, re-run the baselines, then the rule engine design: rules
 for mapping, transforms and escalation triggers, measured against name-match (macro F1 0.20, 4 critical
 errors).
+
+## Day 7 — Schema v3 (items[]), baselines re-measured, rule engine design
+
+**Goal:** Schema v3 merged with the dev labels migrated, baselines re-measured on it, and the rule
+engine designed, so rule code can start on Day 8.
+
+### The assumptions that were wrong
+
+- **"F1 goes up on v3"** (my prediction). The headline stayed at 0.20; only precision rose (0.78 →
+  0.84). Removing a target can only remove false positives; it cannot create new matches, so recall
+  could not move.
+- **"2 critical errors on v3"** (my prediction). It stayed at 4: all four are on `status`, and v3 did
+  not touch `status`. Before predicting a change's effect, list the errors the change touches.
+- **"About 60 renames, 54 targets"** (Claude's estimates). It was 35 renames, and 55 targets: `items[]`
+  itself became a target, like `travellers[]`.
+- **"The ADR already says where the schema may be designed from."** It did not: the rule (dev specs,
+  standards and non-benchmark OTAs, never test specs) was only in the Day 4 journal. Amendment 5 now
+  records it.
+- **"R1 (escalation) is a layer that runs first on its own."** My answer about HX cabin `Status`
+  showed it cannot: "is it dangerous?" is a question about the candidate target, and candidates only
+  exist after synonyms and context have run. R1 is a filter on candidates.
+
+### What cost me time
+
+- Not much: one PR, applied as a patch and merged unchanged. The merge was not reviewed with Claude
+  before merging; the post-merge check found `main` identical to the tested patch.
+- The co-author trailer: a squash merge replaces commit messages with the PR title, so a trailer in
+  the commit is lost unless it is pasted into the squash message.
+
+### Decisions
+
+| Decision                                                                                                      | Why                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Schema v3: `Booking.items[]`, each with product, option, dates and exactly one of `activity` / `cruise`       | One root cause behind `activities[0]`, one cabin per booking, `option_id` in two places and the dead `voyage_id` |
+| V1: no price per item                                                                                         | No dev label would use it; a field without evidence cannot be checked                                            |
+| V2: travellers stay per booking                                                                               | 3 of 4 dev specs list travellers once per booking; Hotelbeds' per-activity paxes are a recorded limitation       |
+| V3: `balance_due_date` moves to the booking                                                                   | Payment schedules belong to the booking; activities take deposits too                                            |
+| V4: Hotelbeds `activities[0].*` → `activities[].*`                                                            | With `items[]` every activity maps; `[0]` meant "the rest is lost"                                               |
+| HX `PricedCategoryCode` → `items[].option_id`                                                                 | The cabin category is the variant sold: my Traveloka "item = cabin type"                                         |
+| Design-source rule written into the ADR (Amendment 5)                                                         | Schema design must never be shaped by test specs                                                                 |
+| Schema and labels in one commit                                                                               | A schema-only commit would fail validation on every label file; every commit on `main` passes on its own         |
+| Co-author trailer when Claude wrote most of a commit                                                          | Commit history should agree with the journal's delegation section                                                |
+| E1: leave-one-spec-out on dev, plus a test that no rule contains a full partner path                          | A mock exam instead of the answer key: an honest estimate before the test set is touched                         |
+| E2: ties → `ASK_PARTNER` if any candidate is critical, else `NONE`                                            | A 50/50 guess on a price is silently wrong half the time; a question costs one email                             |
+| E3: rules as data (`data/rules/*.yaml`) plus a few Python matchers                                            | Countable, diffable and reviewable, like the label files                                                         |
+| E4: match on tokens (`localDateTimeStart` → local, date, time, start), not whole names                        | The step that should beat name-match's exact equality                                                            |
+| E5: every prediction records the rule that produced it, in a sidecar file                                     | Error analysis by rule, and explainability, without changing the label format                                    |
+| Rule flow: noise → candidates (tokens, synonyms, context) → escalation filter → map + transform → else `NONE` | My correction to R1, from the cabin-status question                                                              |
+
+### What I delegated, and what I decided
+
+Claude wrote schema v3, the relabel script and its 35 renames, the test updates, Amendment 5 and the
+rule engine design proposal (with the explanation by analogy I asked for). I decided V1–V4, E1–E5
+(Claude's recommendations, accepted), confirmed the cabin-category judgement by merging, made both
+baseline predictions before the run, and corrected the escalation layer's place in the design.
+
+### Understood
+
+- **Booking vs item:** a field belongs at the level where it varies. Status, contact and price exist
+  once per booking; product, option and dates once per thing bought.
+- **What a schema change can move:** removing a dead target raises precision only; recall needs new
+  matches.
+- **Leave-one-spec-out** is cross-validation for hand-written rules: rules learnt from a spec are
+  switched off when scoring that spec.
+- **Context decides meaning:** `status` at booking level is the booking's; under `unitItems[]` or
+  `SelectedCabin` it is a ticket's or a cabin's. Three of name-match's four critical errors are this.
+- **A patch carries no author:** whoever commits is the author; Claude appears only through a
+  co-author trailer.
+
+### Still open
+
+- **My M1 prediction** (leave-one-spec-out macro F1 and critical errors), asked three times. It is the
+  first item on Day 8, before any rule exists.
+- Block times: none recorded again.
+- The leave-one-spec-out question (Q2) I did not answer.
+- Validate `enum_map` values against the target's allowed values.
+- Later schema work: price per item (before test labelling, only with evidence), traveller–item link,
+  structured cancellation penalties, `HotelDetails` before M3.
+- Missing final newline in `.gitignore` and `Makefile`.
+- Carried: filter-field validation, `spec_sha256` in label files, duplicate-key YAML loader, OpenTravel
+  XSD for HX, an independent gold for HTML Stage 1, second labeller, synthetic PDFs, Day 1 leftovers.
+
+### Tomorrow
+
+M1 prediction first. Then the tokeniser (mine, fill-in-the-blank), the candidate finder with context,
+the noise list and the escalation filter, and a first leave-one-spec-out run against name-match (macro
+F1 0.20, 4 critical errors).

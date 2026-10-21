@@ -285,3 +285,52 @@ escalation recall above 0.
 **Caveats:** baselines are scored on dev only, against single-labeller gold; the baseline field list
 comes from the gold files (equal to Stage 1's by the coverage test). Scores will shift on Day 7 when
 schema v3 renames item-level targets.
+
+## Day 7
+
+**Goal:** Schema v3 and migrated labels; baselines re-measured; rule engine designed.
+
+### Schema v3
+
+| Measure                                                 | Value                                                                                  |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Valid targets                                           | 56 (v2.1) → **55** (v3): `voyage_id` and `fare_category_code` removed, `items[]` added |
+| Label targets / candidates renamed                      | 35 (32 targets + 3 candidates), 1 of them a judgement call                             |
+| Hotelbeds source paths `activities[0]` → `activities[]` | 9                                                                                      |
+| v2.1 targets left in label files                        | 0 (the validator rejects them)                                                         |
+
+### Baselines on v3 (dev)
+
+| name_match          | v2.1 | v3                      |
+| ------------------- | ---- | ----------------------- |
+| Macro precision     | 0.78 | **0.84**                |
+| Macro recall        | 0.12 | 0.12                    |
+| Macro F1 (headline) | 0.20 | **0.20**                |
+| Micro F1            | 0.18 | 0.19                    |
+| HX precision        | 0.25 | 0.50                    |
+| Critical errors     | 4    | **4** (all on `status`) |
+
+`all_none` is unchanged (F1 0.00, 0 critical errors). Rule-engine results will be compared with the v3
+row only.
+
+### Predictions (made before the run)
+
+| Prediction                    | Result                                               | Right?              |
+| ----------------------------- | ---------------------------------------------------- | ------------------- |
+| name_match F1 goes up on v3   | macro unchanged (0.20); micro +0.01; precision +0.06 | no, on the headline |
+| name_match critical errors: 2 | 4                                                    | no                  |
+
+**What it showed:** the first day with predictions written before the results. Both were wrong for
+the same reason: the change only touched one false positive, and none of the critical errors.
+
+### Process
+
+| Measure          | Value                                   |
+| ---------------- | --------------------------------------- |
+| PRs merged       | 1 (ADP-31), plus a Dependabot ruff bump |
+| Tests            | 175 → **179**                           |
+| Post-merge check | `main` identical to the tested patch    |
+| Block times      | not measured                            |
+| M1 prediction    | not yet made                            |
+
+**Caveats:** dev baselines only. The rule engine design (E1–E5) is not yet measured.
