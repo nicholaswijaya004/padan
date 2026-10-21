@@ -48,10 +48,13 @@ def test_counts_are_none_when_undefined() -> None:
 
 
 def test_critical_targets_include_fields_inside_a_critical_field() -> None:
-    assert {"total_price.amount", "total_price.currency", "fulfilment[].value", "start_date"} <= (
-        CRITICAL
-    )
-    assert "product_name" not in CRITICAL
+    assert {
+        "total_price.amount",
+        "total_price.currency",
+        "fulfilment[].value",
+        "items[].start_date",
+    } <= (CRITICAL)
+    assert "items[].product_name" not in CRITICAL
     assert "travellers[].given_name" not in CRITICAL
 
 
@@ -73,19 +76,19 @@ def test_a_missing_prediction_is_none_so_a_miss() -> None:
 
 
 def test_mapping_a_gold_none_field_is_a_false_positive() -> None:
-    score = score_spec([lab("name", "NONE")], [lab("name", "product_name")])
+    score = score_spec([lab("name", "NONE")], [lab("name", "items[].product_name")])
     assert (score.mapping.tp, score.mapping.fp, score.mapping.fn) == (0, 1, 0)
-    assert score.critical_errors == []  # product_name is not critical
+    assert score.critical_errors == []  # items[].product_name is not critical
 
 
 def test_a_wrong_target_is_one_fp_and_one_fn() -> None:
-    score = score_spec([lab("name", "product_name")], [lab("name", "activity.option_name")])
+    score = score_spec([lab("name", "items[].product_name")], [lab("name", "items[].option_name")])
     assert (score.mapping.tp, score.mapping.fp, score.mapping.fn) == (0, 1, 1)
 
 
 def test_first_item_and_any_item_are_the_same_path() -> None:
-    gold = [lab("activities[0].code", "product_id")]
-    pred = [lab("activities[].code", "product_id")]
+    gold = [lab("activities[0].code", "items[].product_id")]
+    pred = [lab("activities[].code", "items[].product_id")]
     assert score_spec(gold, pred).mapping.tp == 1
 
 
@@ -98,8 +101,8 @@ def test_filters_must_match() -> None:
 
 def test_one_field_with_two_targets_is_two_pairs() -> None:
     gold = [
-        lab("startDateTime", "start_date", "transform", transform="date_part"),
-        lab("startDateTime", "start_time", "transform", transform="time_part"),
+        lab("startDateTime", "items[].start_date", "transform", transform="date_part"),
+        lab("startDateTime", "items[].start_time", "transform", transform="time_part"),
     ]
     pred = gold[:1]
     score = score_spec(gold, pred)
@@ -157,13 +160,13 @@ def test_an_enum_map_in_another_order_is_the_same_transform() -> None:
 
 
 def test_a_wrong_transform_on_a_critical_target_is_a_critical_error() -> None:
-    gold = [lab("startDateTime", "start_date", "transform", transform="date_part")]
-    pred = [lab("startDateTime", "start_date", "direct")]
+    gold = [lab("startDateTime", "items[].start_date", "transform", transform="date_part")]
+    pred = [lab("startDateTime", "items[].start_date", "direct")]
     score = score_spec(gold, pred)
     assert score.mapping.tp == 1  # the target is right...
     assert (score.transforms_right, score.transforms_total) == (0, 1)  # ...the value is not
-    assert score.errors == [("TRANSFORM", pair("startDateTime", "start_date"))]
-    assert score.critical_errors == [pair("startDateTime", "start_date")]
+    assert score.errors == [("TRANSFORM", pair("startDateTime", "items[].start_date"))]
+    assert score.critical_errors == [pair("startDateTime", "items[].start_date")]
 
 
 def test_direct_on_both_sides_is_not_a_transform() -> None:

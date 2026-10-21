@@ -21,7 +21,7 @@
     direction: request
     paths: ['productId']
   # type: string
-  target: 'product_id'
+  target: 'items[].product_id'
   kind: 'direct'
   evidence: 'The product ID for this booking.'
 
@@ -30,7 +30,7 @@
     direction: request
     paths: ['optionId']
   # type: string
-  target: 'activity.option_id'
+  target: 'items[].option_id'
   kind: 'direct'
   evidence: 'The option ID for this booking.'
 
@@ -39,7 +39,7 @@
     direction: request
     paths: ['availabilityId']
   # type: string
-  target: 'activity.slot_id'
+  target: 'items[].activity.slot_id'
   kind: 'direct'
   evidence: 'The availability ID for the selected timeslot.'
 
@@ -396,7 +396,7 @@
     direction: response
     paths: ['productId']
   # type: string
-  target: 'product_id'
+  target: 'items[].product_id'
   kind: 'direct'
   evidence: 'The product ID that identifies the product in the booking system to make this reservation.'
 
@@ -405,7 +405,7 @@
     direction: response
     paths: ['optionId']
   # type: string
-  target: 'activity.option_id'
+  target: 'items[].option_id'
   kind: 'direct'
   evidence: 'The product ID that identifies the product option in the booking system to make this reservation.'
 
@@ -459,7 +459,7 @@
     direction: response
     paths: ['availabilityId']
   # type: string
-  target: 'activity.slot_id'
+  target: 'items[].activity.slot_id'
   kind: 'direct'
   evidence: 'The availability id that was used in the request.'
 
@@ -468,7 +468,7 @@
     direction: response
     paths: ['availability.id']
   # type: string
-  target: 'activity.slot_id'
+  target: 'items[].activity.slot_id'
   kind: 'direct'
   evidence: 'The availability id that was used in the request.'
 
@@ -477,7 +477,7 @@
     direction: response
     paths: ['availability.localDateTimeStart']
   # type: string
-  target: 'start_date'
+  target: 'items[].start_date'
   kind: 'transform'
   transform: 'date_part'
   evidence: 'The `localDateTimeStart` value from the original availability object.'
@@ -487,7 +487,7 @@
     direction: response
     paths: ['availability.localDateTimeStart']
   # type: string
-  target: 'start_time'
+  target: 'items[].start_time'
   kind: 'transform'
   transform: 'time_part'
   evidence: 'The `localDateTimeStart` value from the original availability object.'
@@ -497,7 +497,7 @@
     direction: response
     paths: ['availability.localDateTimeEnd']
   # type: string
-  target: 'end_date'
+  target: 'items[].end_date'
   kind: 'transform'
   transform: 'date_part'
   evidence: 'The `localDateTimeEnd` value from the original availability object.'
@@ -507,7 +507,7 @@
     direction: response
     paths: ['availability.localDateTimeEnd']
   # type: string
-  target: 'end_time'
+  target: 'items[].end_time'
   kind: 'transform'
   transform: 'time_part'
   evidence: 'The `localDateTimeEnd` value from the original availability object.'
