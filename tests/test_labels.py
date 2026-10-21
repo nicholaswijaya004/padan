@@ -37,14 +37,23 @@ def test_target_paths_cover_leaves_nested_and_lists() -> None:
         "contact.phones[]",
         "travellers[]",
         "travellers[].custom_fields[].field_id",
-        "activity.slot_id",
-        "cruise.balance_due_date",
+        "items[]",
+        "items[].start_date",
+        "items[].activity.slot_id",
+        "items[].cruise.cabin_number",
+        "balance_due_date",
     } <= VALID_TARGETS
 
 
 def test_target_paths_exclude_containers() -> None:
     assert "total_price" not in VALID_TARGETS
-    assert "activity" not in VALID_TARGETS
+    assert "items[].activity" not in VALID_TARGETS
+
+
+def test_removed_v2_targets_are_rejected() -> None:
+    assert {"product_id", "start_date", "activity.option_id", "cruise.voyage_id"}.isdisjoint(
+        VALID_TARGETS
+    )
 
 
 # --- one entry ---------------------------------------------------------------------------------
@@ -116,7 +125,12 @@ def test_one_source_may_feed_two_targets(tmp_path: Path) -> None:
     path = tmp_path / "x.yaml"
     split = {"kind": "transform", "transform": "date_part"}
     path.write_text(
-        yaml.safe_dump([label(target="start_date", **split), label(target="start_time", **split)])
+        yaml.safe_dump(
+            [
+                label(target="items[].start_date", **split),
+                label(target="items[].start_time", **split),
+            ]
+        )
     )
     assert len(load_labels(path)) == 2
 

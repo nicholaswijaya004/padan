@@ -219,3 +219,47 @@ what the labels are used for. Accordingly, §7 ("gold labels written by hand") n
 - **Known limitation: one labeller.** There is no second human annotator, so inter-annotator agreement is
   not measured; the sealed model draft is a second opinion, not a second human. Before results are
   published, a second person labels a 20% sample of one test spec.
+
+## Amendment 5 — 2026-10-21: schema v3, a booking holds items
+
+Schema v2.1 assumed a booking contains exactly one thing. Dev labelling and the first baseline run
+(Day 6) showed four symptoms of that one assumption:
+
+- Hotelbeds books several `activities[]` in one booking; only `activities[0]` could be labelled.
+- A cruise booking can hold several cabins; `cruise.cabin_number` held one.
+- "Which variant was bought" lived in two places: `activity.option_id`, and
+  `cruise.fare_category_code` (a misnomer: OpenTravel's `PricedCategoryCode` is a cabin category).
+- `cruise.voyage_id` duplicated `product_id` ("product (or sailing) identifier") and, unused after
+  the HX review, drew a false positive from the name-match baseline on its first run.
+
+The labeller's industry experience (Traveloka: a product ID plus an item ID per booked line) points to
+the same model. This amendment also records the rule the schema has followed since Day 4: **the schema
+is designed only from dev specs, published standards (OpenTravel, OCTO) and OTAs outside the benchmark
+(Traveloka), never from test specs**, so test mappings are not made easier by design.
+
+**Decision: schema v3.** Fields move to the level where they vary.
+
+- `Booking` keeps everything that exists once per booking: identifiers, status and hold, `booked_at`,
+  `redeemed_at`, `contact`, `travellers[]`, `total_price`, `net_price`, `cancellable`,
+  `cancellation_policy`, `fulfilment[]`, `custom_fields[]`, and `balance_due_date` (moved up from
+  `cruise.*`: payment schedules belong to the booking, and activities take deposits too).
+- New `items[]` (at least one): `product_id`, `product_name`, `option_id`, `option_name`, start and end
+  date and time, and exactly one of `activity` (`slot_id`, `service_language`) or `cruise`
+  (`cabin_number`, `deck`). A single-item partner maps to `items[]` as a list of one.
+- Removed: `cruise.voyage_id` (now `items[].product_id`) and `cruise.fare_category_code` (now
+  `items[].option_id`). Valid targets: 56 → 55 (`items[]` itself becomes a target, like `travellers[]`).
+- Not added: a price per item. No dev label would use it, and a field without evidence cannot be
+  checked. It may be added before test labelling if evidence appears, never after.
+- Canonical fields store facts, not composite keys. Identifiers such as Traveloka's
+  `SHIP_3D2N_SG-PENANG-SG` are views built from the parts by the consumer (generated code), because
+  building a key from parts always works and parsing one back does not.
+
+**Migration.** The four dev label files were migrated by a mechanical rename (35 targets and
+`ASK_PARTNER` candidates; one judgement, HX `PricedCategoryCode` → `items[].option_id`, decided in
+review), and Hotelbeds source paths `activities[0].*` became `activities[].*`. The validator rejects
+every v2.1 target, so no stale label can survive. No test label existed, so the change costs nothing in
+evaluation integrity; baselines are re-measured on v3 and v2.1 numbers are not compared with later ones.
+
+**Known limitation: travellers are per booking.** Which traveller takes part in which item is not
+modelled. It loses information for one dev spec (Hotelbeds `activities[].paxes[]`); the other three list
+travellers once per booking.

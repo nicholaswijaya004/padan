@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from padan.schema import Booking, Contact, CustomField, Fulfilment, Money, Traveller
+from padan.schema import Booking, Contact, CustomField, Fulfilment, Item, Money, Traveller
 
 
 def valid_booking(**overrides: Any) -> dict[str, Any]:
@@ -13,10 +13,9 @@ def valid_booking(**overrides: Any) -> dict[str, Any]:
     data: dict[str, Any] = {
         "our_booking_id": "padan-1",
         "status": "confirmed",
-        "start_date": "2026-11-02",
         "contact": {"email": "ana@example.com"},
         "travellers": [{"given_name": "Ana", "is_lead": True}],
-        "activity": {},
+        "items": [{"start_date": "2026-11-02", "activity": {}}],
     }
     data.update(overrides)
     return data
@@ -52,19 +51,19 @@ def test_money_rejects_lowercase_currency() -> None:
 
 
 def test_start_date_accepts_plain_date() -> None:
-    assert Booking.model_validate(valid_booking()).start_date == date(2026, 11, 2)
+    assert Booking.model_validate(valid_booking()).items[0].start_date == date(2026, 11, 2)
 
 
 def test_start_date_rejects_datetime_with_time_and_timezone() -> None:
     # P4: a date field refuses a datetime that carries a non-midnight time: no silent truncation.
     with pytest.raises(ValidationError):
-        Booking.model_validate(valid_booking(start_date="2026-10-09T14:00:00+07:00"))
+        Item.model_validate({"start_date": "2026-10-09T14:00:00+07:00", "activity": {}})
 
 
 def test_start_date_rejects_impossible_date() -> None:
     # P5: Hotelbeds' example "2016-04-31" (April has 30 days) is rejected, not silently fixed.
     with pytest.raises(ValidationError):
-        Booking.model_validate(valid_booking(start_date="2016-04-31"))
+        Item.model_validate({"start_date": "2016-04-31", "activity": {}})
 
 
 # --- Traveller names (J1) ------------------------------------------------------------------
@@ -109,20 +108,45 @@ def test_booking_with_two_lead_travellers_is_rejected() -> None:
         Booking.model_validate(valid_booking(travellers=two_leads))
 
 
-def test_booking_with_both_activity_and_cruise_is_rejected() -> None:
+def test_item_with_both_activity_and_cruise_is_rejected() -> None:
     with pytest.raises(ValidationError):
-        Booking.model_validate(valid_booking(cruise={}))
+        Item.model_validate({"start_date": "2026-11-02", "activity": {}, "cruise": {}})
 
 
-def test_booking_with_neither_activity_nor_cruise_is_rejected() -> None:
+def test_item_with_neither_activity_nor_cruise_is_rejected() -> None:
     with pytest.raises(ValidationError):
-        Booking.model_validate(valid_booking(activity=None))
+        Item.model_validate({"start_date": "2026-11-02"})
 
 
 def test_cruise_booking_is_valid() -> None:
-    booking = Booking.model_validate(valid_booking(activity=None, cruise={"voyage_id": "CS21711"}))
-    assert booking.cruise is not None
-    assert booking.cruise.voyage_id == "CS21711"
+    cabin = {"start_date": "2023-01-30", "product_id": "CS21711JUNKTN", "option_id": "A"}
+    booking = Booking.model_validate(valid_booking(items=[cabin | {"cruise": {"deck": "1"}}]))
+    assert booking.items[0].cruise is not None
+    assert booking.items[0].option_id == "A"
+
+
+# --- Schema v3: items ------------------------------------------------------------------------
+
+
+def test_booking_without_items_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Booking.model_validate(valid_booking(items=[]))
+
+
+def test_one_booking_can_hold_several_activities() -> None:
+    # Hotelbeds: one booking, activities[] on different dates; each becomes an item.
+    two = [
+        {"product_id": "E-E10-PARIS", "start_date": "2026-11-02", "activity": {}},
+        {"product_id": "E-E10-LOUVRE", "start_date": "2026-11-03", "activity": {}},
+    ]
+    booking = Booking.model_validate(valid_booking(items=two))
+    assert [item.start_date.day for item in booking.items] == [2, 3]
+
+
+def test_balance_due_date_is_booking_level_and_critical() -> None:
+    extra = Booking.model_fields["balance_due_date"].json_schema_extra
+    assert isinstance(extra, dict)
+    assert extra["critical"] is True
 
 
 # --- Metadata ------------------------------------------------------------------------------
@@ -158,12 +182,12 @@ def test_booking_level_custom_field_and_slot_are_kept() -> None:
     booking = Booking.model_validate(
         valid_booking(
             custom_fields=[{"field_id": "PICKUP_LOCATION", "value": "Hotel Indonesia"}],
-            activity={"slot_id": "inv-123"},
+            items=[{"start_date": "2026-11-02", "activity": {"slot_id": "inv-123"}}],
         )
     )
     assert booking.custom_fields[0].field_id == "PICKUP_LOCATION"
-    assert booking.activity is not None
-    assert booking.activity.slot_id == "inv-123"
+    assert booking.items[0].activity is not None
+    assert booking.items[0].activity.slot_id == "inv-123"
 
 
 # --- Schema v2: fulfilment, hold, net price, split contact ---------------------------------
