@@ -1,5 +1,5 @@
 # Gold labels for hx-swota (dev spec), from the locked pages storing-booking.html (cc629e92...) and
-# retrieving.html (4b4d8ccc...). Method (ADR-001 Amendment 4): drafted by Claude against schema v2.1,
+# retrieving.html (4b4d8ccc...). Method (ADR-001 Amendment 4): drafted by Claude against schema v2.1 (migrated to v3),
 # reviewed and corrected by Nicholas Daniel Wijaya. Blind sample of 10 entries (seed 20261020) labelled
 # before the draft was seen: 4/10 agreement. Review changed 4 draft rows: VoyageID -> product_id (x2) and
 # PolicyInfo.Text -> ASK_PARTNER (labeller), Payment@DueDate -> ASK_PARTNER (Claude, merging a filtered split).
@@ -33,7 +33,7 @@
     direction: request
     paths: ['SailingInfo.SelectedSailing@VoyageID']
   # type: xml attribute
-  target: 'product_id'
+  target: 'items[].product_id'
   kind: 'direct'
   evidence: '[no description; example: CS21711JUNKTN]'
 
@@ -42,7 +42,7 @@
     direction: request
     paths: ['SailingInfo.SelectedCategory@PricedCategoryCode']
   # type: xml attribute
-  target: 'cruise.fare_category_code'
+  target: 'items[].option_id'
   kind: 'direct'
   evidence: '[no description; example: A]'
 
@@ -207,7 +207,7 @@
     direction: response
     paths: ['SailingInfo.SelectedSailing@End']
   # type: xml attribute
-  target: 'end_date'
+  target: 'items[].end_date'
   kind: 'direct'
   evidence: '[no description; example: 2023-01-30]'
 
@@ -216,7 +216,7 @@
     direction: response
     paths: ['SailingInfo.SelectedSailing@Start']
   # type: xml attribute
-  target: 'start_date'
+  target: 'items[].start_date'
   kind: 'direct'
   evidence: '[no description; example: 2023-01-30]'
 
@@ -225,7 +225,7 @@
     direction: response
     paths: ['SailingInfo.SelectedSailing@VoyageID']
   # type: xml attribute
-  target: 'product_id'
+  target: 'items[].product_id'
   kind: 'direct'
   evidence: '[no description; example: CS21711JUNKTN]'
 
@@ -234,7 +234,7 @@
     direction: response
     paths: ['SailingInfo.SelectedSailing.SelectedCategory@PricedCategoryCode']
   # type: xml attribute
-  target: 'cruise.fare_category_code'
+  target: 'items[].option_id'
   kind: 'direct'
   evidence: '[no description; example: A]'
 
@@ -270,7 +270,7 @@
     direction: response
     paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@CabinNumber']
   # type: xml attribute
-  target: 'cruise.cabin_number'
+  target: 'items[].cruise.cabin_number'
   kind: 'direct'
   evidence: '[no description; example: 1002]'
 
@@ -288,7 +288,7 @@
     direction: response
     paths: ['SailingInfo.SelectedSailing.SelectedCategory.SelectedCabin@DeckName']
   # type: xml attribute
-  target: 'cruise.deck'
+  target: 'items[].cruise.deck'
   kind: 'direct'
   evidence: '[no description; example: Deck #1]'
 
@@ -447,7 +447,7 @@
   # type: xml attribute
   target: 'ASK_PARTNER'
   kind: ''
-  candidate: 'cruise.balance_due_date'
+  candidate: 'balance_due_date'
   question: 'Which PaymentSchedule payment is the final balance? Is PaymentNumber=50 a fixed code for it, or is it the payment with the highest PaymentNumber?'
   evidence: '[no description; example: 2023-01-29T23:59:59]'
 

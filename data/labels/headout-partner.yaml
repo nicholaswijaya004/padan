@@ -8,7 +8,7 @@
     direction: request
     paths: ['productId']
   # type: string
-  target: 'product_id'
+  target: 'items[].product_id'
   kind: 'direct'
   evidence: 'The product to book. Obtain from the product listing endpoints.'
 
@@ -17,7 +17,7 @@
     direction: request
     paths: ['variantId']
   # type: string
-  target: 'activity.option_id'
+  target: 'items[].option_id'
   kind: 'direct'
   evidence: "The variant (tour option) to book. Obtain from the product's variants list."
 
@@ -26,7 +26,7 @@
     direction: request
     paths: ['inventoryId']
   # type: string
-  target: 'activity.slot_id'
+  target: 'items[].activity.slot_id'
   kind: 'direct'
   evidence: 'The specific inventory slot (time/date) to book. Obtain from the inventory listing endpoint.'
 
@@ -196,7 +196,7 @@
     direction: response
     paths: ['variantId']
   # type: string
-  target: 'activity.option_id'
+  target: 'items[].option_id'
   kind: 'direct'
   evidence: 'The variant (tour option) that was booked.'
 
@@ -215,7 +215,7 @@
     direction: response
     paths: ['startDateTime']
   # type: string/date-time
-  target: 'start_date'
+  target: 'items[].start_date'
   kind: 'transform'
   transform: 'date_part'
   evidence: "Scheduled start time for the experience in local time, with no timezone offset (format `yyyy-MM-dd'T'HH:mm:ss`)."
@@ -225,7 +225,7 @@
     direction: response
     paths: ['startDateTime']
   # type: string/date-time
-  target: 'start_time'
+  target: 'items[].start_time'
   kind: 'transform'
   transform: 'time_part'
   evidence: "Scheduled start time for the experience in local time, with no timezone offset (format `yyyy-MM-dd'T'HH:mm:ss`)."
@@ -235,7 +235,7 @@
     direction: response
     paths: ['product.id']
   # type: string
-  target: 'product_id'
+  target: 'items[].product_id'
   kind: 'direct'
   evidence: 'Headout product ID.'
 
@@ -244,7 +244,7 @@
     direction: response
     paths: ['product.name']
   # type: string
-  target: 'product_name'
+  target: 'items[].product_name'
   kind: 'direct'
   evidence: 'Display name of the product.'
 
@@ -255,7 +255,7 @@
   # type: string
   target: 'ASK_PARTNER'
   kind: ''
-  candidate: 'activity.option_id'
+  candidate: 'items[].option_id'
   question: 'Is this the same as the variantId in the request? Because there is also a variantId in the response, which is mapped to activity.option_id. If they are the same, we can map this to activity.option_id as well.'
   evidence: 'Headout variant ID.'
 
@@ -264,7 +264,7 @@
     direction: response
     paths: ['product.variant.name']
   # type: string
-  target: 'activity.option_name'
+  target: 'items[].option_name'
   kind: 'direct'
   evidence: 'Display name of the variant.'
 

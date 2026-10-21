@@ -1,4 +1,4 @@
-"""Canonical booking schema v2.1: the target every partner field maps onto (ADR-001)."""
+"""Canonical booking schema v3: the target every partner field maps onto (ADR-001, Amendment 5)."""
 
 from datetime import date, datetime, time
 from decimal import Decimal
@@ -93,8 +93,6 @@ class Contact(BaseModel):
 
 
 class ActivityDetails(BaseModel):
-    option_id: str | None = meta("Partner's option / variant / rate identifier.", default=None)
-    option_name: str | None = meta("Display name of the option.", default=None)
     slot_id: str | None = meta(
         "Partner's identifier of the booked date/time inventory slot.", default=None
     )
@@ -102,13 +100,34 @@ class ActivityDetails(BaseModel):
 
 
 class CruiseDetails(BaseModel):
-    voyage_id: str | None = meta("Partner's sailing / voyage identifier.", default=None)
-    fare_category_code: str | None = meta("Priced fare or cabin category code.", default=None)
     cabin_number: str | None = meta("Assigned cabin number, if any.", default=None)
     deck: str | None = meta("Deck name or number of the cabin.", default=None)
-    balance_due_date: date | None = meta(
-        "Date the remaining balance must be paid.", default=None, critical=True
+
+
+class Item(BaseModel):
+    """One thing bought in the booking: an activity option on a date, or a cabin on a sailing."""
+
+    product_id: str | None = meta("Partner's product (or sailing) identifier.", default=None)
+    product_name: str | None = meta("Display name of the product.", default=None)
+    option_id: str | None = meta(
+        "Partner's variant of the product: activity option or rate, cruise cabin category.",
+        default=None,
     )
+    option_name: str | None = meta("Display name of the option.", default=None)
+    start_date: date = meta("Local start date of the experience or sailing.", critical=True)
+    start_time: time | None = meta(
+        "Local start time, no timezone; None if the partner gives a date only.", default=None
+    )
+    end_date: date | None = meta("Local end date, if the product spans several days.", default=None)
+    end_time: time | None = meta("Local end time, no timezone.", default=None)
+    activity: ActivityDetails | None = None
+    cruise: CruiseDetails | None = None
+
+    @model_validator(mode="after")
+    def one_vertical(self) -> "Item":
+        if (self.activity is None) == (self.cruise is None):
+            raise ValueError("exactly one of activity or cruise must be set")
+        return self
 
 
 class Booking(BaseModel):
@@ -135,14 +154,6 @@ class Booking(BaseModel):
         "When the booking was used at the venue, if the partner reports it (support, refunds).",
         default=None,
     )
-    product_id: str | None = meta("Partner's product (or sailing) identifier.", default=None)
-    product_name: str | None = meta("Display name of the product.", default=None)
-    start_date: date = meta("Local start date of the experience or sailing.", critical=True)
-    start_time: time | None = meta(
-        "Local start time, no timezone; None if the partner gives a date only.", default=None
-    )
-    end_date: date | None = meta("Local end date, if the product spans several days.", default=None)
-    end_time: time | None = meta("Local end time, no timezone.", default=None)
     contact: Contact = meta("The person who made and pays for the booking.")
     travellers: list[Traveller] = meta("Everyone travelling; exactly one is the lead.")
     total_price: Money | None = meta(
@@ -157,20 +168,24 @@ class Booking(BaseModel):
     cancellation_policy: str | None = meta(
         "Cancellation terms as given by the partner.", default=None, critical=True
     )
+    balance_due_date: date | None = meta(
+        "Date the remaining balance must be paid, if the partner takes a deposit.",
+        default=None,
+        critical=True,
+    )
     fulfilment: list[Fulfilment] = meta(
         "Vouchers and tickets the customer uses to get in.", default=[], critical=True
     )
     custom_fields: list[CustomField] = meta(
         "Partner-specific questions answered for the whole booking.", default=[]
     )
-    activity: ActivityDetails | None = None
-    cruise: CruiseDetails | None = None
+    items: list[Item] = meta("What was bought; at least one item.")
 
     @model_validator(mode="after")
     def check_invariants(self) -> "Booking":
         lead_travellers = [traveller for traveller in self.travellers if traveller.is_lead]
         if len(lead_travellers) != 1:
             raise ValueError("exactly one traveller must have is_lead == True")
-        if (self.activity is None) == (self.cruise is None):
-            raise ValueError("exactly one of activity or cruise must be set")
+        if not self.items:
+            raise ValueError("a booking needs at least one item")
         return self
