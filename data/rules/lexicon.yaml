@@ -27,6 +27,9 @@ wrappers: [info, details, detail, list, data, selected, person, name, schedule]
 dependents: [contact, fields, delivery]
 
 entries:
+
+  # ---- Drafted from the dev gold labels: one entry per (targets, leaf words, context).
+
   - id: "balance_due_date <- date due @ price"
     targets: ["balance_due_date"]
     leaf: [["date", "due"]]
@@ -51,6 +54,7 @@ entries:
     leaf: [["creation", "timestamp"]]
     context: [""]
     learnt_from: ["headout-partner"]
+    transforms: ["unix_seconds_to_datetime"]
 
   - id: "cancellable <- cancellable @ root"
     targets: ["cancellable"]
@@ -269,6 +273,7 @@ entries:
     leaf: [["date", "end", "local", "time"]]
     context: ["slot"]
     learnt_from: ["octo-core"]
+    transforms: ["date_part", "time_part"]
 
   - id: "items[].option_id <- category code priced @ option"
     targets: ["items[].option_id"]
@@ -348,12 +353,14 @@ entries:
     leaf: [["date", "start", "time"]]
     context: [""]
     learnt_from: ["headout-partner"]
+    transforms: ["date_part", "time_part"]
 
   - id: "items[].start_date + items[].start_time <- date local start time @ slot"
     targets: ["items[].start_date", "items[].start_time"]
     leaf: [["date", "local", "start", "time"]]
     context: ["slot"]
     learnt_from: ["octo-core"]
+    transforms: ["date_part", "time_part"]
 
   - id: "net_price.amount <- amount @ price"
     targets: ["net_price.amount"]
@@ -508,3 +515,629 @@ entries:
     leaf: [["person", "type"]]
     context: ["traveller"]
     learnt_from: ["headout-partner"]
+
+
+  # ---- G1: a word learnt in one scope also applies to its parallel scope (contact <-> traveller,
+  # voucher <-> ticket, booking root <-> item). The source spec is unchanged, so leave-one-spec-out
+  # stays honest.
+
+  - id: "travellers[].family_name <- surname @ traveller | ticket contact | traveller contact (G1)"
+    targets: ["travellers[].family_name"]
+    leaf: [["surname"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["hotelbeds-activities", "hx-swota"]
+
+  - id: "travellers[].given_name <- name @ traveller | ticket contact | traveller contact (G1)"
+    targets: ["travellers[].given_name"]
+    leaf: [["name"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "fulfilment[kind=voucher].format <- type @ voucher (G1)"
+    targets: ["fulfilment[kind=voucher].format"]
+    leaf: [["type"]]
+    context: ["voucher"]
+    learnt_from: ["headout-partner"]
+
+  - id: "fulfilment[kind=voucher].format <- delivery format @ voucher delivery (G1)"
+    targets: ["fulfilment[kind=voucher].format"]
+    leaf: [["delivery", "format"]]
+    context: ["voucher delivery"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=voucher].partner_id <- id public @ voucher (G1)"
+    targets: ["fulfilment[kind=voucher].partner_id"]
+    leaf: [["id", "public"]]
+    context: ["voucher"]
+    learnt_from: ["headout-partner"]
+
+  - id: "fulfilment[kind=voucher].redeemed_at <- at redeemed utc @ voucher (G1)"
+    targets: ["fulfilment[kind=voucher].redeemed_at"]
+    leaf: [["at", "redeemed", "utc"]]
+    context: ["voucher"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=voucher].value <- url @ voucher (G1)"
+    targets: ["fulfilment[kind=voucher].value"]
+    leaf: [["url"]]
+    context: ["voucher"]
+    learnt_from: ["headout-partner"]
+
+  - id: "fulfilment[kind=voucher].value <- delivery value @ voucher delivery (G1)"
+    targets: ["fulfilment[kind=voucher].value"]
+    leaf: [["delivery", "value"]]
+    context: ["voucher delivery"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=ticket].format <- delivery format @ ticket delivery (G1)"
+    targets: ["fulfilment[kind=ticket].format"]
+    leaf: [["delivery", "format"]]
+    context: ["ticket delivery"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=ticket].redeemed_at <- at redeemed utc @ ticket (G1)"
+    targets: ["fulfilment[kind=ticket].redeemed_at"]
+    leaf: [["at", "redeemed", "utc"]]
+    context: ["ticket"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=ticket].value <- url voucher @ root (G1)"
+    targets: ["fulfilment[kind=ticket].value"]
+    leaf: [["url", "voucher"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
+  - id: "fulfilment[kind=ticket].value <- delivery value @ ticket delivery (G1)"
+    targets: ["fulfilment[kind=ticket].value"]
+    leaf: [["delivery", "value"]]
+    context: ["ticket delivery"]
+    learnt_from: ["octo-core"]
+
+  - id: "items[].activity.service_language <- language service @ root | item (G1)"
+    targets: ["items[].activity.service_language"]
+    leaf: [["language", "service"]]
+    context: ["", "item"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "items[].activity.slot_id <- id inventory @ root | item (G1)"
+    targets: ["items[].activity.slot_id"]
+    leaf: [["id", "inventory"]]
+    context: ["", "item"]
+    learnt_from: ["headout-partner"]
+
+  - id: "items[].activity.slot_id <- key rate @ root | item (G1)"
+    targets: ["items[].activity.slot_id"]
+    leaf: [["key", "rate"]]
+    context: ["", "item"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "items[].end_date <- end @ root | item (G1)"
+    targets: ["items[].end_date"]
+    leaf: [["end"]]
+    context: ["", "item"]
+    learnt_from: ["hx-swota"]
+
+  - id: "items[].end_date <- to @ root | item (G1)"
+    targets: ["items[].end_date"]
+    leaf: [["to"]]
+    context: ["", "item"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "items[].product_id <- id product @ root | item (G1)"
+    targets: ["items[].product_id"]
+    leaf: [["id", "product"]]
+    context: ["", "item"]
+    learnt_from: ["headout-partner"]
+
+  - id: "items[].start_date <- from @ root | item (G1)"
+    targets: ["items[].start_date"]
+    leaf: [["from"]]
+    context: ["", "item"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "items[].start_date <- start @ root | item (G1)"
+    targets: ["items[].start_date"]
+    leaf: [["start"]]
+    context: ["", "item"]
+    learnt_from: ["hx-swota"]
+
+  - id: "contact.family_name <- surname @ contact (G1)"
+    targets: ["contact.family_name"]
+    leaf: [["surname"]]
+    context: ["contact"]
+    learnt_from: ["hotelbeds-activities", "hx-swota"]
+
+  - id: "travellers[].given_name <- given name @ traveller | ticket contact | traveller contact (G1)"
+    targets: ["travellers[].given_name"]
+    leaf: [["given", "name"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["hx-swota"]
+
+  - id: "contact.given_name <- given name @ contact (G1)"
+    targets: ["contact.given_name"]
+    leaf: [["given", "name"]]
+    context: ["contact"]
+    learnt_from: ["hx-swota"]
+
+  - id: "contact.given_name <- name @ contact (G1)"
+    targets: ["contact.given_name"]
+    leaf: [["name"]]
+    context: ["contact"]
+    learnt_from: ["hotelbeds-activities"]
+
+
+  # ---- G2: the canonical schema's own field names (what name-match uses), in their natural context.
+
+  - id: "balance_due_date <- balance date due @ root (schema)"
+    targets: ["balance_due_date"]
+    leaf: [["balance", "date", "due"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "booked_at <- at booked @ root (schema)"
+    targets: ["booked_at"]
+    leaf: [["at", "booked"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "cancellable <- cancellable @ root (schema)"
+    targets: ["cancellable"]
+    leaf: [["cancellable"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "cancellation_policy <- cancellation policy @ root (schema)"
+    targets: ["cancellation_policy"]
+    leaf: [["cancellation", "policy"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "contact.email <- email @ contact (schema)"
+    targets: ["contact.email"]
+    leaf: [["email"]]
+    context: ["contact"]
+    learnt_from: ["schema"]
+
+  - id: "contact.family_name <- family name @ contact (schema)"
+    targets: ["contact.family_name"]
+    leaf: [["family", "name"]]
+    context: ["contact"]
+    learnt_from: ["schema"]
+
+  - id: "contact.full_name <- full name @ contact (schema)"
+    targets: ["contact.full_name"]
+    leaf: [["full", "name"]]
+    context: ["contact"]
+    learnt_from: ["schema"]
+
+  - id: "contact.given_name <- given name @ contact (schema)"
+    targets: ["contact.given_name"]
+    leaf: [["given", "name"]]
+    context: ["contact"]
+    learnt_from: ["schema"]
+
+  - id: "contact.phones[] <- phones @ contact (schema)"
+    targets: ["contact.phones[]"]
+    leaf: [["phones"]]
+    context: ["contact"]
+    learnt_from: ["schema"]
+
+  - id: "custom_fields[].field_id <- field id @ fields (schema)"
+    targets: ["custom_fields[].field_id"]
+    leaf: [["field", "id"]]
+    context: ["fields"]
+    learnt_from: ["schema"]
+
+  - id: "custom_fields[].label <- label @ fields (schema)"
+    targets: ["custom_fields[].label"]
+    leaf: [["label"]]
+    context: ["fields"]
+    learnt_from: ["schema"]
+
+  - id: "custom_fields[].value <- value @ fields (schema)"
+    targets: ["custom_fields[].value"]
+    leaf: [["value"]]
+    context: ["fields"]
+    learnt_from: ["schema"]
+
+  - id: "hold_expires_at <- at expires hold @ root (schema)"
+    targets: ["hold_expires_at"]
+    leaf: [["at", "expires", "hold"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "items[].activity.service_language <- language service @ root | item | slot (schema)"
+    targets: ["items[].activity.service_language"]
+    leaf: [["language", "service"]]
+    context: ["", "item", "slot"]
+    learnt_from: ["schema"]
+
+  - id: "items[].activity.slot_id <- id slot @ root | item | slot (schema)"
+    targets: ["items[].activity.slot_id"]
+    leaf: [["id", "slot"]]
+    context: ["", "item", "slot"]
+    learnt_from: ["schema"]
+
+  - id: "items[].cruise.cabin_number <- cabin number @ root | item | cabin (schema)"
+    targets: ["items[].cruise.cabin_number"]
+    leaf: [["cabin", "number"]]
+    context: ["", "item", "cabin"]
+    learnt_from: ["schema"]
+
+  - id: "items[].cruise.deck <- deck @ root | item | cabin (schema)"
+    targets: ["items[].cruise.deck"]
+    leaf: [["deck"]]
+    context: ["", "item", "cabin"]
+    learnt_from: ["schema"]
+
+  - id: "items[].end_date <- date end @ root | item (schema)"
+    targets: ["items[].end_date"]
+    leaf: [["date", "end"]]
+    context: ["", "item"]
+    learnt_from: ["schema"]
+
+  - id: "items[].end_time <- end time @ root | item (schema)"
+    targets: ["items[].end_time"]
+    leaf: [["end", "time"]]
+    context: ["", "item"]
+    learnt_from: ["schema"]
+
+  - id: "items[].option_id <- id option @ root | item (schema)"
+    targets: ["items[].option_id"]
+    leaf: [["id", "option"]]
+    context: ["", "item"]
+    learnt_from: ["schema"]
+
+  - id: "items[].option_name <- name option @ root | item (schema)"
+    targets: ["items[].option_name"]
+    leaf: [["name", "option"]]
+    context: ["", "item"]
+    learnt_from: ["schema"]
+
+  - id: "items[].product_id <- id product @ root | item (schema)"
+    targets: ["items[].product_id"]
+    leaf: [["id", "product"]]
+    context: ["", "item"]
+    learnt_from: ["schema"]
+
+  - id: "items[].product_name <- name product @ root | item (schema)"
+    targets: ["items[].product_name"]
+    leaf: [["name", "product"]]
+    context: ["", "item"]
+    learnt_from: ["schema"]
+
+  - id: "items[].start_date <- date start @ root | item (schema)"
+    targets: ["items[].start_date"]
+    leaf: [["date", "start"]]
+    context: ["", "item"]
+    learnt_from: ["schema"]
+
+  - id: "items[].start_time <- start time @ root | item (schema)"
+    targets: ["items[].start_time"]
+    leaf: [["start", "time"]]
+    context: ["", "item"]
+    learnt_from: ["schema"]
+
+  - id: "net_price.amount <- amount @ root | price (schema)"
+    targets: ["net_price.amount"]
+    leaf: [["amount"]]
+    context: ["", "price"]
+    learnt_from: ["schema"]
+
+  - id: "net_price.currency <- currency @ root | price (schema)"
+    targets: ["net_price.currency"]
+    leaf: [["currency"]]
+    context: ["", "price"]
+    learnt_from: ["schema"]
+
+  - id: "our_booking_id <- booking id our @ root (schema)"
+    targets: ["our_booking_id"]
+    leaf: [["booking", "id", "our"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "partner_booking_id <- booking id partner @ root (schema)"
+    targets: ["partner_booking_id"]
+    leaf: [["booking", "id", "partner"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "partner_confirmation_code <- code confirmation partner @ root (schema)"
+    targets: ["partner_confirmation_code"]
+    leaf: [["code", "confirmation", "partner"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "redeemed_at <- at redeemed @ root (schema)"
+    targets: ["redeemed_at"]
+    leaf: [["at", "redeemed"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "status <- status @ root (schema)"
+    targets: ["status"]
+    leaf: [["status"]]
+    context: [""]
+    learnt_from: ["schema"]
+
+  - id: "total_price.amount <- amount @ root | price (schema)"
+    targets: ["total_price.amount"]
+    leaf: [["amount"]]
+    context: ["", "price"]
+    learnt_from: ["schema"]
+
+  - id: "total_price.currency <- currency @ root | price (schema)"
+    targets: ["total_price.currency"]
+    leaf: [["currency"]]
+    context: ["", "price"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].age <- age @ traveller | ticket contact | traveller contact (schema)"
+    targets: ["travellers[].age"]
+    leaf: [["age"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].custom_fields[].field_id <- field id @ traveller fields (schema)"
+    targets: ["travellers[].custom_fields[].field_id"]
+    leaf: [["field", "id"]]
+    context: ["traveller fields"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].custom_fields[].label <- label @ traveller fields (schema)"
+    targets: ["travellers[].custom_fields[].label"]
+    leaf: [["label"]]
+    context: ["traveller fields"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].custom_fields[].value <- value @ traveller fields (schema)"
+    targets: ["travellers[].custom_fields[].value"]
+    leaf: [["value"]]
+    context: ["traveller fields"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].date_of_birth <- birth date of @ traveller | ticket contact | traveller contact (schema)"
+    targets: ["travellers[].date_of_birth"]
+    leaf: [["birth", "date", "of"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].family_name <- family name @ traveller | ticket contact | traveller contact (schema)"
+    targets: ["travellers[].family_name"]
+    leaf: [["family", "name"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].full_name <- full name @ traveller | ticket contact | traveller contact (schema)"
+    targets: ["travellers[].full_name"]
+    leaf: [["full", "name"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].given_name <- given name @ traveller | ticket contact | traveller contact (schema)"
+    targets: ["travellers[].given_name"]
+    leaf: [["given", "name"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].is_lead <- is lead @ traveller | ticket contact | traveller contact (schema)"
+    targets: ["travellers[].is_lead"]
+    leaf: [["is", "lead"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].nationality <- nationality @ traveller | ticket contact | traveller contact (schema)"
+    targets: ["travellers[].nationality"]
+    leaf: [["nationality"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["schema"]
+
+  - id: "travellers[].traveller_type <- traveller type @ traveller | ticket contact | traveller contact (schema)"
+    targets: ["travellers[].traveller_type"]
+    leaf: [["traveller", "type"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["schema"]
+
+
+  # ---- G3: general, dictionary-level synonyms written by hand. Their author had read the dev specs, so
+  # they are reported separately (strict score excludes them). Review every line.
+
+  - id: "contact.given_name <- first name / given name / forename / first @ contact (general)"
+    targets: ["contact.given_name"]
+    leaf: [["first", "name"], ["given", "name"], ["forename"], ["first"]]
+    context: ["contact"]
+    learnt_from: ["general"]
+
+  - id: "travellers[].given_name <- first name / given name / forename / first @ traveller | ticket contact | traveller contact (general)"
+    targets: ["travellers[].given_name"]
+    leaf: [["first", "name"], ["given", "name"], ["forename"], ["first"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["general"]
+
+  - id: "contact.family_name <- last name / family name / surname / last @ contact (general)"
+    targets: ["contact.family_name"]
+    leaf: [["last", "name"], ["family", "name"], ["surname"], ["last"]]
+    context: ["contact"]
+    learnt_from: ["general"]
+
+  - id: "travellers[].family_name <- last name / family name / surname / last @ traveller | ticket contact | traveller contact (general)"
+    targets: ["travellers[].family_name"]
+    leaf: [["last", "name"], ["family", "name"], ["surname"], ["last"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["general"]
+
+  - id: "contact.full_name <- full name @ contact (general)"
+    targets: ["contact.full_name"]
+    leaf: [["full", "name"]]
+    context: ["contact"]
+    learnt_from: ["general"]
+
+  - id: "travellers[].full_name <- full name @ traveller | ticket contact | traveller contact (general)"
+    targets: ["travellers[].full_name"]
+    leaf: [["full", "name"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["general"]
+
+  - id: "contact.email <- email / address email / mail @ contact (general)"
+    targets: ["contact.email"]
+    leaf: [["email"], ["address", "email"], ["mail"]]
+    context: ["contact"]
+    learnt_from: ["general"]
+
+  - id: "contact.phones[] <- phone / number phone / telephone / telephones / mobile @ contact (general)"
+    targets: ["contact.phones[]"]
+    leaf: [["phone"], ["number", "phone"], ["telephone"], ["telephones"], ["mobile"]]
+    context: ["contact"]
+    learnt_from: ["general"]
+
+  - id: "travellers[].age <- age @ traveller | ticket contact | traveller contact (general)"
+    targets: ["travellers[].age"]
+    leaf: [["age"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["general"]
+
+  - id: "travellers[].date_of_birth <- birth date / birth date of / dob / birthday @ traveller | ticket contact | traveller contact (general)"
+    targets: ["travellers[].date_of_birth"]
+    leaf: [["birth", "date"], ["birth", "date", "of"], ["dob"], ["birthday"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["general"]
+
+  - id: "travellers[].nationality <- nationality @ traveller | ticket contact | traveller contact (general)"
+    targets: ["travellers[].nationality"]
+    leaf: [["nationality"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["general"]
+
+  - id: "travellers[].traveller_type <- type / pax type / person type / age band @ traveller | ticket contact | traveller contact (general)"
+    targets: ["travellers[].traveller_type"]
+    leaf: [["type"], ["pax", "type"], ["person", "type"], ["age", "band"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["general"]
+
+  - id: "partner_booking_id <- booking id / id reservation @ root (general)"
+    targets: ["partner_booking_id"]
+    leaf: [["booking", "id"], ["id", "reservation"]]
+    context: [""]
+    learnt_from: ["general"]
+
+  - id: "partner_confirmation_code <- code confirmation / confirmation number @ root (general)"
+    targets: ["partner_confirmation_code"]
+    leaf: [["code", "confirmation"], ["confirmation", "number"]]
+    context: [""]
+    learnt_from: ["general"]
+
+  - id: "status <- status / state / booking status @ root (general)"
+    targets: ["status"]
+    leaf: [["status"], ["state"], ["booking", "status"]]
+    context: [""]
+    learnt_from: ["general"]
+
+  - id: "booked_at <- at created / created / creation date / created date / booking date / at booked / booked date @ root (general)"
+    targets: ["booked_at"]
+    leaf: [["at", "created"], ["created"], ["creation", "date"], ["created", "date"], ["booking", "date"], ["at", "booked"], ["booked", "date"]]
+    context: [""]
+    learnt_from: ["general"]
+
+  - id: "hold_expires_at <- at expires / date expiry / date expiration @ root (general)"
+    targets: ["hold_expires_at"]
+    leaf: [["at", "expires"], ["date", "expiry"], ["date", "expiration"]]
+    context: [""]
+    learnt_from: ["general"]
+
+  - id: "cancellable <- cancellable / cancellable is @ root (general)"
+    targets: ["cancellable"]
+    leaf: [["cancellable"], ["cancellable", "is"]]
+    context: [""]
+    learnt_from: ["general"]
+
+  - id: "cancellation_policy <- cancellation policy @ root | policy (general)"
+    targets: ["cancellation_policy"]
+    leaf: [["cancellation", "policy"]]
+    context: ["", "policy"]
+    learnt_from: ["general"]
+
+  - id: "items[].product_id <- id product / code product @ root | item (general)"
+    targets: ["items[].product_id"]
+    leaf: [["id", "product"], ["code", "product"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+
+  - id: "items[].product_name <- name product @ root | item (general)"
+    targets: ["items[].product_name"]
+    leaf: [["name", "product"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+
+  - id: "items[].option_id <- id option / id variant / id rate / code option @ root | item (general)"
+    targets: ["items[].option_id"]
+    leaf: [["id", "option"], ["id", "variant"], ["id", "rate"], ["code", "option"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+
+  - id: "items[].option_name <- name option / name variant @ root | item (general)"
+    targets: ["items[].option_name"]
+    leaf: [["name", "option"], ["name", "variant"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+
+  - id: "items[].start_date <- date start / date travel / date departure @ root | item (general)"
+    targets: ["items[].start_date"]
+    leaf: [["date", "start"], ["date", "travel"], ["date", "departure"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+
+  - id: "items[].end_date <- date end / date return @ root | item (general)"
+    targets: ["items[].end_date"]
+    leaf: [["date", "end"], ["date", "return"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+
+  - id: "items[].start_time <- start time @ root | item (general)"
+    targets: ["items[].start_time"]
+    leaf: [["start", "time"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+
+  - id: "items[].end_time <- end time @ root | item (general)"
+    targets: ["items[].end_time"]
+    leaf: [["end", "time"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+
+  - id: "items[].start_date + items[].start_time <- date start time / datetime start @ root | item (general)"
+    targets: ["items[].start_date", "items[].start_time"]
+    leaf: [["date", "start", "time"], ["datetime", "start"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+    transforms: ["date_part", "time_part"]
+
+  - id: "items[].end_date + items[].end_time <- date end time / datetime end @ root | item (general)"
+    targets: ["items[].end_date", "items[].end_time"]
+    leaf: [["date", "end", "time"], ["datetime", "end"]]
+    context: ["", "item"]
+    learnt_from: ["general"]
+    transforms: ["date_part", "time_part"]
+
+  - id: "total_price.amount <- amount / total / amount total @ price (general)"
+    targets: ["total_price.amount"]
+    leaf: [["amount"], ["total"], ["amount", "total"]]
+    context: ["price"]
+    learnt_from: ["general"]
+
+  - id: "net_price.amount <- amount / net / amount net @ price (general)"
+    targets: ["net_price.amount"]
+    leaf: [["amount"], ["net"], ["amount", "net"]]
+    context: ["price"]
+    learnt_from: ["general"]
+
+  - id: "total_price.currency <- currency / code currency @ price (general)"
+    targets: ["total_price.currency"]
+    leaf: [["currency"], ["code", "currency"]]
+    context: ["price"]
+    learnt_from: ["general"]
+
+  - id: "net_price.currency <- currency / code currency @ price (general)"
+    targets: ["net_price.currency"]
+    leaf: [["currency"], ["code", "currency"]]
+    context: ["price"]
+    learnt_from: ["general"]

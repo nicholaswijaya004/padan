@@ -6,18 +6,22 @@ entry's tokens exactly (C1). The parents become an entity path, e.g. unitItems[]
 it accepts and must name one exactly, so a ticket's contact never falls back to the booking
 contact (C2).
 Entries are data in data/rules/lexicon.yaml, each with the dev specs it was learnt from (C3), which
-is what lets leave-one-spec-out switch off a spec's own entries (E1).
+is what lets leave-one-spec-out switch off a spec's own entries (E1). Two sources are not specs:
+"schema" (the canonical field names, as name-match uses them) and "general" (dictionary-level
+synonyms written by hand, reported separately because their author had read the dev specs).
 """
 
 import re
+from collections.abc import Collection
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from padan.labels import VALID_TARGETS, normalise
 from padan.tokens import tokens
+from padan.transforms import parse_transform
 
 LEXICON = Path("data/rules/lexicon.yaml")
 FILTER = re.compile(r"\[[^\]]*\]")
@@ -31,6 +35,16 @@ class Entry(BaseModel):
     context: list[str] = Field(min_length=1)  # context keys; "" is the booking root
     learnt_from: list[str] = Field(min_length=1)
     escalate: bool = False  # learnt from an ASK_PARTNER label: the meaning was not documented
+    transforms: list[str | None] = []  # one per target when a target needs one, e.g. date_part
+
+    @model_validator(mode="after")
+    def one_transform_per_target(self) -> "Entry":
+        if self.transforms and len(self.transforms) != len(self.targets):
+            raise ValueError("transforms must list one entry (or null) per target")
+        for transform in self.transforms:
+            if transform is not None:
+                parse_transform(transform)
+        return self
 
     @field_validator("targets")
     @classmethod
@@ -102,20 +116,22 @@ class Candidate:
     targets: tuple[str, ...]
     entry: str
     escalate: bool = False
+    transforms: tuple[str | None, ...] = ()
 
 
-def candidates(path: str, lexicon: Lexicon, held_out: str | None = None) -> list[Candidate]:
+def candidates(path: str, lexicon: Lexicon, off: Collection[str] = ()) -> list[Candidate]:
     """Every entry whose leaf words and context key both match exactly.
 
-    held_out: a spec id whose own entries are switched off (leave-one-spec-out).
+    off: sources switched off. An entry is skipped when all of its sources are off, e.g. off={spec}
+    for leave-one-spec-out, plus "general" for the strict score.
     """
     leaf, parents = split(path)
     leaf_words = sorted(tokens(leaf))
     key = context_key(entity_path(parents, lexicon), lexicon)
     return [
-        Candidate(tuple(entry.targets), entry.id, entry.escalate)
+        Candidate(tuple(entry.targets), entry.id, entry.escalate, tuple(entry.transforms))
         for entry in lexicon.entries
-        if (held_out is None or set(entry.learnt_from) - {held_out})
+        if set(entry.learnt_from) - set(off)
         and key in entry.context
         and leaf_words in [sorted(words) for words in entry.leaf]
     ]

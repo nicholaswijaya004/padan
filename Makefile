@@ -1,4 +1,4 @@
-.PHONY: check lint typecheck test fmt fetch scaffold baselines score
+.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules
 
 check: lint typecheck test
 
@@ -27,3 +27,6 @@ baselines:
 
 score:
 	uv run python -m padan.report $(PRED)
+
+rules:
+	uv run python -m padan.engine data/predictions
