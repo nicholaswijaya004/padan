@@ -55,7 +55,7 @@ def needs_enum_map(target: str) -> bool:
 
 
 def decide(found: list[Candidate]) -> list[Decision]:
-    """The escalation policy: candidates -> one decision per target (E2). You write this."""
+    """The escalation policy: candidates -> one decision per target (E2)."""
     # 1. nothing matched: leave it blank
     if not found:
         return [Decision(NONE)]

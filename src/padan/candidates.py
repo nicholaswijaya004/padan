@@ -52,6 +52,8 @@ class Entry(BaseModel):
         unknown = [t for t in targets if normalise(t) not in VALID_TARGETS]
         if unknown:
             raise ValueError(f"not Booking schema paths: {unknown}")
+        if len(set(targets)) != len(targets):
+            raise ValueError(f"a target is listed twice: {targets}")
         return targets
 
     @field_validator("leaf")

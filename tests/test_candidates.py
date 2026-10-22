@@ -145,6 +145,12 @@ def test_entry_target_must_exist_in_the_schema() -> None:
         Entry.model_validate(entry("cruise.voyage_id", ["voyage", "id"], ["item"]))
 
 
+def test_entry_target_must_not_repeat() -> None:
+    # a repeated target reads as a second, different reading and turns a sure mapping into NONE
+    with pytest.raises(ValidationError):
+        Entry.model_validate(entry("status", ["status"], [""]) | {"targets": ["status", "status"]})
+
+
 def test_entry_leaf_must_be_words_not_a_partner_path() -> None:
     with pytest.raises(ValidationError):
         Entry.model_validate(entry("status", ["unitItems[].status"], [""]))
