@@ -84,7 +84,8 @@ def test_a_dependent_entity_is_read_with_its_owner() -> None:
 
 
 def targets(path: str, lex: Lexicon = LEX, held_out: str | None = None) -> list[str]:
-    return [t for c in candidates(path, lex, held_out) for t in c.targets]
+    off = [held_out] if held_out else []
+    return [t for c in candidates(path, lex, off) for t in c.targets]
 
 
 def test_leaf_words_must_match_exactly() -> None:
@@ -112,6 +113,23 @@ def test_leave_one_spec_out_switches_off_a_specs_own_entries() -> None:
     # no fallback: with the ticket-contact entry off, the booking contact's entry must not match
     assert targets("unitItems[].contact.firstName", held_out="b") == []
     assert targets("unitItems[].contact.firstName", held_out="a") == ["travellers[].given_name"]
+
+
+def test_general_entries_can_be_switched_off_for_the_strict_score() -> None:
+    general = lexicon(entry("status", ["state"], [""], spec="general"))
+    assert [c.targets for c in candidates("state", general, off=["octo"])] == [("status",)]
+    assert candidates("state", general, off=["octo", "general"]) == []
+
+
+def test_a_split_entry_carries_one_transform_per_target() -> None:
+    split_entry = entry("items[].start_date", ["start", "date", "time"], [""]) | {
+        "targets": ["items[].start_date", "items[].start_time"],
+        "transforms": ["date_part", "time_part"],
+    }
+    [found] = candidates("startDateTime", lexicon(split_entry))
+    assert found.transforms == ("date_part", "time_part")
+    with pytest.raises(ValidationError):
+        Entry.model_validate(split_entry | {"transforms": ["date_part"]})
 
 
 def test_an_entry_learnt_from_two_specs_survives_holding_one_out() -> None:
