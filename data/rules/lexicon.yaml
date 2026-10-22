@@ -69,15 +69,21 @@ entries:
     learnt_from: ["hx-swota"]
     escalate: true
 
+  - id: "contact.email <- address email @ contact"
+    targets: ["contact.email"]
+    leaf: [["address", "email"]]
+    context: ["contact"]
+    learnt_from: ["octo-core"]
+
   - id: "contact.email <- email @ contact"
     targets: ["contact.email"]
     leaf: [["email"]]
     context: ["contact"]
     learnt_from: ["hotelbeds-activities"]
 
-  - id: "contact.email + contact.email <- address email @ contact"
-    targets: ["contact.email", "contact.email"]
-    leaf: [["address", "email"]]
+  - id: "contact.family_name <- last name @ contact"
+    targets: ["contact.family_name"]
+    leaf: [["last", "name"]]
     context: ["contact"]
     learnt_from: ["octo-core"]
 
@@ -87,15 +93,15 @@ entries:
     context: ["contact"]
     learnt_from: ["hotelbeds-activities"]
 
-  - id: "contact.family_name + contact.family_name <- last name @ contact"
-    targets: ["contact.family_name", "contact.family_name"]
-    leaf: [["last", "name"]]
+  - id: "contact.full_name <- full name @ contact"
+    targets: ["contact.full_name"]
+    leaf: [["full", "name"]]
     context: ["contact"]
     learnt_from: ["octo-core"]
 
-  - id: "contact.full_name + contact.full_name <- full name @ contact"
-    targets: ["contact.full_name", "contact.full_name"]
-    leaf: [["full", "name"]]
+  - id: "contact.given_name <- first name @ contact"
+    targets: ["contact.given_name"]
+    leaf: [["first", "name"]]
     context: ["contact"]
     learnt_from: ["octo-core"]
 
@@ -105,9 +111,9 @@ entries:
     context: ["contact"]
     learnt_from: ["hotelbeds-activities"]
 
-  - id: "contact.given_name + contact.given_name <- first name @ contact"
-    targets: ["contact.given_name", "contact.given_name"]
-    leaf: [["first", "name"]]
+  - id: "contact.phones[] <- number phone @ contact"
+    targets: ["contact.phones[]"]
+    leaf: [["number", "phone"]]
     context: ["contact"]
     learnt_from: ["octo-core"]
 
@@ -117,14 +123,8 @@ entries:
     context: ["contact"]
     learnt_from: ["hotelbeds-activities"]
 
-  - id: "contact.phones[] + contact.phones[] <- number phone @ contact"
-    targets: ["contact.phones[]", "contact.phones[]"]
-    leaf: [["number", "phone"]]
-    context: ["contact"]
-    learnt_from: ["octo-core"]
-
-  - id: "custom_fields[].field_id + custom_fields[].field_id <- id @ fields"
-    targets: ["custom_fields[].field_id", "custom_fields[].field_id"]
+  - id: "custom_fields[].field_id <- id @ fields"
+    targets: ["custom_fields[].field_id"]
     leaf: [["id"]]
     context: ["fields"]
     learnt_from: ["headout-partner"]
@@ -135,8 +135,8 @@ entries:
     context: ["fields"]
     learnt_from: ["headout-partner"]
 
-  - id: "custom_fields[].value + custom_fields[].value <- value @ fields"
-    targets: ["custom_fields[].value", "custom_fields[].value"]
+  - id: "custom_fields[].value <- value @ fields"
+    targets: ["custom_fields[].value"]
     leaf: [["value"]]
     context: ["fields"]
     learnt_from: ["headout-partner"]
@@ -220,6 +220,12 @@ entries:
     context: ["item"]
     learnt_from: ["hotelbeds-activities"]
 
+  - id: "items[].activity.slot_id <- availability id @ root"
+    targets: ["items[].activity.slot_id"]
+    leaf: [["availability", "id"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
   - id: "items[].activity.slot_id <- id inventory @ root"
     targets: ["items[].activity.slot_id"]
     leaf: [["id", "inventory"]]
@@ -236,12 +242,6 @@ entries:
     targets: ["items[].activity.slot_id"]
     leaf: [["id"]]
     context: ["slot"]
-    learnt_from: ["octo-core"]
-
-  - id: "items[].activity.slot_id + items[].activity.slot_id <- availability id @ root"
-    targets: ["items[].activity.slot_id", "items[].activity.slot_id"]
-    leaf: [["availability", "id"]]
-    context: [""]
     learnt_from: ["octo-core"]
 
   - id: "items[].cruise.cabin_number <- cabin number @ cabin"
@@ -275,6 +275,18 @@ entries:
     learnt_from: ["octo-core"]
     transforms: ["date_part", "time_part"]
 
+  - id: "items[].option_id <- id option @ root"
+    targets: ["items[].option_id"]
+    leaf: [["id", "option"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "items[].option_id <- id variant @ root"
+    targets: ["items[].option_id"]
+    leaf: [["id", "variant"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
   - id: "items[].option_id <- category code priced @ option"
     targets: ["items[].option_id"]
     leaf: [["category", "code", "priced"]]
@@ -288,18 +300,6 @@ entries:
     learnt_from: ["headout-partner"]
     escalate: true
 
-  - id: "items[].option_id + items[].option_id <- id option @ root"
-    targets: ["items[].option_id", "items[].option_id"]
-    leaf: [["id", "option"]]
-    context: [""]
-    learnt_from: ["octo-core"]
-
-  - id: "items[].option_id + items[].option_id <- id variant @ root"
-    targets: ["items[].option_id", "items[].option_id"]
-    leaf: [["id", "variant"]]
-    context: [""]
-    learnt_from: ["headout-partner"]
-
   - id: "items[].option_name <- name @ option"
     targets: ["items[].option_name"]
     leaf: [["name"]]
@@ -310,25 +310,19 @@ entries:
     targets: ["items[].product_id"]
     leaf: [["id", "product"]]
     context: [""]
-    learnt_from: ["headout-partner"]
+    learnt_from: ["headout-partner", "octo-core"]
+
+  - id: "items[].product_id <- id voyage @ item"
+    targets: ["items[].product_id"]
+    leaf: [["id", "voyage"]]
+    context: ["item"]
+    learnt_from: ["hx-swota"]
 
   - id: "items[].product_id <- id @ product"
     targets: ["items[].product_id"]
     leaf: [["id"]]
     context: ["product"]
     learnt_from: ["headout-partner"]
-
-  - id: "items[].product_id + items[].product_id <- id product @ root"
-    targets: ["items[].product_id", "items[].product_id"]
-    leaf: [["id", "product"]]
-    context: [""]
-    learnt_from: ["octo-core"]
-
-  - id: "items[].product_id + items[].product_id <- id voyage @ item"
-    targets: ["items[].product_id", "items[].product_id"]
-    leaf: [["id", "voyage"]]
-    context: ["item"]
-    learnt_from: ["hx-swota"]
 
   - id: "items[].product_name <- name @ product"
     targets: ["items[].product_name"]
@@ -388,8 +382,8 @@ entries:
     context: [""]
     learnt_from: ["headout-partner"]
 
-  - id: "our_booking_id + our_booking_id <- reference reseller @ root"
-    targets: ["our_booking_id", "our_booking_id"]
+  - id: "our_booking_id <- reference reseller @ root"
+    targets: ["our_booking_id"]
     leaf: [["reference", "reseller"]]
     context: [""]
     learnt_from: ["octo-core"]
@@ -450,6 +444,12 @@ entries:
     context: ["traveller"]
     learnt_from: ["hotelbeds-activities"]
 
+  - id: "travellers[].family_name <- last name @ ticket contact"
+    targets: ["travellers[].family_name"]
+    leaf: [["last", "name"]]
+    context: ["ticket contact"]
+    learnt_from: ["octo-core"]
+
   - id: "travellers[].family_name <- surname @ traveller"
     targets: ["travellers[].family_name"]
     leaf: [["surname"]]
@@ -462,15 +462,15 @@ entries:
     context: ["traveller contact"]
     learnt_from: ["hx-swota"]
 
-  - id: "travellers[].family_name + travellers[].family_name <- last name @ ticket contact"
-    targets: ["travellers[].family_name", "travellers[].family_name"]
-    leaf: [["last", "name"]]
+  - id: "travellers[].full_name <- full name @ ticket contact"
+    targets: ["travellers[].full_name"]
+    leaf: [["full", "name"]]
     context: ["ticket contact"]
     learnt_from: ["octo-core"]
 
-  - id: "travellers[].full_name + travellers[].full_name <- full name @ ticket contact"
-    targets: ["travellers[].full_name", "travellers[].full_name"]
-    leaf: [["full", "name"]]
+  - id: "travellers[].given_name <- first name @ ticket contact"
+    targets: ["travellers[].given_name"]
+    leaf: [["first", "name"]]
     context: ["ticket contact"]
     learnt_from: ["octo-core"]
 
@@ -492,15 +492,15 @@ entries:
     context: ["traveller contact"]
     learnt_from: ["hx-swota"]
 
-  - id: "travellers[].given_name + travellers[].given_name <- first name @ ticket contact"
-    targets: ["travellers[].given_name", "travellers[].given_name"]
-    leaf: [["first", "name"]]
-    context: ["ticket contact"]
-    learnt_from: ["octo-core"]
-
-  - id: "travellers[].is_lead + travellers[].is_lead <- is primary @ traveller"
-    targets: ["travellers[].is_lead", "travellers[].is_lead"]
+  - id: "travellers[].is_lead <- is primary @ traveller"
+    targets: ["travellers[].is_lead"]
     leaf: [["is", "primary"]]
+    context: ["traveller"]
+    learnt_from: ["headout-partner"]
+
+  - id: "travellers[].traveller_type <- person type @ traveller"
+    targets: ["travellers[].traveller_type"]
+    leaf: [["person", "type"]]
     context: ["traveller"]
     learnt_from: ["headout-partner"]
 
@@ -510,22 +510,34 @@ entries:
     context: ["traveller"]
     learnt_from: ["hotelbeds-activities"]
 
-  - id: "travellers[].traveller_type + travellers[].traveller_type <- person type @ traveller"
-    targets: ["travellers[].traveller_type", "travellers[].traveller_type"]
-    leaf: [["person", "type"]]
-    context: ["traveller"]
-    learnt_from: ["headout-partner"]
-
 
   # ---- G1: a word learnt in one scope also applies to its parallel scope (contact <-> traveller,
   # voucher <-> ticket, booking root <-> item). The source spec is unchanged, so leave-one-spec-out
   # stays honest.
+
+  - id: "travellers[].family_name <- last name @ traveller | ticket contact | traveller contact (G1)"
+    targets: ["travellers[].family_name"]
+    leaf: [["last", "name"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["octo-core"]
 
   - id: "travellers[].family_name <- surname @ traveller | ticket contact | traveller contact (G1)"
     targets: ["travellers[].family_name"]
     leaf: [["surname"]]
     context: ["traveller", "ticket contact", "traveller contact"]
     learnt_from: ["hotelbeds-activities", "hx-swota"]
+
+  - id: "travellers[].full_name <- full name @ traveller | ticket contact | traveller contact (G1)"
+    targets: ["travellers[].full_name"]
+    leaf: [["full", "name"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "travellers[].given_name <- first name @ traveller | ticket contact | traveller contact (G1)"
+    targets: ["travellers[].given_name"]
+    leaf: [["first", "name"]]
+    context: ["traveller", "ticket contact", "traveller contact"]
+    learnt_from: ["octo-core"]
 
   - id: "travellers[].given_name <- name @ traveller | ticket contact | traveller contact (G1)"
     targets: ["travellers[].given_name"]
@@ -599,6 +611,12 @@ entries:
     context: ["", "item"]
     learnt_from: ["hotelbeds-activities"]
 
+  - id: "items[].activity.slot_id <- availability id @ root | item (G1)"
+    targets: ["items[].activity.slot_id"]
+    leaf: [["availability", "id"]]
+    context: ["", "item"]
+    learnt_from: ["octo-core"]
+
   - id: "items[].activity.slot_id <- id inventory @ root | item (G1)"
     targets: ["items[].activity.slot_id"]
     leaf: [["id", "inventory"]]
@@ -623,11 +641,29 @@ entries:
     context: ["", "item"]
     learnt_from: ["hotelbeds-activities"]
 
+  - id: "items[].option_id <- id option @ root | item (G1)"
+    targets: ["items[].option_id"]
+    leaf: [["id", "option"]]
+    context: ["", "item"]
+    learnt_from: ["octo-core"]
+
+  - id: "items[].option_id <- id variant @ root | item (G1)"
+    targets: ["items[].option_id"]
+    leaf: [["id", "variant"]]
+    context: ["", "item"]
+    learnt_from: ["headout-partner"]
+
   - id: "items[].product_id <- id product @ root | item (G1)"
     targets: ["items[].product_id"]
     leaf: [["id", "product"]]
     context: ["", "item"]
-    learnt_from: ["headout-partner"]
+    learnt_from: ["headout-partner", "octo-core"]
+
+  - id: "items[].product_id <- id voyage @ root | item (G1)"
+    targets: ["items[].product_id"]
+    leaf: [["id", "voyage"]]
+    context: ["", "item"]
+    learnt_from: ["hx-swota"]
 
   - id: "items[].start_date <- from @ root | item (G1)"
     targets: ["items[].start_date"]
@@ -641,11 +677,29 @@ entries:
     context: ["", "item"]
     learnt_from: ["hx-swota"]
 
+  - id: "contact.family_name <- last name @ contact (G1)"
+    targets: ["contact.family_name"]
+    leaf: [["last", "name"]]
+    context: ["contact"]
+    learnt_from: ["octo-core"]
+
   - id: "contact.family_name <- surname @ contact (G1)"
     targets: ["contact.family_name"]
     leaf: [["surname"]]
     context: ["contact"]
     learnt_from: ["hotelbeds-activities", "hx-swota"]
+
+  - id: "contact.full_name <- full name @ contact (G1)"
+    targets: ["contact.full_name"]
+    leaf: [["full", "name"]]
+    context: ["contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "contact.given_name <- first name @ contact (G1)"
+    targets: ["contact.given_name"]
+    leaf: [["first", "name"]]
+    context: ["contact"]
+    learnt_from: ["octo-core"]
 
   - id: "travellers[].given_name <- given name @ traveller | ticket contact | traveller contact (G1)"
     targets: ["travellers[].given_name"]
