@@ -1,0 +1,510 @@
+# Rule lexicon (ADR-001 E1-E5): which partner names mean which canonical targets, in which context.
+# Entries were drafted by a script from the dev gold labels (Day 8) and are curated by hand: one entry
+# per (targets, leaf words, context), with the dev specs it was learnt from. Leave-one-spec-out switches
+# off an entry when the spec being scored is its only source. Never add an entry from a test spec.
+
+# Entity words, in priority order: the first entity whose words appear in a parent name wins.
+entities:
+  traveller: [customer, customers, pax, paxes, guest, guests, traveller, travellers, traveler, travelers, participant, participants, passenger, passengers]
+  contact: [contact, holder, booker]
+  ticket: [ticket, tickets, unit, units]
+  cabin: [cabin, cabins]
+  delivery: [delivery]
+  fields: [fields, questions, answers]
+  voucher: [voucher, vouchers]
+  slot: [availability, slot, slots, timeslot]
+  item: [activity, activities, item, items, sailing, sailings]
+  product: [product, products]
+  option: [variant, variants, option, options, category]
+  price: [price, prices, pricing, payment, payments]
+  policy: [policy, policies]
+  booking: [booking, bookings, reservation, reservations, order]
+
+# Parent names made only of these words are skipped (ContactInfo.PersonName -> contact).
+wrappers: [info, details, detail, list, data, selected, person, name, schedule]
+
+# Read together with their owner: unitItems[].contact is "ticket contact", not "contact".
+dependents: [contact, fields, delivery]
+
+entries:
+  - id: "balance_due_date <- date due @ price"
+    targets: ["balance_due_date"]
+    leaf: [["date", "due"]]
+    context: ["price"]
+    learnt_from: ["hx-swota"]
+    escalate: true
+
+  - id: "booked_at <- at created utc @ root"
+    targets: ["booked_at"]
+    leaf: [["at", "created", "utc"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "booked_at <- booked date @ root"
+    targets: ["booked_at"]
+    leaf: [["booked", "date"]]
+    context: [""]
+    learnt_from: ["hx-swota"]
+
+  - id: "booked_at <- creation timestamp @ root"
+    targets: ["booked_at"]
+    leaf: [["creation", "timestamp"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
+  - id: "cancellable <- cancellable @ root"
+    targets: ["cancellable"]
+    leaf: [["cancellable"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "cancellation_policy <- text @ policy"
+    targets: ["cancellation_policy"]
+    leaf: [["text"]]
+    context: ["policy"]
+    learnt_from: ["hx-swota"]
+    escalate: true
+
+  - id: "contact.email <- email @ contact"
+    targets: ["contact.email"]
+    leaf: [["email"]]
+    context: ["contact"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "contact.email + contact.email <- address email @ contact"
+    targets: ["contact.email", "contact.email"]
+    leaf: [["address", "email"]]
+    context: ["contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "contact.family_name <- surname @ contact"
+    targets: ["contact.family_name"]
+    leaf: [["surname"]]
+    context: ["contact"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "contact.family_name + contact.family_name <- last name @ contact"
+    targets: ["contact.family_name", "contact.family_name"]
+    leaf: [["last", "name"]]
+    context: ["contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "contact.full_name + contact.full_name <- full name @ contact"
+    targets: ["contact.full_name", "contact.full_name"]
+    leaf: [["full", "name"]]
+    context: ["contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "contact.given_name <- name @ contact"
+    targets: ["contact.given_name"]
+    leaf: [["name"]]
+    context: ["contact"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "contact.given_name + contact.given_name <- first name @ contact"
+    targets: ["contact.given_name", "contact.given_name"]
+    leaf: [["first", "name"]]
+    context: ["contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "contact.phones[] <- telephones @ contact"
+    targets: ["contact.phones[]"]
+    leaf: [["telephones"]]
+    context: ["contact"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "contact.phones[] + contact.phones[] <- number phone @ contact"
+    targets: ["contact.phones[]", "contact.phones[]"]
+    leaf: [["number", "phone"]]
+    context: ["contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "custom_fields[].field_id + custom_fields[].field_id <- id @ fields"
+    targets: ["custom_fields[].field_id", "custom_fields[].field_id"]
+    leaf: [["id"]]
+    context: ["fields"]
+    learnt_from: ["headout-partner"]
+
+  - id: "custom_fields[].label <- name @ fields"
+    targets: ["custom_fields[].label"]
+    leaf: [["name"]]
+    context: ["fields"]
+    learnt_from: ["headout-partner"]
+
+  - id: "custom_fields[].value + custom_fields[].value <- value @ fields"
+    targets: ["custom_fields[].value", "custom_fields[].value"]
+    leaf: [["value"]]
+    context: ["fields"]
+    learnt_from: ["headout-partner"]
+
+  - id: "fulfilment[kind=ticket].format <- type @ ticket"
+    targets: ["fulfilment[kind=ticket].format"]
+    leaf: [["type"]]
+    context: ["ticket"]
+    learnt_from: ["headout-partner"]
+
+  - id: "fulfilment[kind=ticket].format <- delivery format @ ticket delivery"
+    targets: ["fulfilment[kind=ticket].format"]
+    leaf: [["delivery", "format"]]
+    context: ["ticket delivery"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=ticket].partner_id <- id public @ ticket"
+    targets: ["fulfilment[kind=ticket].partner_id"]
+    leaf: [["id", "public"]]
+    context: ["ticket"]
+    learnt_from: ["headout-partner"]
+
+  - id: "fulfilment[kind=ticket].redeemed_at <- at redeemed utc @ ticket"
+    targets: ["fulfilment[kind=ticket].redeemed_at"]
+    leaf: [["at", "redeemed", "utc"]]
+    context: ["ticket"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=ticket].value <- url @ ticket"
+    targets: ["fulfilment[kind=ticket].value"]
+    leaf: [["url"]]
+    context: ["ticket"]
+    learnt_from: ["headout-partner"]
+
+  - id: "fulfilment[kind=ticket].value <- delivery value @ ticket delivery"
+    targets: ["fulfilment[kind=ticket].value"]
+    leaf: [["delivery", "value"]]
+    context: ["ticket delivery"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=voucher].format <- delivery format @ voucher delivery"
+    targets: ["fulfilment[kind=voucher].format"]
+    leaf: [["delivery", "format"]]
+    context: ["voucher delivery"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=voucher].redeemed_at <- at redeemed utc @ voucher"
+    targets: ["fulfilment[kind=voucher].redeemed_at"]
+    leaf: [["at", "redeemed", "utc"]]
+    context: ["voucher"]
+    learnt_from: ["octo-core"]
+
+  - id: "fulfilment[kind=voucher].value <- url voucher @ root"
+    targets: ["fulfilment[kind=voucher].value"]
+    leaf: [["url", "voucher"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
+  - id: "fulfilment[kind=voucher].value <- delivery value @ voucher delivery"
+    targets: ["fulfilment[kind=voucher].value"]
+    leaf: [["delivery", "value"]]
+    context: ["voucher delivery"]
+    learnt_from: ["octo-core"]
+
+  - id: "hold_expires_at <- at expires utc @ root"
+    targets: ["hold_expires_at"]
+    leaf: [["at", "expires", "utc"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "items[].activity.service_language <- language prefered @ item"
+    targets: ["items[].activity.service_language"]
+    leaf: [["language", "prefered"]]
+    context: ["item"]
+    learnt_from: ["hotelbeds-activities"]
+    escalate: true
+
+  - id: "items[].activity.service_language <- language service @ item"
+    targets: ["items[].activity.service_language"]
+    leaf: [["language", "service"]]
+    context: ["item"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "items[].activity.slot_id <- id inventory @ root"
+    targets: ["items[].activity.slot_id"]
+    leaf: [["id", "inventory"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
+  - id: "items[].activity.slot_id <- key rate @ item"
+    targets: ["items[].activity.slot_id"]
+    leaf: [["key", "rate"]]
+    context: ["item"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "items[].activity.slot_id <- id @ slot"
+    targets: ["items[].activity.slot_id"]
+    leaf: [["id"]]
+    context: ["slot"]
+    learnt_from: ["octo-core"]
+
+  - id: "items[].activity.slot_id + items[].activity.slot_id <- availability id @ root"
+    targets: ["items[].activity.slot_id", "items[].activity.slot_id"]
+    leaf: [["availability", "id"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "items[].cruise.cabin_number <- cabin number @ cabin"
+    targets: ["items[].cruise.cabin_number"]
+    leaf: [["cabin", "number"]]
+    context: ["cabin"]
+    learnt_from: ["hx-swota"]
+
+  - id: "items[].cruise.deck <- deck name @ cabin"
+    targets: ["items[].cruise.deck"]
+    leaf: [["deck", "name"]]
+    context: ["cabin"]
+    learnt_from: ["hx-swota"]
+
+  - id: "items[].end_date <- end @ item"
+    targets: ["items[].end_date"]
+    leaf: [["end"]]
+    context: ["item"]
+    learnt_from: ["hx-swota"]
+
+  - id: "items[].end_date <- to @ item"
+    targets: ["items[].end_date"]
+    leaf: [["to"]]
+    context: ["item"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "items[].end_date + items[].end_time <- date end local time @ slot"
+    targets: ["items[].end_date", "items[].end_time"]
+    leaf: [["date", "end", "local", "time"]]
+    context: ["slot"]
+    learnt_from: ["octo-core"]
+
+  - id: "items[].option_id <- category code priced @ option"
+    targets: ["items[].option_id"]
+    leaf: [["category", "code", "priced"]]
+    context: ["option"]
+    learnt_from: ["hx-swota"]
+
+  - id: "items[].option_id <- id @ option"
+    targets: ["items[].option_id"]
+    leaf: [["id"]]
+    context: ["option"]
+    learnt_from: ["headout-partner"]
+    escalate: true
+
+  - id: "items[].option_id + items[].option_id <- id option @ root"
+    targets: ["items[].option_id", "items[].option_id"]
+    leaf: [["id", "option"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "items[].option_id + items[].option_id <- id variant @ root"
+    targets: ["items[].option_id", "items[].option_id"]
+    leaf: [["id", "variant"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
+  - id: "items[].option_name <- name @ option"
+    targets: ["items[].option_name"]
+    leaf: [["name"]]
+    context: ["option"]
+    learnt_from: ["headout-partner"]
+
+  - id: "items[].product_id <- id product @ root"
+    targets: ["items[].product_id"]
+    leaf: [["id", "product"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
+  - id: "items[].product_id <- id @ product"
+    targets: ["items[].product_id"]
+    leaf: [["id"]]
+    context: ["product"]
+    learnt_from: ["headout-partner"]
+
+  - id: "items[].product_id + items[].product_id <- id product @ root"
+    targets: ["items[].product_id", "items[].product_id"]
+    leaf: [["id", "product"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "items[].product_id + items[].product_id <- id voyage @ item"
+    targets: ["items[].product_id", "items[].product_id"]
+    leaf: [["id", "voyage"]]
+    context: ["item"]
+    learnt_from: ["hx-swota"]
+
+  - id: "items[].product_name <- name @ product"
+    targets: ["items[].product_name"]
+    leaf: [["name"]]
+    context: ["product"]
+    learnt_from: ["headout-partner"]
+
+  - id: "items[].start_date <- from @ item"
+    targets: ["items[].start_date"]
+    leaf: [["from"]]
+    context: ["item"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "items[].start_date <- start @ item"
+    targets: ["items[].start_date"]
+    leaf: [["start"]]
+    context: ["item"]
+    learnt_from: ["hx-swota"]
+
+  - id: "items[].start_date + items[].start_time <- date start time @ root"
+    targets: ["items[].start_date", "items[].start_time"]
+    leaf: [["date", "start", "time"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
+  - id: "items[].start_date + items[].start_time <- date local start time @ slot"
+    targets: ["items[].start_date", "items[].start_time"]
+    leaf: [["date", "local", "start", "time"]]
+    context: ["slot"]
+    learnt_from: ["octo-core"]
+
+  - id: "net_price.amount <- amount @ price"
+    targets: ["net_price.amount"]
+    leaf: [["amount"]]
+    context: ["price"]
+    learnt_from: ["headout-partner"]
+    escalate: true
+
+  - id: "net_price.currency <- code currency @ price"
+    targets: ["net_price.currency"]
+    leaf: [["code", "currency"]]
+    context: ["price"]
+    learnt_from: ["headout-partner"]
+    escalate: true
+
+  - id: "our_booking_id <- client reference @ root"
+    targets: ["our_booking_id"]
+    leaf: [["client", "reference"]]
+    context: [""]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "our_booking_id <- id partner reference @ root"
+    targets: ["our_booking_id"]
+    leaf: [["id", "partner", "reference"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
+  - id: "our_booking_id + our_booking_id <- reference reseller @ root"
+    targets: ["our_booking_id", "our_booking_id"]
+    leaf: [["reference", "reseller"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "partner_booking_id <- booking id @ root"
+    targets: ["partner_booking_id"]
+    leaf: [["booking", "id"]]
+    context: [""]
+    learnt_from: ["headout-partner"]
+
+  - id: "partner_booking_id <- id @ root"
+    targets: ["partner_booking_id"]
+    leaf: [["id"]]
+    context: [""]
+    learnt_from: ["hx-swota", "octo-core"]
+
+  - id: "partner_confirmation_code <- reference supplier @ root"
+    targets: ["partner_confirmation_code"]
+    leaf: [["reference", "supplier"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "redeemed_at <- at redeemed utc @ root"
+    targets: ["redeemed_at"]
+    leaf: [["at", "redeemed", "utc"]]
+    context: [""]
+    learnt_from: ["octo-core"]
+
+  - id: "status <- code status @ root"
+    targets: ["status"]
+    leaf: [["code", "status"]]
+    context: [""]
+    learnt_from: ["hx-swota"]
+    escalate: true
+
+  - id: "status <- status @ root"
+    targets: ["status"]
+    leaf: [["status"]]
+    context: [""]
+    learnt_from: ["headout-partner", "octo-core"]
+
+  - id: "total_price.amount <- amount @ price"
+    targets: ["total_price.amount"]
+    leaf: [["amount"]]
+    context: ["price"]
+    learnt_from: ["hx-swota"]
+    escalate: true
+
+  - id: "total_price.currency <- code currency @ price"
+    targets: ["total_price.currency"]
+    leaf: [["code", "currency"]]
+    context: ["price"]
+    learnt_from: ["hx-swota"]
+
+  - id: "travellers[].age <- age @ traveller"
+    targets: ["travellers[].age"]
+    leaf: [["age"]]
+    context: ["traveller"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "travellers[].family_name <- surname @ traveller"
+    targets: ["travellers[].family_name"]
+    leaf: [["surname"]]
+    context: ["traveller"]
+    learnt_from: ["hotelbeds-activities", "hx-swota"]
+
+  - id: "travellers[].family_name <- surname @ traveller contact"
+    targets: ["travellers[].family_name"]
+    leaf: [["surname"]]
+    context: ["traveller contact"]
+    learnt_from: ["hx-swota"]
+
+  - id: "travellers[].family_name + travellers[].family_name <- last name @ ticket contact"
+    targets: ["travellers[].family_name", "travellers[].family_name"]
+    leaf: [["last", "name"]]
+    context: ["ticket contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "travellers[].full_name + travellers[].full_name <- full name @ ticket contact"
+    targets: ["travellers[].full_name", "travellers[].full_name"]
+    leaf: [["full", "name"]]
+    context: ["ticket contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "travellers[].given_name <- given name @ traveller"
+    targets: ["travellers[].given_name"]
+    leaf: [["given", "name"]]
+    context: ["traveller"]
+    learnt_from: ["hx-swota"]
+
+  - id: "travellers[].given_name <- name @ traveller"
+    targets: ["travellers[].given_name"]
+    leaf: [["name"]]
+    context: ["traveller"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "travellers[].given_name <- given name @ traveller contact"
+    targets: ["travellers[].given_name"]
+    leaf: [["given", "name"]]
+    context: ["traveller contact"]
+    learnt_from: ["hx-swota"]
+
+  - id: "travellers[].given_name + travellers[].given_name <- first name @ ticket contact"
+    targets: ["travellers[].given_name", "travellers[].given_name"]
+    leaf: [["first", "name"]]
+    context: ["ticket contact"]
+    learnt_from: ["octo-core"]
+
+  - id: "travellers[].is_lead + travellers[].is_lead <- is primary @ traveller"
+    targets: ["travellers[].is_lead", "travellers[].is_lead"]
+    leaf: [["is", "primary"]]
+    context: ["traveller"]
+    learnt_from: ["headout-partner"]
+
+  - id: "travellers[].traveller_type <- type @ traveller"
+    targets: ["travellers[].traveller_type"]
+    leaf: [["type"]]
+    context: ["traveller"]
+    learnt_from: ["hotelbeds-activities"]
+
+  - id: "travellers[].traveller_type + travellers[].traveller_type <- person type @ traveller"
+    targets: ["travellers[].traveller_type", "travellers[].traveller_type"]
+    leaf: [["person", "type"]]
+    context: ["traveller"]
+    learnt_from: ["headout-partner"]
