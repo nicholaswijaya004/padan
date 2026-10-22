@@ -668,3 +668,90 @@ baseline predictions before the run, and corrected the escalation layer's place 
 M1 prediction first. Then the tokeniser (mine, fill-in-the-blank), the candidate finder with context,
 the noise list and the escalation filter, and a first leave-one-spec-out run against name-match (macro
 F1 0.20, 4 critical errors).
+
+## Day 8 — Tokeniser, candidate finder, rule engine: M1 target met on dev
+
+**Goal:** A first rule engine measured with leave-one-spec-out against name-match (macro F1 0.20, 4
+critical errors).
+
+### The assumptions that were wrong
+
+- **"A lexicon learnt from dev labels generalises."** Drafted automatically from the 4 dev specs, it
+  proposed the right target for 91% of gold pairs with all entries on, and 8% under leave-one-spec-out:
+  only 3 of 79 entries were taught by more than one spec. Every partner names things its own way;
+  rules learnt from one spec are memorised answers. Widening contexts (G1), the schema's own names (G2)
+  and general synonyms (G3) raised it to 26% strict and 48% with synonyms.
+- **"The nearest entity decides a field's context"** (Claude's recommendation C2). OCTO's
+  `unitItems[].contact.firstName` and HX's `GuestDetail.ContactInfo...GivenName` are travellers, not
+  the booking contact: a contact is read with its owner (`ticket contact`).
+- **"A specific context can fall back to a general one."** A test caught it predicting the booker's
+  name for a traveller once the specific entry was switched off. Context keys now match exactly.
+- **"The draft script was correct."** It merged the same path from two endpoints into one entry with
+  the target listed twice (21 entries). `decide()` read the repeated tuple as a second reading and
+  returned `NONE` for sure mappings, e.g. Headout `productId`. Found while preparing this journal;
+  fixed in ADP-36, and the validator now rejects repeated targets. Scores moved 0.40 → 0.41 (strict)
+  and 0.60 → 0.61 (general).
+- **My M1 prediction (0.45, 1 critical error)** sat between the two results: strict 0.41 / 3, with
+  general synonyms 0.61 / 0. The best-calibrated prediction so far.
+
+### What cost me time
+
+- **The regex lookahead:** my first A was `[A-Z]+[a-z]+`, which eats the next word (`PNRNumber` →
+  `pnrnumber`). `(?=...)` looks without consuming.
+- **Commands on separate lines:** `make fmt` failed, but `git add` and `git commit` on the next lines
+  still ran, so an untested commit with a lint error existed until I amended it. Chain with `&&`.
+- **Label vs candidate in `decide()`:** I checked `candidate.target == 'ASK_PARTNER'`, but a candidate
+  is a proposal with `targets` and an `escalate` flag; `ASK_PARTNER` exists only in labels. Also
+  `candidate[0]` (indexing the object) instead of `candidate.targets[0]`, and a missing `s`.
+
+### Decisions
+
+| Decision | Why |
+| --- | --- |
+| M1 prediction written before any rule: 0.45, 1 critical error | Asked three times; the result is only meaningful against a guess made blind |
+| Tokens: acronym-then-word, word, acronym, digits (`[A-Z]+(?=[A-Z][a-z])` first) | `PNRNumber` → `pnr, number`; order matters because the first fitting shape wins |
+| C1: leaf words must equal an entry exactly | "Contains" would match `ID_Context` to the booking ID and `CabinCategoryStatusCode` to status |
+| C2: context = entities in the parent path; dependents read with their owner; exact keys | The ticket holder is a traveller; the booking holder is the contact |
+| C3: entries drafted from dev gold with `learnt_from`; entries are words, never paths | Makes leave-one-spec-out possible and memorised paths impossible |
+| G1: a word applies in its parallel scope (contact ↔ traveller, voucher ↔ ticket, root ↔ item) | The source spec stays the same, so leave-one-spec-out stays honest |
+| G2: the schema's own names (`learnt_from: schema`) | The knowledge name-match already uses; no leakage |
+| G3: general synonyms reported separately (strict excludes them) | Written by Claude after reading dev specs, so not blind; the test set decides |
+| `currency` / `amount` under a price proposes both gross and net | Two critical readings make `decide()` ask: it turned 3 silent wrong currencies into questions |
+| `decide()`: none → `NONE`; learnt from `ASK_PARTNER` → ask; two readings → ask if critical else `NONE`; one → map; critical enum without a map → ask | The escalation policy in code (E2) |
+| Repeated targets in a lexicon entry are invalid | One malformed entry silently turned correct mappings into `NONE` |
+
+### What I delegated, and what I decided
+
+I wrote the tokeniser (three of four blanks; the lookahead after Claude's explanation) and `decide()`
+(seven blanks), made the M1 prediction, and decided C1–C3 and G1–G3 (Claude's recommendations,
+accepted). Claude wrote the candidate finder, the lexicon draft and curation, the engine runner, all
+tests, and found and fixed its own draft-script bug. I asked why I was not writing the candidate finder;
+the answer (the design changed twice while being written, and time) led to me writing `decide()`.
+
+### Understood
+
+- **Memorising vs generalising, measured:** 91% with a spec's own entries, 8% without. Leave-one-spec-
+  out is the only reason the 91% was not reported.
+- **Context decides meaning:** OCTO's `contact.firstName` (booking holder → contact) and
+  `unitItems[].contact.firstName` (ticket holder → traveller) share a leaf name.
+- **An entry is general only when two partners taught it.**
+- **Cross-spec generalisation can be wrong:** HX taught "price currency = gross"; Headout's docs do not
+  say so. Without leave-one-spec-out, Headout's own entries would have hidden the 3 critical errors.
+- **Safety by ambiguity:** proposing both readings for a critical field makes the system ask instead
+  of guess.
+
+### Still open
+
+- **My G3 review** (keep / drop / add): G3 is the whole difference between 0.41 and 0.61.
+- R4: build `enum_map` from documented values; until then `status` is asked (OCTO, Headout) and
+  `traveller_type` mapped without a map (transforms 2/5).
+- Keyed fields: Headout `inputFields[id=…].value` (11 gold pairs) carry their meaning in a filter the
+  rules cannot see; derived labels (5) are not learnable.
+- HX `Payment@Amount`, `PriceInfo@Amount`: asked, gold `NONE`.
+- Local git name `nicholas.wijaya004`; block times not recorded.
+- Carried from Day 7.
+
+### Tomorrow
+
+G3 review, then R4 (`enum_map` from evidence), a decision on keyed fields, a re-run, and M1 declared on
+one page (strict and general numbers, the method, what is still wrong). Then the API credit for M2.
