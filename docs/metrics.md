@@ -334,3 +334,56 @@ the same reason: the change only touched one false positive, and none of the cri
 | M1 prediction    | not yet made                            |
 
 **Caveats:** dev baselines only. The rule engine design (E1–E5) is not yet measured.
+
+## Day 8
+
+**Goal:** First rule engine, measured with leave-one-spec-out (LOSO) on dev.
+
+### Candidate recall (share of gold pairs whose target is proposed at all; the engine's ceiling)
+
+| Lexicon | Entries | All entries on | LOSO strict | LOSO + general synonyms |
+| --- | --- | --- | --- | --- |
+| Drafted from dev gold | 79 | 91% | 8% | — |
+| + G1 contexts, G2 schema names, G3 synonyms | 190 | 93% | 26% | 48% |
+
+Drafted entries taught by more than one spec: 4 of 78 (booking `id`, `productId`, `status`, `surname`).
+
+### Rule engine (dev, LOSO, schema v3)
+
+| | Macro P | Macro R | Macro F1 | Micro F1 | Esc P / R (micro) | Transforms | Critical errors |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| name_match | 0.84 | 0.12 | 0.20 | 0.19 | — / 0.00 | 0/2 | 4 |
+| **rules strict** | 0.84 | 0.27 | **0.41** | 0.34 | 0.33 / 0.27 | 0/0 | **3** |
+| **rules + general** | 0.96 | 0.45 | **0.61** | 0.58 | 0.42 / 0.45 | 2/5 | **0** |
+
+| Macro F1 per spec | strict | + general |
+| --- | --- | --- |
+| headout-partner | 0.13 | 0.39 |
+| hotelbeds-activities | 0.56 | 0.70 |
+| hx-swota | 0.58 | 0.69 |
+| octo-core | 0.36 | 0.65 |
+
+**M1 target** (Day 6): macro F1 above 0.20, fewer than 4 critical errors, escalation recall above 0. Met
+by both variants. Strict's 3 critical errors are all Headout currency fields mapped to gross by a rule
+HX taught; general synonyms make them questions instead.
+
+### Predictions
+
+| Prediction | Result | Right? |
+| --- | --- | --- |
+| LOSO macro F1 0.45 | strict 0.41, general 0.61 | between the two: close |
+| 1 critical error | strict 3, general 0 | between the two |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 3 (ADP-33 tokeniser, ADP-34 candidate finder, ADP-35 rule engine); ADP-36 fix open |
+| Tests | 179 → **226** |
+| Bugs found by tests while writing | 1 (context fallback predicted the booker's name for a traveller) |
+| Bugs found after merge | 1 (repeated targets in 21 drafted entries; macro F1 0.40 → 0.41 strict, 0.60 → 0.61 general once fixed) |
+| Untested commit | 1 (lint error; amended before push) |
+| Block times | not measured |
+
+**Caveats:** dev only, single-labeller gold. The general synonyms were written by someone who had read
+the dev specs, so the 0.61 is optimistic; 0.41 is the floor. The test set has not been touched.
