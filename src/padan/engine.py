@@ -8,16 +8,14 @@ escalation policy (E2). Every prediction gets a receipt naming the lexicon entri
 
 import json
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, Literal, get_args, get_origin
-
-from pydantic import BaseModel
+from typing import Any, Literal
 
 from padan.baselines import Field, dump, fields_of, gold_files
 from padan.candidates import Candidate, Lexicon, candidates, load_lexicon
-from padan.labels import ASK_PARTNER, NONE, LabelEntry, Source, _unwrap, load_labels, normalise
-from padan.schema import Booking
+from padan.enums import ENUM_VALUES, enum_map_from
+from padan.labels import ASK_PARTNER, NONE, LabelEntry, Source, load_labels, normalise
 from padan.score import CRITICAL
 
 
@@ -29,21 +27,12 @@ class Decision:
     candidate: str | None = None  # for ASK_PARTNER: the target we would map if the partner confirms
 
 
-def enum_paths(model: type[BaseModel], prefix: str = "") -> set[str]:
-    """Targets whose values are a fixed set (Literal): a raw partner code is not a valid value."""
-    paths: set[str] = set()
-    for name, info in model.model_fields.items():
-        path, annotation = f"{prefix}{name}", _unwrap(info.annotation)
-        if get_origin(annotation) is list:
-            path, (annotation,) = f"{path}[]", get_args(annotation)
-        if get_origin(annotation) is Literal:
-            paths.add(path)
-        elif isinstance(annotation, type) and issubclass(annotation, BaseModel):
-            paths |= enum_paths(annotation, f"{path}.")
-    return paths
+ENUMS = frozenset(ENUM_VALUES)
 
-
-ENUMS = frozenset(enum_paths(Booking))
+# Enums whose values are steps in the partner's own process: the same code can mean different
+# things (Headout `PENDING` is "confirmed"), so no table is built from names; M2 reads the
+# per-value descriptions instead. Until then decide() asks.
+LIFECYCLE = frozenset({"status"})
 
 
 def is_critical_target(target: str) -> bool:
@@ -83,6 +72,24 @@ def decide(found: list[Candidate]) -> list[Decision]:
     return decisions
 
 
+def with_enum_maps(found: list[Candidate], evidence: str) -> list[Candidate]:
+    """R4: give an enum target its enum_map when the evidence documents every value by name."""
+    enriched = []
+    for candidate in found:
+        transforms = list(candidate.transforms) or [None] * len(candidate.targets)
+        for i, target in enumerate(candidate.targets):
+            if (
+                transforms[i] is None
+                and needs_enum_map(target)
+                and normalise(target) not in LIFECYCLE
+            ):
+                transforms[i] = enum_map_from(evidence, target)
+        enriched.append(
+            replace(candidate, transforms=tuple(transforms)) if any(transforms) else candidate
+        )
+    return enriched
+
+
 def question(candidate: str | None) -> str:
     return f"Does this field carry {candidate}? Its meaning or values are not documented."
 
@@ -94,7 +101,7 @@ def predict(
     entries: list[LabelEntry] = []
     receipts: list[dict[str, Any]] = []
     for endpoint, direction, path, evidence in fields:
-        found = candidates(path, lexicon, off)
+        found = with_enum_maps(candidates(path, lexicon, off), evidence)
         decisions = decide(found)
         for d in decisions:
             entries.append(

@@ -67,6 +67,32 @@ def test_predict_maps_asks_and_leaves_blank_with_a_receipt_per_field() -> None:
     assert [r["entries"] for r in receipts] == [["id"], ["email"], ["status"], []]
 
 
+def test_r4_maps_a_documented_enum_and_still_asks_about_status() -> None:
+    lex = LEX.model_copy(
+        update={
+            "entries": [
+                *LEX.entries,
+                LEX.entries[0].model_copy(
+                    update={
+                        "id": "format",
+                        "targets": ["fulfilment[kind=voucher].format"],
+                        "leaf": [["format"]],
+                    }
+                ),
+            ]
+        }
+    )
+    documented = [
+        (EP, "response", "format", "possible values are: `QRCODE` or `PDF_URL`."),
+        (EP, "response", "status", "One of `PENDING`, `CONFIRMED`, `CANCELLED`."),
+    ]
+    entries, _ = predict(documented, lex, off=[])
+    assert [(e.target, e.transform) for e in entries] == [
+        ("fulfilment[kind=voucher].format", "enum_map(QRCODE=qrcode, PDF_URL=pdf_url)"),
+        ("ASK_PARTNER", None),  # a lifecycle enum: name matches can be false friends
+    ]
+
+
 def test_off_switches_off_a_spec_and_the_general_synonyms() -> None:
     entries, _ = predict(fields("id", "contact.email"), LEX, off=["octo", "general"])
     assert [e.target for e in entries] == ["NONE", "NONE"]
