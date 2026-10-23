@@ -706,19 +706,19 @@ critical errors).
 
 ### Decisions
 
-| Decision | Why |
-| --- | --- |
-| M1 prediction written before any rule: 0.45, 1 critical error | Asked three times; the result is only meaningful against a guess made blind |
-| Tokens: acronym-then-word, word, acronym, digits (`[A-Z]+(?=[A-Z][a-z])` first) | `PNRNumber` → `pnr, number`; order matters because the first fitting shape wins |
-| C1: leaf words must equal an entry exactly | "Contains" would match `ID_Context` to the booking ID and `CabinCategoryStatusCode` to status |
-| C2: context = entities in the parent path; dependents read with their owner; exact keys | The ticket holder is a traveller; the booking holder is the contact |
-| C3: entries drafted from dev gold with `learnt_from`; entries are words, never paths | Makes leave-one-spec-out possible and memorised paths impossible |
-| G1: a word applies in its parallel scope (contact ↔ traveller, voucher ↔ ticket, root ↔ item) | The source spec stays the same, so leave-one-spec-out stays honest |
-| G2: the schema's own names (`learnt_from: schema`) | The knowledge name-match already uses; no leakage |
-| G3: general synonyms reported separately (strict excludes them) | Written by Claude after reading dev specs, so not blind; the test set decides |
-| `currency` / `amount` under a price proposes both gross and net | Two critical readings make `decide()` ask: it turned 3 silent wrong currencies into questions |
-| `decide()`: none → `NONE`; learnt from `ASK_PARTNER` → ask; two readings → ask if critical else `NONE`; one → map; critical enum without a map → ask | The escalation policy in code (E2) |
-| Repeated targets in a lexicon entry are invalid | One malformed entry silently turned correct mappings into `NONE` |
+| Decision                                                                                                                                             | Why                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| M1 prediction written before any rule: 0.45, 1 critical error                                                                                        | Asked three times; the result is only meaningful against a guess made blind                   |
+| Tokens: acronym-then-word, word, acronym, digits (`[A-Z]+(?=[A-Z][a-z])` first)                                                                      | `PNRNumber` → `pnr, number`; order matters because the first fitting shape wins               |
+| C1: leaf words must equal an entry exactly                                                                                                           | "Contains" would match `ID_Context` to the booking ID and `CabinCategoryStatusCode` to status |
+| C2: context = entities in the parent path; dependents read with their owner; exact keys                                                              | The ticket holder is a traveller; the booking holder is the contact                           |
+| C3: entries drafted from dev gold with `learnt_from`; entries are words, never paths                                                                 | Makes leave-one-spec-out possible and memorised paths impossible                              |
+| G1: a word applies in its parallel scope (contact ↔ traveller, voucher ↔ ticket, root ↔ item)                                                        | The source spec stays the same, so leave-one-spec-out stays honest                            |
+| G2: the schema's own names (`learnt_from: schema`)                                                                                                   | The knowledge name-match already uses; no leakage                                             |
+| G3: general synonyms reported separately (strict excludes them)                                                                                      | Written by Claude after reading dev specs, so not blind; the test set decides                 |
+| `currency` / `amount` under a price proposes both gross and net                                                                                      | Two critical readings make `decide()` ask: it turned 3 silent wrong currencies into questions |
+| `decide()`: none → `NONE`; learnt from `ASK_PARTNER` → ask; two readings → ask if critical else `NONE`; one → map; critical enum without a map → ask | The escalation policy in code (E2)                                                            |
+| Repeated targets in a lexicon entry are invalid                                                                                                      | One malformed entry silently turned correct mappings into `NONE`                              |
 
 ### What I delegated, and what I decided
 
@@ -755,3 +755,88 @@ the answer (the design changed twice while being written, and time) led to me wr
 
 G3 review, then R4 (`enum_map` from evidence), a decision on keyed fields, a re-run, and M1 declared on
 one page (strict and general numbers, the method, what is still wrong). Then the API credit for M2.
+
+## Day 9 — G3 review, R4 enum maps, keyed fields, M1 declared
+
+**Goal:** Declare M1: review the general synonyms, build enum maps from documented values (R4), decide
+on keyed fields, and write the M1 page. M1 was planned for Day 9, Friday 23 October, on Day 4; it was
+declared that day.
+
+### The assumptions that were wrong
+
+- **"R4 will raise F1"** (my prediction). Macro F1 stayed at 0.41 / 0.61. R4 fixes transforms, not
+  targets, and mapping F1 counts targets only; the gain shows in the transforms column (2/5 → 4/5).
+  The same lesson as Day 7: list the errors a change can touch before predicting its effect.
+- **"R4 will map OCTO's `deliveryFormat`"** (Claude's expectation). Under leave-one-spec-out nothing
+  proposes `fulfilment.format` for OCTO: only OCTO teaches the words "delivery format". R4 cannot give
+  a table to a candidate that does not exist.
+- **"A value name means the same thing everywhere."** Headout's `PENDING` is documented as "confirmed
+  with supplier. Treat as confirmed". Mapping it to our `pending` by name would be a silent critical
+  error. Status values are steps in each partner's own process, so `status` gets no table from names.
+- **"Every synonym must be judged by reading it."** Benching one entry at a time (ablation) showed which
+  of the 33 general entries earn their place, which one prevents 3 critical errors, and that 21 never
+  fire on dev.
+
+### What cost me time
+
+- **Starting a branch before the PR it depends on was merged.** `git apply` refused the M1 patch
+  (no `enums.py` on `main`), and the commit lines after it still ran. Check `origin/main` first, and
+  chain the sequence with `&&`.
+- **Python:** `any(allowed for ...)` is always true for a non-empty set (the check must be about each
+  value: `value not in allowed`); f-strings put the variable inside the braces (`f"{code}={value}"`).
+- **Regex capture groups:** `(...)` makes `findall` return only the code, not the backticks.
+
+### Decisions
+
+| Decision                                                                                                   | Why                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Keep the general synonyms that measurably help, and the gross/net currency and amount block                | Ablation: 11 entries add true positives with no false positives; `net_price.currency` alone prevents 3 critical errors          |
+| Drop "state" (status), "expiry date" and "expiration date" (hold expiry)                                   | Each sits next to a critical field and plausibly means something else (an address, a voucher or card expiry); none fired on dev |
+| R4: enum maps by name for format and type enums; `status` stays `ASK_PARTNER` until M2                     | Headout `PENDING` is a false friend; reading per-value descriptions is a language task                                          |
+| R4 builds a table only when every documented code matches                                                  | A partial table leaves a real value untranslated                                                                                |
+| R4 reads backticked capital codes in the evidence                                                          | That is how OCTO and Headout document values; schema-only `enum` lists are a recorded gap                                       |
+| K1: keyed fields (Headout `inputFields[id=…]`, 11 pairs) are a known gap                                   | One dev example cannot be validated under leave-one-spec-out                                                                    |
+| M1 declared on one page (`docs/milestones/M1.md`) with strict 0.41 / 3 and general 0.61 / 0                | The range is the honest headline: strict is the floor, the general synonyms were not written blind                              |
+| Explain the API to the funder as WhatsApp vs the WhatsApp Business API                                     | My choice over a gym analogy: the same person-vs-system split and per-use billing, familiar to an Indonesian funder             |
+| API setup at $0 (workspace, $20 spend limit, key in `.env`); credit bought on Day 10 before the first call | No spend before M2's calibration run                                                                                            |
+
+### What I delegated, and what I decided
+
+I decided the G3 review, R1–R3 for R4 and K1 (Claude's recommendations, accepted), chose the funder
+analogy, and wrote part of `enum_map_from()`: the lowercase value (B) and the logic of the all-or-
+nothing check (C) and the output (D). Claude wrote the regex (A), the fix to C, the f-string syntax,
+the ablation study, the engine integration and the `status` exclusion, all tests, the M1 page and the
+funder note on the Claude API.
+
+### Understood
+
+- **Ablation:** remove one part, re-measure, and the difference is that part's contribution. Parts
+  that change nothing on dev are untested, not useless.
+- **Mapping F1 and transform accuracy measure different things:** a right target with a wrong table
+  is a mapping true positive and a transform error.
+- **False friends in enum values:** the same code can name different steps in different partners'
+  processes.
+- **A rule fitted to one example cannot be evaluated honestly** under leave-one-spec-out; recording
+  the gap beats building something unmeasurable.
+- **Subscription vs API:** a person using Claude's apps for a flat fee, vs software calling Claude with
+  a key, billed per token from prepaid credit with a spend limit.
+
+### Still open
+
+- API setup done at $0: workspace `padan`, key in `.env` (git-ignored, checked). The first key was
+  exposed in chat during setup; it was revoked within minutes and replaced. The Console allows a
+  spend limit only after the first payment, so on Day 10: buy $20 (auto-reload off), set the $20 org
+  spend limit, then the first call.
+- M2 design: prompt, the label schema for structured output, which fields go to Claude, cost logging,
+  and how `status` values are read.
+- Keyed fields, schema-only `enum` values, derived values, one-partner vocabulary: in the M1 page's
+  gap table.
+- A second labeller on a 20% sample before results are published.
+- Block times: not recorded again.
+- Carried from earlier days.
+
+### Tomorrow
+
+M2 begins: buy the credit (auto-reload off), then set the $20 spend limit, load the key from `.env`,
+design the M2 call (structured output, cached schema and rules, the same escalation policy), then a
+calibration run on one dev partner to replace the cost estimate with measured numbers.

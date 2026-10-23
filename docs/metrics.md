@@ -387,3 +387,55 @@ HX taught; general synonyms make them questions instead.
 
 **Caveats:** dev only, single-labeller gold. The general synonyms were written by someone who had read
 the dev specs, so the 0.61 is optimistic; 0.41 is the floor. The test set has not been touched.
+
+## Day 9
+
+**Goal:** M1 declared.
+
+### G3 review (ablation: each general entry removed in turn, leave-one-spec-out)
+
+| Group | Entries | Effect when removed |
+| --- | --- | --- |
+| Helpers | 11 | −0.008 to −0.034 macro F1 each; 0 false positives |
+| Safety (`net_price.currency`) | 1 | +3 critical errors, +3 false positives |
+| No effect on dev | 21 | none (untested, not useless) |
+| Dropped after review | 3 words | none on dev ("state", "expiry date", "expiration date") |
+
+### R4 (enum maps from documented values)
+
+| | Before | After |
+| --- | --- | --- |
+| Macro F1, strict / general | 0.41 / 0.61 | 0.41 / 0.61 |
+| Transforms right, general | 2/5 | **4/5** |
+| Critical errors, strict / general | 3 / 0 | 3 / 0 |
+| `status` | asked | asked (lifecycle enum; Headout `PENDING` = confirmed) |
+
+### M1 (declared 2026-10-23, Day 9, as planned)
+
+| | Macro F1 | Micro F1 | Esc P / R | Transforms | Critical errors |
+| --- | --- | --- | --- | --- | --- |
+| name_match | 0.20 | 0.19 | — / 0.00 | 0/2 | 4 |
+| **rules, strict** | **0.41** | 0.34 | 0.33 / 0.27 | — | **3** |
+| **rules, general** | **0.61** | 0.58 | 0.42 / 0.45 | 4/5 | **0** |
+
+Target (Day 6): macro F1 above 0.20, fewer than 4 critical errors, escalation recall above 0. Met.
+
+### Predictions
+
+| Prediction | Result | Right? |
+| --- | --- | --- |
+| R4 raises macro F1 | unchanged; transforms 2/5 → 4/5 | no |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 3 (ADP-38 G3 review, ADP-39 R4, ADP-40 M1 page) |
+| Tests | 226 → **234** |
+| Failed attempts | 1 (M1 branch created before ADP-39 was merged; nothing committed) |
+| Funder material | 1 page: Claude API vs subscription, integration code, cost estimate |
+| API spend | $0 |
+| Block times | not measured |
+
+**Caveats:** dev only, single-labeller gold, general synonyms not written blind. The test set is
+untouched.
