@@ -706,19 +706,19 @@ critical errors).
 
 ### Decisions
 
-| Decision | Why |
-| --- | --- |
-| M1 prediction written before any rule: 0.45, 1 critical error | Asked three times; the result is only meaningful against a guess made blind |
-| Tokens: acronym-then-word, word, acronym, digits (`[A-Z]+(?=[A-Z][a-z])` first) | `PNRNumber` → `pnr, number`; order matters because the first fitting shape wins |
-| C1: leaf words must equal an entry exactly | "Contains" would match `ID_Context` to the booking ID and `CabinCategoryStatusCode` to status |
-| C2: context = entities in the parent path; dependents read with their owner; exact keys | The ticket holder is a traveller; the booking holder is the contact |
-| C3: entries drafted from dev gold with `learnt_from`; entries are words, never paths | Makes leave-one-spec-out possible and memorised paths impossible |
-| G1: a word applies in its parallel scope (contact ↔ traveller, voucher ↔ ticket, root ↔ item) | The source spec stays the same, so leave-one-spec-out stays honest |
-| G2: the schema's own names (`learnt_from: schema`) | The knowledge name-match already uses; no leakage |
-| G3: general synonyms reported separately (strict excludes them) | Written by Claude after reading dev specs, so not blind; the test set decides |
-| `currency` / `amount` under a price proposes both gross and net | Two critical readings make `decide()` ask: it turned 3 silent wrong currencies into questions |
-| `decide()`: none → `NONE`; learnt from `ASK_PARTNER` → ask; two readings → ask if critical else `NONE`; one → map; critical enum without a map → ask | The escalation policy in code (E2) |
-| Repeated targets in a lexicon entry are invalid | One malformed entry silently turned correct mappings into `NONE` |
+| Decision                                                                                                                                             | Why                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| M1 prediction written before any rule: 0.45, 1 critical error                                                                                        | Asked three times; the result is only meaningful against a guess made blind                   |
+| Tokens: acronym-then-word, word, acronym, digits (`[A-Z]+(?=[A-Z][a-z])` first)                                                                      | `PNRNumber` → `pnr, number`; order matters because the first fitting shape wins               |
+| C1: leaf words must equal an entry exactly                                                                                                           | "Contains" would match `ID_Context` to the booking ID and `CabinCategoryStatusCode` to status |
+| C2: context = entities in the parent path; dependents read with their owner; exact keys                                                              | The ticket holder is a traveller; the booking holder is the contact                           |
+| C3: entries drafted from dev gold with `learnt_from`; entries are words, never paths                                                                 | Makes leave-one-spec-out possible and memorised paths impossible                              |
+| G1: a word applies in its parallel scope (contact ↔ traveller, voucher ↔ ticket, root ↔ item)                                                        | The source spec stays the same, so leave-one-spec-out stays honest                            |
+| G2: the schema's own names (`learnt_from: schema`)                                                                                                   | The knowledge name-match already uses; no leakage                                             |
+| G3: general synonyms reported separately (strict excludes them)                                                                                      | Written by Claude after reading dev specs, so not blind; the test set decides                 |
+| `currency` / `amount` under a price proposes both gross and net                                                                                      | Two critical readings make `decide()` ask: it turned 3 silent wrong currencies into questions |
+| `decide()`: none → `NONE`; learnt from `ASK_PARTNER` → ask; two readings → ask if critical else `NONE`; one → map; critical enum without a map → ask | The escalation policy in code (E2)                                                            |
+| Repeated targets in a lexicon entry are invalid                                                                                                      | One malformed entry silently turned correct mappings into `NONE`                              |
 
 ### What I delegated, and what I decided
 
@@ -788,17 +788,17 @@ declared that day.
 
 ### Decisions
 
-| Decision | Why |
-| --- | --- |
-| Keep the general synonyms that measurably help, and the gross/net currency and amount block | Ablation: 11 entries add true positives with no false positives; `net_price.currency` alone prevents 3 critical errors |
-| Drop "state" (status), "expiry date" and "expiration date" (hold expiry) | Each sits next to a critical field and plausibly means something else (an address, a voucher or card expiry); none fired on dev |
-| R4: enum maps by name for format and type enums; `status` stays `ASK_PARTNER` until M2 | Headout `PENDING` is a false friend; reading per-value descriptions is a language task |
-| R4 builds a table only when every documented code matches | A partial table leaves a real value untranslated |
-| R4 reads backticked capital codes in the evidence | That is how OCTO and Headout document values; schema-only `enum` lists are a recorded gap |
-| K1: keyed fields (Headout `inputFields[id=…]`, 11 pairs) are a known gap | One dev example cannot be validated under leave-one-spec-out |
-| M1 declared on one page (`docs/milestones/M1.md`) with strict 0.41 / 3 and general 0.61 / 0 | The range is the honest headline: strict is the floor, the general synonyms were not written blind |
-| Explain the API to the funder as WhatsApp vs the WhatsApp Business API | My choice over a gym analogy: the same person-vs-system split and per-use billing, familiar to an Indonesian funder |
-| API setup at $0 (workspace, $20 spend limit, key in `.env`); credit bought on Day 10 before the first call | No spend before M2's calibration run |
+| Decision                                                                                                   | Why                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Keep the general synonyms that measurably help, and the gross/net currency and amount block                | Ablation: 11 entries add true positives with no false positives; `net_price.currency` alone prevents 3 critical errors          |
+| Drop "state" (status), "expiry date" and "expiration date" (hold expiry)                                   | Each sits next to a critical field and plausibly means something else (an address, a voucher or card expiry); none fired on dev |
+| R4: enum maps by name for format and type enums; `status` stays `ASK_PARTNER` until M2                     | Headout `PENDING` is a false friend; reading per-value descriptions is a language task                                          |
+| R4 builds a table only when every documented code matches                                                  | A partial table leaves a real value untranslated                                                                                |
+| R4 reads backticked capital codes in the evidence                                                          | That is how OCTO and Headout document values; schema-only `enum` lists are a recorded gap                                       |
+| K1: keyed fields (Headout `inputFields[id=…]`, 11 pairs) are a known gap                                   | One dev example cannot be validated under leave-one-spec-out                                                                    |
+| M1 declared on one page (`docs/milestones/M1.md`) with strict 0.41 / 3 and general 0.61 / 0                | The range is the honest headline: strict is the floor, the general synonyms were not written blind                              |
+| Explain the API to the funder as WhatsApp vs the WhatsApp Business API                                     | My choice over a gym analogy: the same person-vs-system split and per-use billing, familiar to an Indonesian funder             |
+| API setup at $0 (workspace, $20 spend limit, key in `.env`); credit bought on Day 10 before the first call | No spend before M2's calibration run                                                                                            |
 
 ### What I delegated, and what I decided
 
@@ -823,7 +823,10 @@ funder note on the Claude API.
 
 ### Still open
 
-- Block 5 (API setup at $0) confirmed done or not; credit bought on Day 10 before the calibration run.
+- API setup done at $0: workspace `padan`, key in `.env` (git-ignored, checked). The first key was
+  exposed in chat during setup; it was revoked within minutes and replaced. The Console allows a
+  spend limit only after the first payment, so on Day 10: buy $20 (auto-reload off), set the $20 org
+  spend limit, then the first call.
 - M2 design: prompt, the label schema for structured output, which fields go to Claude, cost logging,
   and how `status` values are read.
 - Keyed fields, schema-only `enum` values, derived values, one-partner vocabulary: in the M1 page's
@@ -834,6 +837,6 @@ funder note on the Claude API.
 
 ### Tomorrow
 
-M2 begins: buy the credit (spend limit already set), load the key from `.env`, design the M2 call
-(structured output, cached schema and rules, the same escalation policy), then a calibration run on one
-dev partner to replace the cost estimate with measured numbers.
+M2 begins: buy the credit (auto-reload off), then set the $20 spend limit, load the key from `.env`,
+design the M2 call (structured output, cached schema and rules, the same escalation policy), then a
+calibration run on one dev partner to replace the cost estimate with measured numbers.
