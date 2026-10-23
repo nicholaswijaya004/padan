@@ -994,7 +994,9 @@ entries:
 
 
   # ---- G3: general, dictionary-level synonyms written by hand. Their author had read the dev specs, so
-  # they are reported separately (strict score excludes them). Review every line.
+  # they are reported separately (strict score excludes them). Reviewed on Day 9 with a one-entry-at-a-
+  # time ablation: dropped "state" (an address field, next to critical `status`) and "expiry date" /
+  # "expiration date" (often a voucher or card expiry, next to critical `hold_expires_at`).
 
   - id: "contact.given_name <- first name / given name / forename / first @ contact (general)"
     targets: ["contact.given_name"]
@@ -1080,9 +1082,9 @@ entries:
     context: [""]
     learnt_from: ["general"]
 
-  - id: "status <- status / state / booking status @ root (general)"
+  - id: "status <- status / booking status @ root (general)"
     targets: ["status"]
-    leaf: [["status"], ["state"], ["booking", "status"]]
+    leaf: [["status"], ["booking", "status"]]
     context: [""]
     learnt_from: ["general"]
 
@@ -1092,9 +1094,9 @@ entries:
     context: [""]
     learnt_from: ["general"]
 
-  - id: "hold_expires_at <- at expires / date expiry / date expiration @ root (general)"
+  - id: "hold_expires_at <- at expires @ root (general)"
     targets: ["hold_expires_at"]
-    leaf: [["at", "expires"], ["date", "expiry"], ["date", "expiration"]]
+    leaf: [["at", "expires"]]
     context: [""]
     learnt_from: ["general"]
 
