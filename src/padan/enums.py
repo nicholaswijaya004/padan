@@ -37,7 +37,6 @@ def enum_map_from(evidence: str, target: str) -> str | None:
     """'`ADULT`, `CHILD`' for travellers[].traveller_type -> 'enum_map(ADULT=adult, CHILD=child)'.
 
     None when the evidence documents no codes, or when any code has no value of the same name.
-    You write this (Day 9, R4).
     """
     allowed = ENUM_VALUES[normalise(target)]
     codes = list(dict.fromkeys(CODE.findall(evidence)))  # each code once, in order
