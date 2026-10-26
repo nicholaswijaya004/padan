@@ -840,3 +840,85 @@ funder note on the Claude API.
 M2 begins: buy the credit (auto-reload off), then set the $20 spend limit, load the key from `.env`,
 design the M2 call (structured output, cached schema and rules, the same escalation policy), then a
 calibration run on one dev partner to replace the cost estimate with measured numbers.
+
+## Day 10 — M2 begins: Claude for what the rules leave blank
+
+**Goal:** Buy the credit, design and build the M2 call, calibrate on one dev spec, then run the full
+dev set and see what Claude adds on top of the M1 rules.
+
+### The assumptions that were wrong
+
+- **The cost estimate** (funder note): about 500 output tokens per field. Measured: 100 (Sonnet) to
+  145 (Opus). Output dominates the price, so Opus costs about $0.004 per field, not $0.012. My
+  calibration prediction was $0.20; it cost $0.078.
+- **"Without a description, Claude has little to work with."** Hotelbeds has no descriptions at all;
+  Opus took its F1 from 0.56 to 0.92 from names, example values and neighbouring fields alone. My
+  prediction was 0.70.
+- **"Code-gathered context is enough."** Mostly, but not always: OCTO's `REJECTED` status appears only
+  in the schema's `enum` list, which Stage 1 does not keep, so Claude's status table was complete for
+  what it saw and still a critical error against gold. My D6 question was right.
+- **"More F1 means a better system."** Strict rules + Opus raised macro F1 from 0.41 to 0.85 and critical
+  errors from 3 to 7. The critical errors needed explaining before any model was chosen.
+- **Claude's code assumptions:** the command line rejected `strict` (the engine names its variants
+  `rules_strict`), and a cached re-run overwrote the paid run's `cost.json`. Both caught before they
+  cost anything; the paid numbers were recovered from the cache.
+
+### What cost me time
+
+- **The first key was exposed** in a pasted command (Day 9 setup), so it was revoked and replaced.
+  Never paste a line containing the key; when a command fails at the shell, cut it before sharing.
+- **The Console spend limit** unlocks only after the first payment, so the order became credit
+  (auto-reload off), then the $20 limit, then the first call.
+- An editor formatter re-padded old journal tables again; restored before committing the M2 code.
+
+### Decisions
+
+| Decision | Why |
+| --- | --- |
+| D1: Claude sees only the fields the rules leave blank, plus `status` | The rules' mappings are 84–96% precise; Claude's job is recall |
+| D2: per field, Claude gets endpoint, path, the documentation and the names of sibling fields | Cheap context; neighbours carry meaning (`value` next to `id`, `amount` next to `currency`) |
+| D3: the system prompt holds the schema, the escalation policy and the transform vocabulary; no worked examples | Examples from dev specs are those specs' answers |
+| D4: Claude on the strict rules, reported next to Claude on the general rules | Tests whether hand-written synonyms still matter once Claude is there |
+| D5: every reply cached on disk by model, prompt version and field | Re-runs cost nothing; only a new model, prompt or field costs money |
+| D6: Opus 5.5 at medium effort; Sonnet 5.5 on the same fields for comparison | The model choice is made on measured quality per dollar |
+| Calibrate on Hotelbeds (16 fields) before the full run | Replace the estimate with measurements for $0.11 |
+| Run both models on the full dev set ($1.03) | The model choice decides the cost of every later run, including the test set |
+| A: gold maps Headout `voucherId` and OCTO `unitItems[].supplierReference` to the fulfilment `partner_id` (to apply on Day 11) | The docs support both; Claude-recommended, accepted by me. Counted as gold changes prompted by model disagreement |
+| B: `fulfilment[].partner_id` is no longer critical (Day 11) | A wrong reference ID is an inconvenience; a wrong voucher URL or format stops a customer getting in |
+| All fixes bundled into prompt v2 and one re-run | A prompt change re-asks every field |
+| Stop if spend passes $15 and re-plan with the funder | Projection: about $13–14 for the whole project, $6 buffer |
+
+### What I delegated, and what I decided
+
+I bought the credit and set the limit, decided D1–D6 (D6 after asking whether code-gathered context
+could miss things, which the OCTO status case proved), chose to see results before writing the LLM
+code myself, wrote `to_labels()` (five blanks), made all three predictions, and ran every paid run.
+Claude wrote the prompt, the API call, the disk cache, the cost accounting, the hybrid runner, the fake
+client and all tests, and analysed the critical errors. Claude-recommended and accepted: A and B.
+
+### Understood
+
+- **Calibration:** a small paid run whose only job is to replace estimates with measurements.
+- **What costs money in an LLM call:** output tokens dominate; a cached system prompt is read at a
+  tenth of the input price; a disk cache makes every repeat free.
+- **An LLM is scored like any other component:** the same gold, the same scorer, and an error analysis
+  that asks *who* made each error and *why*.
+- **Context gaps look like model errors.** OCTO's status was "wrong" because we did not pass the
+  `enum` list.
+- **Model disagreement can find gold mistakes, and can also bias the gold toward the model.** Changes it
+  prompts must be supported by the docs, accepted by a human, and counted.
+
+### Still open
+
+- Day 11 bundle (prompt v2, one re-run): schema `enum` values in the field message (and for R4), the
+  idempotency-key rule for `uuid`, a per-run cost log, gold change A, schema change B.
+- The prompt A/B test with my own `v1-nicholas`, and writing `Mapper.ask` myself.
+- Update the funder page with measured costs.
+- Context retrieval for meaning written elsewhere in the docs (Headout's enum guide page).
+- Test specs: fetch, then human-only labels from the target side, before any test number exists.
+- Second labeller; block times (not recorded again); carried items.
+
+### Tomorrow
+
+Prediction first, then the v2 bundle and one full dev re-run with Opus (about $0.70). Then the model
+decision, and the plan for the test specs: fetching and human-only labelling.
