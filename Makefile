@@ -1,4 +1,4 @@
-.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules
+.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules hybrid
 
 check: lint typecheck test
 
@@ -30,3 +30,6 @@ score:
 
 rules:
 	uv run python -m padan.engine data/predictions
+
+hybrid:
+	uv run --env-file .env python -m padan.hybrid data/predictions $(MODEL) $(BASE) $(SPECS)
