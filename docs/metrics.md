@@ -439,3 +439,82 @@ Target (Day 6): macro F1 above 0.20, fewer than 4 critical errors, escalation re
 
 **Caveats:** dev only, single-labeller gold, general synonyms not written blind. The test set is
 untouched.
+
+## Day 10
+
+**Goal:** M2 started; Claude calibrated and measured on dev.
+
+### Budget
+
+| Item | Value |
+| --- | --- |
+| Credit bought | $20 (auto-reload off); monthly spend limit $20 |
+| Spent today | **$1.14** (calibration $0.11, full dev runs $1.03) |
+| Re-runs served from the disk cache | 2 (Opus calibration re-run, general-base run): $0 |
+| Projected total for the project | about $13–14; stop and re-plan at $15 |
+
+### Cost per field (measured over 189 calls per model)
+
+| | Estimate (funder note) | Opus 5.5 | Sonnet 5.5 |
+| --- | --- | --- | --- |
+| New input tokens | 300 | ~120 | ~120 |
+| Cached prompt tokens | 3,000 | ~2,900 | ~2,900 |
+| Output tokens | 500 | ~145 | ~100 |
+| Dollars | $0.0118 (Opus) | **$0.0041** | **$0.0019** |
+
+### Calibration (Hotelbeds, 16 fields, strict base)
+
+| | F1 | Critical errors | Cost |
+| --- | --- | --- | --- |
+| Rules alone | 0.56 | 0 | $0 |
+| + Opus 5.5 | **0.92** | 0 | $0.078 |
+| + Sonnet 5.5 | 0.81 | 0 | $0.034 |
+
+### Full dev run (4 specs, leave-one-spec-out)
+
+| | Macro P | Macro R | **Macro F1** | Esc R (micro) | Transforms | **Critical errors** | Cost |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Rules, strict (M1) | 0.84 | 0.27 | 0.41 | 0.27 | — | 3 | $0 |
+| Rules, general (M1) | 0.96 | 0.45 | 0.61 | 0.45 | 4/5 | 0 | $0 |
+| Strict + Opus 5.5 | 0.88 | 0.82 | 0.85 | 0.64 | 13/17 | 7 | $0.70 |
+| Strict + Sonnet 5.5 | 0.78 | 0.81 | 0.79 | 0.64 | 13/18 | 9 | $0.33 |
+| **General + Opus 5.5** | 0.90 | 0.84 | **0.87** | **0.82** | 13/15 | **4** | $0 (cached) |
+
+| Macro F1 per spec (general + Opus) | |
+| --- | --- |
+| headout-partner | 0.67 |
+| hotelbeds-activities | 0.96 |
+| hx-swota | 0.91 |
+| octo-core | 0.92 |
+
+### Critical errors (strict + Opus), by cause
+
+| Field | Made by | Cause |
+| --- | --- | --- |
+| Headout currency ×3 | rules | HX's "price currency = gross" borrowed by Headout; the general base asks instead |
+| OCTO `status` | Claude | context gap: `REJECTED` only in the schema `enum`, not in the description sent |
+| OCTO `uuid` | Claude | real error: an idempotency key the client generates read as the partner's booking ID |
+| Headout `voucherId`, OCTO `unitItems[].supplierReference` | Claude | gold likely wrong (decision A); also counted critical only by inheritance (decision B) |
+
+### Predictions
+
+| Prediction | Result | Right? |
+| --- | --- | --- |
+| Opus calibration cost $0.20 | $0.078 | no (too high) |
+| Hotelbeds F1 with Opus 0.70 | 0.92 | no (too low) |
+| Dev macro F1 with Opus above 0.80 | 0.85 strict / 0.87 general | **yes** |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 2 (ADP-41 Day 9 docs, ADP-42 M2 code) |
+| Tests | 234 → **254** |
+| Bugs caught before spending | 1 (command line rejected `strict`) |
+| Cost records lost | 1 (`cost.json` overwritten by a cached re-run; recovered from the cache) |
+| Invalid Claude replies | 0 of 189 |
+| Gold changes prompted by model disagreement | 2 (decided, applied on Day 11) |
+| Block times | not measured |
+
+**Caveats:** dev only; one labeller; OCTO's and Headout's docs are public, so Claude may have seen them
+in training. The held-out test specs decide.
