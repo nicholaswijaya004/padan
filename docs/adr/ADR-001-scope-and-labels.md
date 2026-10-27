@@ -263,3 +263,46 @@ evaluation integrity; baselines are re-measured on v3 and v2.1 numbers are not c
 **Known limitation: travellers are per booking.** Which traveller takes part in which item is not
 modelled. It loses information for one dev spec (Hotelbeds `activities[].paxes[]`); the other three list
 travellers once per booking.
+
+## Amendment 6 — 2026-10-27: test-set pre-registration
+
+Written before any test spec is fetched or opened, so that the test set, the system under test and the
+reported numbers are fixed before any test result exists.
+
+**Test specs.** Chosen by format and effort, not by results:
+
+- **Tier 1 (the headline):** `viator-partner`, `getyourguide-partner`, `musement-partner`. All three are
+  OpenAPI, which the existing Stage 1 extraction handles; GetYourGuide's split files are bundled first.
+- **Tier 2 (reported separately, only if done before the Tier 1 run):** `rezdy-agent`, `rezdy-connect`,
+  `fareharbor-external`. Each needs a new HTML extractor (about half a day to a day each).
+- **Not in the headline:** `checkfront-v3` (another HTML extractor) and `widgety-cruise-v2` (search only,
+  no booking endpoints).
+
+**System under test, frozen now.** The general rules with the full dev lexicon (all four dev specs;
+leave-one-spec-out does not apply to test), plus Claude Opus 5.5 at effort `medium` with prompt v2
+(`PROMPT_VERSION = "v2"`), on schema v3.1. Reported next to it on the same gold: name-match, the strict
+rules alone and the general rules alone. Claude Sonnet 5.5 is not run on test.
+
+**Test gold.**
+
+- Labelled by Nicholas only, from the target side (Amendment 4): for each canonical target, the partner
+  field(s) that carry it, or `ASK_PARTNER`; every other field is set to `NONE` by a script, and that
+  `NONE` list is reviewed by hand.
+- **No model draft and no model comparison.** M2 is Claude, so gold adjusted toward a Claude draft
+  would bend toward the system under test. (This replaces Amendment 2's sealed-draft comparison for test.)
+- Stored in `data/labels/test/`, so dev tooling never reads it, and **frozen**: the SHA-256 of each file is
+  committed before rules or Claude run on that spec.
+
+**One run.** After the freeze, each system runs once on test. The prompt, the lexicon and the rules are
+not changed in response to test results; later improvements are reported as future work, never as a new
+headline.
+
+**Changes after the run.** Allowed only for clear labelling slips (a misspelt path, a field placed on the
+wrong target by mistake), each listed with its reason. The headline is reported both before and after
+those changes. Every change suggested by looking at model output is counted, as on dev.
+
+**Headline.** Macro F1 over the Tier 1 specs for the frozen system, with silent critical errors and
+escalation precision and recall beside it, and the cost of the run.
+
+**Before publishing,** a second person labels a 20% sample of one Tier 1 spec, and agreement is reported
+(Amendment 4).
