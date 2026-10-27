@@ -240,10 +240,21 @@ def test_nationality_must_be_alpha_2() -> None:
 
 
 def test_new_critical_fields_are_marked() -> None:
-    for name in ("net_price", "hold_expires_at", "fulfilment"):
+    for name in ("net_price", "hold_expires_at"):
         extra = Booking.model_fields[name].json_schema_extra
         assert isinstance(extra, dict)
         assert extra["critical"] is True, name
+
+
+def test_fulfilment_is_critical_field_by_field_and_partner_id_is_not() -> None:
+    # v3.1: a wrong voucher URL or format stops a customer getting in; a wrong reference ID does not
+    def critical(name: str) -> bool:
+        extra = Fulfilment.model_fields[name].json_schema_extra
+        assert isinstance(extra, dict)
+        return bool(extra["critical"])
+
+    assert [critical(n) for n in ("kind", "format", "value", "redeemed_at")] == [True] * 4
+    assert not critical("partner_id")
 
 
 # --- Schema v2.1: redemption time -----------------------------------------------------------

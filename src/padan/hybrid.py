@@ -3,12 +3,14 @@
     uv run --env-file .env python -m padan.hybrid OUT_DIR MODEL BASE [SPEC ...]
     # e.g. data/predictions claude-opus-5-5 strict hotelbeds-activities
 
-Writes OUT_DIR/hybrid_<base>_<model>/<spec>.yaml (label files the scorer reads) and a cost report.
+Writes OUT_DIR/hybrid_<base>_<model>_<prompt version>/<spec>.yaml (label files the scorer reads),
+and appends one entry per run to cost.json there, so a cached re-run never hides a paid one.
 """
 
 import json
 import os
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,9 +18,10 @@ from pydantic import ValidationError
 
 from padan.baselines import Field, dump, fields_of, gold_files
 from padan.candidates import Lexicon, load_lexicon
-from padan.engine import VARIANTS, predict, question
+from padan.engine import VARIANTS, Values, predict, question
+from padan.extract import spec_values
 from padan.labels import ASK_PARTNER, NONE, LabelEntry, Source, load_labels
-from padan.llm import Mapper, Usage, field_message
+from padan.llm import PROMPT_VERSION, Mapper, Usage, field_message
 
 
 def entry(field: Field, target: str, **extra: Any) -> LabelEntry:
@@ -65,10 +68,15 @@ def needs_claude(labels: list[LabelEntry]) -> bool:
 
 
 def hybrid(
-    fields: list[Field], lexicon: Lexicon, off: list[str], mapper: Mapper
+    fields: list[Field],
+    lexicon: Lexicon,
+    off: list[str],
+    mapper: Mapper,
+    values: Values | None = None,
 ) -> tuple[list[LabelEntry], list[Usage], int]:
     """Rule labels, with Claude's labels for the fields the rules could not decide."""
-    rule_labels, _ = predict(fields, lexicon, off)
+    values = values or {}
+    rule_labels, _ = predict(fields, lexicon, off, values)
     by_field: dict[tuple[str, str, str], list[LabelEntry]] = {}
     for label in rule_labels:
         key = (label.source.endpoint, label.source.direction, label.source.paths[0])
@@ -81,7 +89,8 @@ def hybrid(
         if not needs_claude(mine):
             labels += mine
             continue
-        reply, usage = mapper.ask(field_message(field, fields))
+        listed = values.get((field[0], field[1], field[2]), [])
+        reply, usage = mapper.ask(field_message(field, fields, listed))
         usages.append(usage)
         claude_labels, valid = to_labels(reply, field)
         invalid += not valid
@@ -106,6 +115,16 @@ def cost_report(usages: list[Usage], invalid: int) -> dict[str, Any]:
     }
 
 
+def log_run(log: Path, report: dict[str, Any]) -> float:
+    """Append this run's per-spec report to the log; return the run's dollars."""
+    runs = json.loads(log.read_text()) if log.exists() else []
+    if isinstance(runs, dict):  # a v1 cost.json held one run, overwritten each time
+        runs = [{"run_at": None, "specs": runs}]
+    runs.append({"run_at": datetime.now(UTC).isoformat(timespec="seconds"), "specs": report})
+    log.write_text(json.dumps(runs, indent=1) + "\n")
+    return float(sum(spec["dollars"] or 0 for spec in report.values()))
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 3 or f"rules_{argv[2]}" not in VARIANTS:
         print("usage: python -m padan.hybrid OUT_DIR MODEL strict|general [SPEC ...]")
@@ -118,7 +137,7 @@ def main(argv: list[str]) -> int:
     import anthropic
 
     out_dir, model, base, specs = Path(argv[0]), argv[1], argv[2], set(argv[3:])
-    out = out_dir / f"hybrid_{base}_{model}"
+    out = out_dir / f"hybrid_{base}_{model}_{PROMPT_VERSION}"
     out.mkdir(parents=True, exist_ok=True)
     mapper, lexicon = Mapper(anthropic.Anthropic(), model), load_lexicon()
     report: dict[str, Any] = {}
@@ -128,11 +147,12 @@ def main(argv: list[str]) -> int:
             continue
         fields = fields_of(load_labels(gold_path))
         off = [spec, *VARIANTS[f"rules_{base}"]]
-        labels, usages, invalid = hybrid(fields, lexicon, off, mapper)
+        labels, usages, invalid = hybrid(fields, lexicon, off, mapper, spec_values(spec))
         (out / gold_path.name).write_text(dump(labels))
         report[spec] = cost_report(usages, invalid)
         print(f"{spec}: {json.dumps(report[spec])}")
-    (out / "cost.json").write_text(json.dumps(report, indent=1) + "\n")
+    total = log_run(out / "cost.json", report)
+    print(f"this run: ${total:.4f}; all runs logged in {out / 'cost.json'}")
     return 0
 
 

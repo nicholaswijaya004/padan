@@ -178,8 +178,10 @@
     direction: response
     paths: ['voucherId']
   # type: string
-  target: 'NONE'
-  kind: ''
+  # Day 11, decision A: was NONE. Changed after M2's error analysis (the model mapped it); the docs
+  # support it and Nicholas accepted it. Counted as a gold change prompted by model disagreement.
+  target: 'fulfilment[kind=voucher].partner_id'
+  kind: 'direct'
   evidence: 'Identifier of the voucher issued for this booking. Pass it to [Get a voucher](/api-partner/v2/vouchers/get) to retrieve the structured voucher payload.'
 
 - source:

@@ -15,6 +15,7 @@ from padan.extract import (
     load_spec,
     properties,
     resolve,
+    spec_values,
     walk,
     write_scaffold,
 )
@@ -242,6 +243,47 @@ def test_extract_takes_evidence_from_the_operation_example() -> None:
     }
     [field] = extract(spec, ["PUT /bookings request"], [])
     assert field.evidence == "[no description; example: 07198]"
+
+
+def test_extract_keeps_the_enum_of_a_leaf_and_of_an_array_of_scalars() -> None:
+    spec = {
+        "paths": {
+            "/bookings": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "status": {
+                                                "type": "string",
+                                                "enum": ["ON_HOLD", "REJECTED"],
+                                            },
+                                            "methods": {
+                                                "type": "array",
+                                                "items": {"type": "string", "enum": ["VOUCHER"]},
+                                            },
+                                            "note": {"type": "string"},
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    fields = {f.path: f.values for f in extract(spec, ["GET /bookings response"], [])}
+    assert fields == {"status": ["ON_HOLD", "REJECTED"], "methods[]": ["VOUCHER"], "note": []}
+
+
+def test_spec_values_is_empty_without_the_raw_spec(tmp_path: Path) -> None:
+    manifest = tmp_path / "manifest.yaml"
+    manifest.write_text("- id: nowhere\n  scope: ['GET /x response']\n")
+    assert spec_values("nowhere", manifest) == {}
 
 
 # --- real gold files (needs data/raw/, so skipped in CI) ---------------------------------------

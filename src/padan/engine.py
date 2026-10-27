@@ -8,6 +8,7 @@ escalation policy (E2). Every prediction gets a receipt naming the lexicon entri
 
 import json
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Literal
@@ -15,6 +16,7 @@ from typing import Any, Literal
 from padan.baselines import Field, dump, fields_of, gold_files
 from padan.candidates import Candidate, Lexicon, candidates, load_lexicon
 from padan.enums import ENUM_VALUES, enum_map_from
+from padan.extract import spec_values
 from padan.labels import ASK_PARTNER, NONE, LabelEntry, Source, load_labels, normalise
 from padan.score import CRITICAL
 
@@ -28,6 +30,7 @@ class Decision:
 
 
 ENUMS = frozenset(ENUM_VALUES)
+Values = dict[tuple[str, str, str], list[str]]
 
 # Enums whose values are steps in the partner's own process: the same code can mean different
 # things (Headout `PENDING` is "confirmed"), so no table is built from names; M2 reads the
@@ -72,7 +75,9 @@ def decide(found: list[Candidate]) -> list[Decision]:
     return decisions
 
 
-def with_enum_maps(found: list[Candidate], evidence: str) -> list[Candidate]:
+def with_enum_maps(
+    found: list[Candidate], evidence: str, listed: Sequence[str] = ()
+) -> list[Candidate]:
     """R4: give an enum target its enum_map when the evidence documents every value by name."""
     enriched = []
     for candidate in found:
@@ -83,7 +88,7 @@ def with_enum_maps(found: list[Candidate], evidence: str) -> list[Candidate]:
                 and needs_enum_map(target)
                 and normalise(target) not in LIFECYCLE
             ):
-                transforms[i] = enum_map_from(evidence, target)
+                transforms[i] = enum_map_from(evidence, target, listed)
         enriched.append(
             replace(candidate, transforms=tuple(transforms)) if any(transforms) else candidate
         )
@@ -95,13 +100,20 @@ def question(candidate: str | None) -> str:
 
 
 def predict(
-    fields: list[Field], lexicon: Lexicon, off: list[str]
+    fields: list[Field],
+    lexicon: Lexicon,
+    off: list[str],
+    values: Values | None = None,
 ) -> tuple[list[LabelEntry], list[dict[str, Any]]]:
-    """Prediction entries for every field, plus a receipt per field (which entries matched)."""
+    """Prediction entries for every field, plus a receipt per field (which entries matched).
+
+    values: each field's allowed values from the spec (padan.extract.spec_values), if fetched.
+    """
     entries: list[LabelEntry] = []
     receipts: list[dict[str, Any]] = []
     for endpoint, direction, path, evidence in fields:
-        found = with_enum_maps(candidates(path, lexicon, off), evidence)
+        listed = (values or {}).get((endpoint, direction, path), [])
+        found = with_enum_maps(candidates(path, lexicon, off), evidence, listed)
         decisions = decide(found)
         for d in decisions:
             entries.append(
@@ -139,7 +151,7 @@ def main(argv: list[str]) -> int:
         for gold_path in gold_files():
             spec = gold_path.stem
             fields = fields_of(load_labels(gold_path))
-            entries, receipts = predict(fields, lexicon, off=[spec, *extra_off])
+            entries, receipts = predict(fields, lexicon, [spec, *extra_off], spec_values(spec))
             (out / variant / gold_path.name).write_text(dump(entries))
             (out / variant / f"{spec}.rules.json").write_text(json.dumps(receipts, indent=1) + "\n")
     print(

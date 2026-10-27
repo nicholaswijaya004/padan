@@ -32,6 +32,7 @@ class ExtractedField(BaseModel):
     path: str
     type: str
     evidence: str
+    values: list[str] = []  # the schema's `enum`, when it lists the allowed values
 
 
 class ScopedSpec(BaseModel):
@@ -105,6 +106,14 @@ def walk(
 
 
 # --- around the walk ---------------------------------------------------------------------------
+
+
+def enum_of(raw: Node, schemas: dict[str, Node]) -> list[str]:
+    """The `enum` a leaf lists (for an array of scalars, its items'), as strings; else []."""
+    node = resolve(raw, schemas)
+    if "array" in types_of(node):
+        node = resolve(node.get("items", {}), schemas)
+    return [str(value) for value in node.get("enum", []) if value is not None]
 
 
 def types_of(node: Node) -> list[str]:
@@ -182,6 +191,7 @@ def extract(spec: Node, scope: list[str], exclude: list[str]) -> list[ExtractedF
                     path=leaf,
                     type=type_label(raw, schemas),
                     evidence=evidence_of(raw, schemas, example_at(media.get("example"), leaf)),
+                    values=enum_of(raw, schemas),
                 )
             )
     return fields
@@ -358,6 +368,23 @@ def load_scoped(spec_id: str, manifest: Path = MANIFEST) -> ScopedSpec:
         if entry["id"] == spec_id:
             return ScopedSpec.model_validate(entry)
     raise KeyError(f"{spec_id} is not in {manifest}")
+
+
+def spec_values(spec_id: str, manifest: Path = MANIFEST) -> dict[tuple[str, str, str], list[str]]:
+    """Allowed values per field (endpoint, direction, path), read from data/raw/ at run time.
+
+    Empty when the spec is not fetched or is not an OpenAPI file. Partner specs are never committed,
+    so these lists exist only on the machine that fetched them.
+    """
+    entry = load_scoped(spec_id, manifest)
+    raw = RAW_DIR / f"{spec_id}.yaml"
+    if entry.urls or not entry.scope or not raw.exists():
+        return {}
+    return {
+        (f.endpoint, f.direction, f.path): f.values
+        for f in extract(load_spec(raw), entry.scope, entry.exclude)
+        if f.values
+    }
 
 
 def load_spec(path: Path) -> Node:
