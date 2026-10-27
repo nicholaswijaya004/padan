@@ -518,3 +518,63 @@ untouched.
 
 **Caveats:** dev only; one labeller; OCTO's and Headout's docs are public, so Claude may have seen them
 in training. The held-out test specs decide.
+
+## Day 11
+
+**Goal:** Prompt v2 measured on dev; model chosen; test set pre-registered.
+
+### Dev, general rules + Claude Opus 5.5 (leave-one-spec-out)
+
+| | Gold / schema | Macro F1 | Esc P / R (macro) | Transforms | **Critical errors** | Cost |
+| --- | --- | --- | --- | --- | --- | --- |
+| v1 (Day 10) | old / v3 | 0.87 | 0.35 / 0.60 | 13/15 | 4 | $0.70 |
+| v1, re-scored | new (change A) / v3.1 | 0.87 | 0.35 / 0.60 | 13/16 | 2 | $0 |
+| v2 | new / v3.1 | **0.89** | **0.60** / 0.60 | 15/17 | 1 | $0.67 |
+| **v2, scorer equivalence** | new / v3.1 | **0.89** | **0.60** / 0.60 | 15/16 | **0** | $0 |
+
+| Macro F1 per spec (v2) | |
+| --- | --- |
+| headout-partner | 0.72 |
+| hotelbeds-activities | 0.96 |
+| hx-swota | 0.91 |
+| octo-core | 0.97 |
+
+Rules alone after the bundle: strict 0.40, general 0.60 (gold change A adds two pairs the rules miss).
+
+### Where Day 10's critical errors went
+
+| Error | Owner | Resolved by |
+| --- | --- | --- |
+| Headout `voucherId`, OCTO `supplierReference` | gold | change A, schema v3.1 |
+| OCTO `status` (missing `REJECTED`) | context | `enum` values in the field message |
+| OCTO `uuid` → booking ID | Claude | prompt v2 rule |
+| OCTO voucher `deliveryValue` with `construct(kind=voucher)` (new in v2) | scorer | constants stated by the path count as direct |
+
+### Predictions
+
+| Prediction | Result | Right? |
+| --- | --- | --- |
+| v2: 0 critical errors | 1, then 0 after the scorer fix | yes, with the scorer caveat |
+| v2: macro F1 about 0.90 | 0.89 | yes |
+
+### Budget
+
+| Item | Value |
+| --- | --- |
+| Spent today | $0.67 |
+| **Spent in total** | **$1.81 of $20** |
+| Next paid run | the Tier 1 test run, after labels are frozen |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 2 (ADP-44 v2 bundle and scorer fix, ADP-45 Amendment 6), plus a Dependabot bump |
+| Tests | 254 → **266** |
+| Gold changes prompted by model disagreement | 2 (applied) |
+| Scoring changes prompted by model output | 1 |
+| Prompt mistakes found by re-reading | 1 (`our_booking_id` missing in v1) |
+| Block times | not measured |
+
+**Caveats:** dev only; the dev specs are public and may be in Claude's training data. The test set is
+pre-registered and not yet fetched.

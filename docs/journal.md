@@ -922,3 +922,73 @@ client and all tests, and analysed the critical errors. Claude-recommended and a
 
 Prediction first, then the v2 bundle and one full dev re-run with Opus (about $0.70). Then the model
 decision, and the plan for the test specs: fetching and human-only labelling.
+
+## Day 11 — Prompt v2, zero critical errors on dev, test set pre-registered
+
+**Goal:** Apply Day 10's fixes as one prompt version and one re-run, choose the model, and fix the test
+set and its rules in writing before anyone opens a test spec.
+
+### The assumptions that were wrong
+
+- **"I can predict v2 without knowing what v2 is."** I could not, and said so. Once each change was
+  shown as the exact text Claude would see, I predicted 0 critical errors and macro F1 about 0.90; the
+  result was 0.89, and 0 critical errors after one scoring fix.
+- **Claude's v1 prompt left `our_booking_id` out** ("set by padan, never by a partner field"). Partners
+  echo our reference back (`resellerReference`, `clientReference`), so every such field the rules
+  missed was impossible for Claude to get right. Found by re-reading the prompt, not by a test.
+- **"A wrong transform on a critical field is a wrong value."** Not always: `construct(kind=voucher)`
+  on `fulfilment[kind=voucher].value` writes exactly what a direct copy writes. The scorer now drops
+  constants the target path already states, for gold and predictions alike.
+- **"The test plan is just: label the 8 test specs."** Five of the eight are HTML sites that each need a
+  new extractor, and one (Widgety) has no booking endpoints.
+
+### What cost me time
+
+- Little: one patch, one paid re-run, one scorer fix. The time went into reading results, which is
+  where it should go.
+
+### Decisions
+
+| Decision | Why |
+| --- | --- |
+| One prompt version (v2) for all prompt fixes, one paid re-run | A prompt change re-asks every field |
+| v2: the spec's `enum` values in the field message and in R4 | OCTO `status` lacked `REJECTED`, which only the `enum` lists |
+| v2: client-generated IDs (idempotency keys, request UUIDs) are not the partner's booking ID | OCTO `uuid` was mapped to `partner_booking_id` |
+| v2: `our_booking_id` in the prompt as "our reference, echoed back by the partner" | Claude's v1 omission |
+| Gold change A and schema v3.1 (`fulfilment` critical field by field, `partner_id` not) | Decided on Day 10; applied with v2 |
+| Re-score v1 on the new gold before running v2 | Separates what the answer key changed from what the prompt changed |
+| Scorer: `construct()` constants stated by the target path count as direct | Same value written; applied to both sides; counted as a scoring change prompted by model output |
+| Model: Claude Opus 5.5 for every run that counts | Better F1 and fewer critical errors on every dev spec; about $0.35 more per dev run |
+| Test Tier 1: Viator, GetYourGuide, Musement (OpenAPI); Tier 2 (Rezdy ×2, FareHarbor) only if done before the Tier 1 run | The existing extractor handles OpenAPI; each HTML site costs half a day to a day |
+| ADR-001 Amendment 6: test set, frozen system, human-only gold (no model draft), hashes before any run, one run, before-and-after reporting of slip fixes | Pre-registration: nothing about the test can be chosen after seeing a test result |
+
+### What I delegated, and what I decided
+
+I made the predictions, ran the re-score and the paid run, and decided the scorer fix, the model, Tier 1
+and the test procedure (all Claude's recommendations, accepted). Claude explained what v2 changes,
+wrote the v2 bundle, the scorer fix and Amendment 6, and found its own v1 prompt mistake.
+
+### Understood
+
+- **Decompose an improvement before celebrating it:** v1 re-scored on the new gold (0.87, 2 critical)
+  shows the answer key's share; v2 on the same gold (0.89, 1) shows the prompt's.
+- **Errors have owners:** of Day 10's 4 critical errors, 2 were gold, 1 was missing context and 1 was
+  Claude; v2's last one was the scorer.
+- **Pre-registration:** writing the test set and the rules down before the data exists is what makes a
+  single test number believable.
+- **Gold built with a model's help bends toward that model;** on test, the gold is human-only.
+
+### Still open
+
+- **The second labeller** (20% of one Tier 1 spec, Amendment 4): not chosen yet.
+- Day 12: fetch the Tier 1 specs (GetYourGuide `$ref` bundling, Viator's embedded spec), the
+  `data/labels/test/` layout, the `NONE`-filling script and the freeze hashes.
+- Update the funder page with measured costs.
+- Dev-only, as future work: my own prompt (`v1-nicholas`) against v2; writing `Mapper.ask` myself;
+  context retrieval for meaning written elsewhere in the docs. None of them can change the test headline.
+- Tier 2 extractors; M3 (generated code); block times; carried items.
+
+### Tomorrow
+
+Fetch and extract the three Tier 1 specs, set up the test label layout, then start labelling Viator from
+the target side. No rule and no Claude run touches test until every Tier 1 file is labelled and hashed.
