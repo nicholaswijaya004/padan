@@ -1,4 +1,7 @@
-"""Canonical booking schema v3: the target every partner field maps onto (ADR-001, Amendment 5)."""
+"""Canonical booking schema v3.1: the target every partner field maps onto (ADR-001, Amendment 5).
+
+v3.1 (Day 11): fulfilment fields are critical one by one; partner_id is not.
+"""
 
 from datetime import date, datetime, time
 from decimal import Decimal
@@ -40,16 +43,19 @@ class Fulfilment(BaseModel):
     """One document the customer uses to get in: the booking's voucher or a single ticket."""
 
     kind: Literal["voucher", "ticket"] = meta(
-        "voucher covers the whole booking; ticket is one entry credential."
+        "voucher covers the whole booking; ticket is one entry credential.", critical=True
     )
     format: Literal["pdf_url", "html_url", "wallet_url", "qrcode", "barcode", "text", "other"] = (
-        meta("How it is delivered; decides whether value is a URL or a code.")
+        meta("How it is delivered; decides whether value is a URL or a code.", critical=True)
     )
-    value: str = meta("The URL, or the code itself (QR payload, barcode, text code).")
+    value: str = meta(
+        "The URL, or the code itself (QR payload, barcode, text code).", critical=True
+    )
     partner_id: str | None = meta("Partner's identifier for this document, if any.", default=None)
     redeemed_at: datetime | None = meta(
         "When this voucher or ticket was used at the venue, if the partner reports it.",
         default=None,
+        critical=True,
     )
 
 
@@ -174,7 +180,8 @@ class Booking(BaseModel):
         critical=True,
     )
     fulfilment: list[Fulfilment] = meta(
-        "Vouchers and tickets the customer uses to get in.", default=[], critical=True
+        "Vouchers and tickets the customer uses to get in; critical field by field (v3.1).",
+        default=[],
     )
     custom_fields: list[CustomField] = meta(
         "Partner-specific questions answered for the whole booking.", default=[]

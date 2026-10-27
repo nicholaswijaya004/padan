@@ -48,3 +48,16 @@ def test_one_code_without_a_value_means_no_table() -> None:
 
 def test_no_documented_codes_means_no_table() -> None:
     assert enum_map_from("[no description; example: ADULT]", TYPE) is None
+
+
+def test_codes_listed_only_in_the_spec_enum_are_included() -> None:
+    # OCTO: REJECTED is in the schema's enum but not in the description
+    evidence = "`QRCODE` generate it yourself."
+    assert (
+        enum_map_from(evidence, FORMAT, ["QRCODE", "PDF_URL"])
+        == "enum_map(QRCODE=qrcode, PDF_URL=pdf_url)"
+    )
+
+
+def test_a_listed_code_without_a_value_also_means_no_table() -> None:
+    assert enum_map_from("`PDF_URL`", FORMAT, ["PDF_URL", "APPLE_WALLET_URL"]) is None

@@ -699,8 +699,10 @@
     direction: response
     paths: ['unitItems[].supplierReference']
   # type: string|null
-  target: 'NONE'
-  kind: ''
+  # Day 11, decision A: was NONE. Changed after M2's error analysis (the model mapped it); the docs
+  # support it and Nicholas accepted it. Counted as a gold change prompted by model disagreement.
+  target: 'fulfilment[kind=ticket].partner_id'
+  kind: 'direct'
   evidence: 'A reference the supplier uses to identify the unit within all bookings.'
 
 - source:
