@@ -17,9 +17,11 @@ FIELDS = [
 
 
 def test_the_prompt_lists_every_partner_target_with_flags_and_values() -> None:
-    for target in VALID_TARGETS - {"our_booking_id"}:
+    for target in VALID_TARGETS:
         assert f"- {target}" in SYSTEM_PROMPT
-    assert "- our_booking_id" not in SYSTEM_PROMPT  # set by padan, never by a partner
+    # v2: our own reference is in the list, because partners echo it back
+    assert "- our_booking_id: padan's own booking reference" in SYSTEM_PROMPT
+    assert "idempotency key" in SYSTEM_PROMPT
     assert "- status [critical]:" in SYSTEM_PROMPT
     assert "Allowed values: cancelled, confirmed, failed, on_hold, pending." in SYSTEM_PROMPT
     assert "enum_map" in SYSTEM_PROMPT and "PENDING can mean confirmed" in SYSTEM_PROMPT
@@ -30,6 +32,13 @@ def test_the_field_message_names_its_siblings_only() -> None:
     message = field_message(FIELDS[0], FIELDS)
     assert "Field: holder.name" in message and "same object: surname" in message
     assert "clientReference" not in message
+
+
+def test_listed_values_appear_only_when_the_spec_lists_them() -> None:
+    assert "Allowed values in the spec: ADULT, CHILD" in field_message(
+        FIELDS[0], FIELDS, ["ADULT", "CHILD"]
+    )
+    assert "Allowed values" not in field_message(FIELDS[0], FIELDS)
 
 
 def test_the_request_pins_model_effort_format_fallback_and_caching(tmp_path: Path) -> None:

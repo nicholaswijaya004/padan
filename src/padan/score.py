@@ -29,15 +29,39 @@ class Pair:
     target: str
 
 
+STATED = re.compile(r"\[(\w+)=([^\]]+)\]")  # constants a target path states: [kind=voucher]
+
+
+def without_stated_constants(entry: LabelEntry) -> LabelEntry:
+    """Drop construct() constants the target path already states; nothing left means direct.
+
+    construct(kind=voucher) on fulfilment[kind=voucher].value writes the same value as a direct
+    copy, so the two must score the same. Applied to gold and predictions alike (Day 11).
+    """
+    if entry.kind != "transform" or entry.transform is None:
+        return entry
+    transform = parse_transform(entry.transform)
+    if transform.name != "construct":
+        return entry
+    stated = set(STATED.findall(entry.target))
+    kept = [(key, value) for key, value in transform.args if (key, value) not in stated]
+    if len(kept) == len(transform.args):
+        return entry
+    if not kept:
+        return entry.model_copy(update={"kind": "direct", "transform": None})
+    args = ", ".join(f"{key}={value}" for key, value in kept)
+    return entry.model_copy(update={"transform": f"construct({args})"})
+
+
 def pairs(entries: list[LabelEntry]) -> dict[Pair, LabelEntry]:
-    """One Pair per label entry, with [0] read as []."""
+    """One Pair per label entry, with [0] read as [] and stated constants dropped."""
     return {
         Pair(
             entry.source.endpoint,
             entry.source.direction,
             " + ".join(FIRST_ITEM.sub("[]", path) for path in entry.source.paths),
             entry.target,
-        ): entry
+        ): without_stated_constants(entry)
         for entry in entries
     }
 

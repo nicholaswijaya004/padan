@@ -8,6 +8,7 @@ model, the prompt or the field changes (D5).
 
 import hashlib
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -20,7 +21,7 @@ from padan.score import CRITICAL
 from padan.transforms import TRANSFORMS
 
 PROMPT_VERSION = (
-    "v1"  # bump on any change to SYSTEM_PROMPT or field_message(): old replies are not reused
+    "v2"  # bump on any change to SYSTEM_PROMPT or field_message(): old replies are not reused
 )
 CACHE_DIR = Path("data/llm_cache")
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
@@ -76,13 +77,21 @@ def _descriptions() -> dict[str, str]:
     return found
 
 
+# v2: v1 left this target out, so Claude could not map a partner's echo of our own reference.
+OUR_REFERENCE = (
+    "padan's own booking reference, which we send to the partner and the partner echoes back "
+    "(e.g. reseller reference, client reference, partner reference)."
+)
+
+
 def schema_table() -> str:
     """One line per valid target: path, critical flag, allowed values, description. Sorted."""
     descriptions = _descriptions()
     lines = []
     for target in sorted(VALID_TARGETS):
         if target == "our_booking_id":
-            continue  # set by padan, never by a partner field
+            lines.append(f"- {target}: {OUR_REFERENCE}")
+            continue
         flags = " [critical]" if target in CRITICAL else ""
         values = ENUM_VALUES.get(target)
         allowed = f" Allowed values: {', '.join(sorted(values))}." if values else ""
@@ -122,12 +131,15 @@ mapping, or two when one partner value fills two targets (a date-time split into
 - decision "none": the field carries nothing the schema holds: message metadata (correlation IDs,
 versions, timestamps of the message), catalogue data repeated inside the booking, partner-internal
 codes, or a value the schema has no place for.
+- An identifier the client generates and sends, such as an idempotency key or a request UUID, is not
+the partner's booking ID; choose none, unless the documentation says it is our booking reference.
 - decision "ask": the field probably carries a critical target, but the documentation does not say
 enough to fill it correctly. Examples: several amounts and nothing says which is the gross total; a
 status given as numeric codes with no list of meanings; a date whose role is not stated. Give the
 target you would map as "candidate" and the question for the partner. Never guess a critical field.
 - An enum target (one with allowed values) needs transform enum_map(CODE=value, ...) covering every
-code the documentation lists, read from each code's description, not from its spelling: a partner's
+code the documentation lists and every value in "Allowed values in the spec", read from each code's
+description, not from its spelling: a partner's
 PENDING can mean confirmed. If the codes are not documented, ask (critical target) or choose none.
 - Use only the information given. A field with only an example value can still be mapped when its
 name, example and neighbours make the meaning clear.
@@ -171,13 +183,15 @@ def siblings(field: Field, fields: list[Field]) -> list[str]:
     return found
 
 
-def field_message(field: Field, fields: list[Field]) -> str:
+def field_message(field: Field, fields: list[Field], listed: Sequence[str] = ()) -> str:
+    """The user message for one field. `listed`: the spec's `enum` for it, when there is one."""
     endpoint, direction, path, evidence = field
     neighbours = ", ".join(siblings(field, fields)) or "(none)"
+    allowed = f"\nAllowed values in the spec: {', '.join(listed)}" if listed else ""
     return (
         f"Endpoint: {endpoint} ({direction})\n"
         f"Field: {path}\n"
-        f"Documentation: {evidence}\n"
+        f"Documentation: {evidence}{allowed}\n"
         f"Other fields in the same object: {neighbours}"
     )
 

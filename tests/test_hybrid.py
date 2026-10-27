@@ -1,9 +1,10 @@
 """M2 hybrid: which fields go to Claude, how its replies become labels, and the cost report."""
 
+import json
 from pathlib import Path
 
 from padan.candidates import Lexicon
-from padan.hybrid import cost_report, hybrid, main, needs_claude, to_labels
+from padan.hybrid import cost_report, hybrid, log_run, main, needs_claude, to_labels
 from padan.labels import LabelEntry
 from padan.llm import Mapper, Usage
 from tests.fake_claude import FakeClient, reply
@@ -139,3 +140,30 @@ def test_main_refuses_to_run_without_a_key(monkeypatch, tmp_path: Path, capsys) 
 def test_main_rejects_an_unknown_base(capsys) -> None:  # type: ignore[no-untyped-def]
     assert main(["out", "claude-opus-5-5", "loose"]) == 2
     assert "usage:" in capsys.readouterr().out
+
+
+def test_each_run_is_appended_to_the_cost_log(tmp_path: Path) -> None:
+    log = tmp_path / "cost.json"
+    assert log_run(log, {"a": {"dollars": 0.5}}) == 0.5
+    assert (
+        log_run(log, {"a": {"dollars": 0}}) == 0.0
+    )  # a cached re-run no longer hides the paid one
+    runs = json.loads(log.read_text())
+    assert [r["specs"]["a"]["dollars"] for r in runs] == [0.5, 0]
+
+
+def test_a_v1_single_run_log_is_kept_as_the_first_entry(tmp_path: Path) -> None:
+    log = tmp_path / "cost.json"
+    log.write_text(json.dumps({"a": {"dollars": 0.7}}))
+    log_run(log, {"a": {"dollars": 0}})
+    assert [r["specs"]["a"]["dollars"] for r in json.loads(log.read_text())] == [0.7, 0]
+
+
+def test_listed_values_reach_claude(tmp_path: Path) -> None:
+    lexicon = Lexicon.model_validate(
+        {"entities": {}, "wrappers": [], "dependents": [], "entries": []}
+    )
+    client = FakeClient([reply("none")])
+    values = {(EP, "response", "startDateTime"): ["A", "B"]}
+    hybrid([FIELD], lexicon, [], Mapper(client, "claude-opus-5-5", tmp_path), values)
+    assert "Allowed values in the spec: A, B" in client.calls[0]["messages"][0]["content"]
