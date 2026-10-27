@@ -169,6 +169,33 @@ def test_a_wrong_transform_on_a_critical_target_is_a_critical_error() -> None:
     assert score.critical_errors == [pair("startDateTime", "items[].start_date")]
 
 
+VALUE = "fulfilment[kind=voucher].value"
+
+
+def test_a_construct_that_repeats_the_target_path_is_direct() -> None:
+    # Day 11: construct(kind=voucher) on fulfilment[kind=voucher].value writes the same value
+    gold = [lab("deliveryValue", VALUE)]
+    pred = [lab("deliveryValue", VALUE, "transform", transform="construct(kind=voucher)")]
+    score = score_spec(gold, pred)
+    assert score.transforms_total == 0 and score.errors == [] and score.critical_errors == []
+
+
+def test_only_the_stated_constants_are_dropped() -> None:
+    gold = [
+        lab("voucherUrl", VALUE, "transform", transform="construct(kind=voucher, format=pdf_url)")
+    ]
+    pred = [lab("voucherUrl", VALUE, "transform", transform="construct(format=pdf_url)")]
+    assert score_spec(gold, pred).transforms_right == 1
+
+
+def test_a_constant_the_path_does_not_state_still_counts() -> None:
+    gold = [lab("voucherUrl", VALUE, "transform", transform="construct(format=pdf_url)")]
+    pred = [lab("voucherUrl", VALUE, "direct")]
+    score = score_spec(gold, pred)
+    assert (score.transforms_right, score.transforms_total) == (0, 1)
+    assert score.critical_errors == [pair("voucherUrl", VALUE)]
+
+
 def test_direct_on_both_sides_is_not_a_transform() -> None:
     gold = [lab("id", "partner_booking_id")]
     assert score_spec(gold, gold).transforms_total == 0
