@@ -57,8 +57,11 @@
   terms: CC BY 4.0 (declared in the spec's info.license)
   likely_in_training_data: true
   usable: 'yes'
-  notes: 'Verified 2026-10-13 (headless browser + direct download). OpenAPI 3.0.1 is embedded in the Redoc page (__redoc_state, ~4.4 MB HTML); the Postman download returns 403. Fetch script must extract the embedded spec.'
+  notes: 'Verified 2026-10-13 (headless browser + direct download). OpenAPI 3.0.1 is embedded in the Redoc page (__redoc_state, ~4.4 MB HTML); the Postman download returns 403. Fetch script must extract the embedded spec. Scope (Day 12, before labelling): create = POST /booking/book request; get = POST /booking/status response (the only retrieval looked up by our own distributor references; mybookings and pastbooking look up by voucher key or customer email). Create response not labelled, as on dev.'
   method: redoc
+  scope:
+    - POST /booking/book request
+    - POST /booking/status response
 
 - id: viator-supplier
   provider: Viator (Tripadvisor)
@@ -86,10 +89,14 @@
   terms: 'Apache-2.0 (LICENSE file in repository)'
   likely_in_training_data: true
   usable: 'yes'
-  notes: 'Verified 2026-10-13 (git clone): OpenAPI 3.0.0 split across files via $ref (spec/api.yaml + paths/ + components/), 389 description fields. Fetch script must bundle $refs. Clearest licence of any candidate'
+  notes: 'Verified 2026-10-13 (git clone): OpenAPI 3.0.0 split across files via $ref (spec/api.yaml + paths/ + components/), 389 description fields. Fetch script must bundle $refs. Clearest licence of any candidate. Scope (Day 12, before labelling): create = POST /{version}/bookings + POST /{version}/carts requests (the cart step completes the booking, like OCTO confirm); get = GET /{version}/bookings/{booking_hash} response.'
   method: github
   commit: 12c9da41c8d97c59f9232d580837bc000b5f0c1d
   root: spec/api.yaml
+  scope:
+    - POST /{version}/bookings request
+    - POST /{version}/carts request
+    - GET /{version}/bookings/{booking_hash} response
 
 - id: musement-partner
   provider: Musement (TUI)
@@ -103,8 +110,13 @@
   terms: Apache-2.0 (linked from the reference as the spec licence)
   likely_in_training_data: unknown
   usable: 'yes'
-  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML download, 425 KB. Pickups, customer info, cancellations'
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML download, 425 KB. Pickups, customer info, cancellations. Scope (Day 12, before labelling): create = POST /carts/{cartUuid}/items + POST /orders requests (POST /carts only makes an empty container); get = GET /orders/{orderUuid} response. Excluded items[].product. (the product definition embedded in each order item: a catalogue object, Amendment 4). PUT customer has no schema fields (form served at run time).'
   method: direct
+  scope:
+    - POST /carts/{cartUuid}/items request
+    - POST /orders request
+    - GET /orders/{orderUuid} response
+  exclude: ['items[].product.']
 
 - id: rezdy-agent
   provider: Rezdy
