@@ -177,6 +177,20 @@ def test_extract_applies_scope_and_exclusions() -> None:
     ]
 
 
+def test_extract_walks_a_body_that_is_a_list() -> None:
+    schema = {"type": "array", "items": {"$ref": "#/components/schemas/Money"}}
+    media = {"schema": schema, "example": [{"amount": 1, "currency": "EUR"}]}
+    spec = {
+        "paths": {"/items": {"post": {"requestBody": {"content": {"application/json": media}}}}},
+        "components": {"schemas": SCHEMAS},
+    }
+    fields = extract(spec, ["POST /items request"], exclude=[])
+    assert [(f.path, f.evidence) for f in fields] == [
+        ("[].amount", "Total amount."),
+        ("[].currency", "[no description; example: EUR]"),
+    ]
+
+
 def test_scaffold_quotes_and_leaves_target_blank() -> None:
     field = ExtractedField(
         endpoint="GET /b",

@@ -58,6 +58,7 @@
   likely_in_training_data: true
   usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). OpenAPI 3.0.1 is embedded in the Redoc page (__redoc_state, ~4.4 MB HTML); the Postman download returns 403. Fetch script must extract the embedded spec.'
+  method: redoc
 
 - id: viator-supplier
   provider: Viator (Tripadvisor)
@@ -86,6 +87,9 @@
   likely_in_training_data: true
   usable: 'yes'
   notes: 'Verified 2026-10-13 (git clone): OpenAPI 3.0.0 split across files via $ref (spec/api.yaml + paths/ + components/), 389 description fields. Fetch script must bundle $refs. Clearest licence of any candidate'
+  method: github
+  commit: 12c9da41c8d97c59f9232d580837bc000b5f0c1d
+  root: spec/api.yaml
 
 - id: musement-partner
   provider: Musement (TUI)
@@ -100,6 +104,7 @@
   likely_in_training_data: unknown
   usable: 'yes'
   notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML download, 425 KB. Pickups, customer info, cancellations'
+  method: direct
 
 - id: rezdy-agent
   provider: Rezdy
@@ -155,7 +160,7 @@
   terms: Not found on the docs site
   likely_in_training_data: unknown
   usable: 'yes'
-  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML, 134 KB. Also openapi-v1, openapi-v2-affiliate and openapi-v2-common (listed in /docs/llms.txt). Upstream changed 2026-10-16: one description in V2Voucher.ticketSection, outside the labelled endpoints; accepted after diff.'
+  notes: 'Verified 2026-10-13 (headless browser + direct download). Direct OpenAPI 3.1.0 YAML, 134 KB. Also openapi-v1, openapi-v2-affiliate and openapi-v2-common (listed in /docs/llms.txt). Upstream changed 2026-10-16: one description in V2Voucher.ticketSection, outside the labelled endpoints; accepted after diff. Upstream changed again (seen 2026-10-27): APPLE_WALLET_URL and GOOGLE_WALLET_URL dropped from the ticket type enum and from the tickets[].url description, two labelled fields; kept at the locked version so the Day 10-11 dev results stay reproducible (make fetch reports it as changed).'
   method: direct
   scope:
     - POST /api/public/v2/bookings/ request

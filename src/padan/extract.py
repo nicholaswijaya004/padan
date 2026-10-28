@@ -133,14 +133,16 @@ def type_label(raw: Node, schemas: dict[str, Node]) -> str:
 
 
 def example_at(example: Any, path: str) -> Any:
-    """The value at `path` in an example body; for `name[]`, the first element. None if absent."""
+    """The value at `path` in an example body; for `name[]`, the first element. None if absent.
+    A path starting with `[].` is in a body that is itself a list."""
     value = example
     for part in path.split("."):
         is_list = part.endswith("[]")
         name = part[:-2] if is_list else part
-        if not isinstance(value, dict) or name not in value:
-            return None
-        value = value[name]
+        if name:
+            if not isinstance(value, dict) or name not in value:
+                return None
+            value = value[name]
         if is_list:
             if not isinstance(value, list) or not value:
                 return None
@@ -181,7 +183,10 @@ def extract(spec: Node, scope: list[str], exclude: list[str]) -> list[ExtractedF
         method, path, direction = item.split(" ")
         endpoint = f"{method} {path}"
         media = operation_content(spec, endpoint, direction)
-        for leaf, raw in walk(media["schema"], schemas):
+        schema, prefix = media["schema"], ""
+        if "array" in types_of(resolve(schema, schemas)):  # a list at the top: paths start "[]."
+            schema, prefix = resolve(schema, schemas).get("items", {}), "[]"
+        for leaf, raw in walk(schema, schemas, prefix):
             if any(leaf.startswith(prefix) for prefix in exclude):
                 continue
             fields.append(
