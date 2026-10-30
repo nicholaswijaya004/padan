@@ -1079,3 +1079,76 @@ form, not meaning, at my request: completing one pick's syntax, and changing two
 
 Label GetYourGuide from the target side, review its `NONE` list and freeze it. Rules and Claude still do
 not touch test until all three Tier 1 files are frozen.
+
+## Day 13 — GetYourGuide labelled and frozen; a GPT draft discarded
+
+**Goal:** Label GetYourGuide (140 fields) from the target side, review its `NONE` list and freeze it.
+One late session, 30–31 October, 23:00 to 01:42.
+
+### The assumptions that were wrong
+
+- **"GetYourGuide will be slower than Viator."** It was faster: 1.16 min per field against 1.41, with the
+  tool already familiar and a form checklist from Day 12.
+- **"About 30 named, 4 ask."** 52 named and 1 ask. GetYourGuide returns its booking and participant
+  questions as separate fields, and each answer maps to a custom-field value.
+- **"A transform is pseudocode."** Only `kind: derived` is free text. `kind: transform` names one of seven
+  functions, because the scorer compares the function as well as the target.
+- **"I can map a list to a list."** The label format works on leaf fields. `participant_questions[]` being
+  the travellers is already said by its children's labels; `travellers[]` itself is only for a count.
+- **"Using GPT to tidy the sheet is just speed."** It is a model draft, which Amendment 6 rules out for test
+  gold whatever the model.
+
+### What cost me time
+
+- My first sheet had 3 paths that are not in scope (a list of objects, and a field that exists only in the
+  create request) and 10 transform names outside the vocabulary.
+- The GPT detour: a revision drafted, checked, discarded and restored, about 40 minutes.
+
+### The GPT revision
+
+After my first sheet came back with form errors, I used GPT to revise it faster. Claude asked whether a
+tool had been used before checking it, and I said yes. The revision was discarded; the sheet was restored
+to my own version from before it (with Claude's form-only fixes), and I did the `NONE` review by hand,
+deciding every field from GetYourGuide's evidence. I considered mapping `slot_id`, read the docs
+again, and left it empty: GetYourGuide has no slot identifier. Because I saw the revision
+before the review, some anchoring cannot be ruled out; the frozen labels are byte-for-byte my restored
+version, with nothing from the revision. No model was used for Viator.
+
+### Decisions
+
+| Decision | Why |
+| --- | --- |
+| `status`: `ASK_PARTNER` | Critical, and I could not match GetYourGuide's codes to our allowed values from the docs |
+| `items[].start_date`: `date_part` | My "extract local date" is exactly the vocabulary's `date_part` |
+| Multi-input and free-text recipes: `kind: derived` | Only the seven vocabulary functions can be scored as transforms |
+| `fulfilment[]`, `travellers[]`, `travellers[].traveller_type`: empty | List rows are for counts; the traveller category exists only in the create request, and we send it |
+| Fulfilment picks narrowed to `fulfilment[kind=ticket]…` | Named as the dev gold names them, so the scorer can match |
+| The same list-row convention as Viator | All three Tier 1 specs scored the same way |
+| Discard the GPT revision and review `NONE` by hand (option A) | Keeps the pre-registered method; the caveat is stated rather than hidden |
+
+### What I delegated, and what I decided
+
+Every pick, every `ask` and every empty row is mine. Claude checked my sheets for form only (paths in scope,
+vocabulary, syntax), made the form fixes I asked for as a patch, worded the `status` question from my
+decision, and recommended narrowing `fulfilment[].kind`, which I accepted. It did not point out missed
+targets: that would have put its judgement, the same model as M2, into the gold.
+
+### Understood
+
+- **The `NONE` review is where missed targets are caught,** by me, before the freeze; a change then is an
+  ordinary edit, after the freeze it is a reported slip.
+- **One pick, one endpoint:** a pick's paths must all come from the same operation.
+- **A rule written before the test only protects the result if it is followed,** or if each exception is
+  written down.
+
+### Still open
+
+- Musement (164 fields), the last Tier 1 spec.
+- The second labeller (20% of one Tier 1 spec, Amendment 4).
+- The repository's squash-merge default, so co-author lines survive.
+- Backlog: acknowledged upstream drift for `make fetch`; the funder page; Tier 2 extractors; M3.
+
+### Tomorrow
+
+Label Musement from the target side, by hand, critical rows first, in shorter sittings if needed. When it is
+frozen, all three Tier 1 label files are sealed and the one test run can be prepared.

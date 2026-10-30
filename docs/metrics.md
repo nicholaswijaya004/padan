@@ -647,3 +647,43 @@ Predictions asked and not made: failing tests before the blanks, Viator named/as
 
 **Caveats:** one labeller; Viator's docs are public and may be in Claude's training data. No rule or
 Claude run has touched test yet.
+
+## Day 13
+
+**Goal:** GetYourGuide labelled by hand and frozen.
+
+### Labelling
+
+| Spec | Named | Ask | NONE | Time | Min / field | Frozen |
+| --- | --- | --- | --- | --- | --- | --- |
+| viator-partner | 18 | 2 | 43 | 90 min | 1.41 | yes (Day 12) |
+| getyourguide-partner | 52 | 1 | 87 | 162 min | 1.16 | yes |
+| musement-partner | | | | | | |
+
+| GetYourGuide block | Time |
+| --- | --- |
+| Sheet, all rows (Blocks 1 and 2 together) | 23:00–01:00, 120 min |
+| GPT revision discarded, restore, `NONE` review | 01:00–01:42, 42 min |
+
+### Predictions
+
+| Prediction | Result | Right? |
+| --- | --- | --- |
+| 30 named | 52 | no (too low) |
+| 4 ask | 1 | no (too high) |
+| Slower than Viator | 1.16 vs 1.41 min/field | no (faster) |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 1 (ADP-54 GetYourGuide labels) |
+| Tests | 293 (unchanged) |
+| Form errors in my first sheet | 13 (3 paths out of scope, 10 transform names outside the vocabulary) |
+| Claude form fixes applied by patch | 1 patch: 6 picks to `derived`, 1 narrowed target, plus my 5 decisions written in |
+| Model drafts of test gold | 1 (GPT revision of the GetYourGuide sheet, discarded before the `NONE` review; disclosed) |
+| Block times | all measured |
+
+**Caveats:** one labeller; I saw a GPT revision of the GetYourGuide sheet before reviewing `NONE`, so some
+anchoring cannot be ruled out (the frozen sheet contains nothing from it). No rule or Claude run has touched
+test yet.
