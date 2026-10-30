@@ -66,6 +66,30 @@ def test_fill_places_picks_and_sets_every_other_field_to_none() -> None:
     LABELS.validate_python(entries)  # the same format as every dev label file
 
 
+def test_a_pick_can_narrow_its_target_with_a_filter() -> None:
+    sheet = """
+- target: 'fulfilment[].value'
+  picks:
+    - source: {endpoint: 'GET /book/{id}', direction: response, paths: ['total']}
+      kind: ask
+      target: 'fulfilment[kind=voucher].value'
+      question: 'Is this the voucher link?'
+- target: 'fulfilment[].kind'
+  picks: []
+"""
+    (entry,) = [e for e in fill(rows(sheet), FIELDS) if e["target"] != "NONE"]
+    assert entry["candidate"] == "fulfilment[kind=voucher].value"
+    LABELS.validate_python([entry])
+
+
+def test_a_narrowed_target_must_be_a_form_of_its_row() -> None:
+    wrong = "- target: 'fulfilment[].value'\n  picks:\n    - source: {endpoint: 'POST /book', "
+    wrong += "direction: request, paths: ['email']}\n      kind: direct\n"
+    wrong += "      target: 'fulfilment[kind=voucher].format'\n"
+    with pytest.raises(ValueError, match="is not a form of"):
+        rows(wrong)
+
+
 def test_an_unpicked_field_is_none() -> None:
     entries = fill(rows("- target: 'status'\n  picks: []\n"), FIELDS)
     assert [e["target"] for e in entries] == ["NONE"] * len(FIELDS)
