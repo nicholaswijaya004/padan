@@ -1,4 +1,4 @@
-.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules hybrid
+.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules hybrid sheet labels freeze verify
 
 check: lint typecheck test
 
@@ -21,6 +21,18 @@ fetch:
 
 scaffold:
 	uv run python -m padan.extract $(SPEC)
+
+sheet:
+	uv run python -m padan.sheet new $(SPEC)
+
+labels:
+	uv run python -m padan.sheet fill $(SPEC)
+
+freeze:
+	uv run python -m padan.sheet freeze
+
+verify:
+	uv run python -m padan.sheet verify
 
 baselines:
 	uv run python -m padan.baselines data/predictions
