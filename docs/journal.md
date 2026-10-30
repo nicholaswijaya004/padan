@@ -1109,8 +1109,8 @@ One late session, 30–31 October, 23:00 to 01:42.
 After my first sheet came back with form errors, I used GPT to revise it faster. Claude asked whether a
 tool had been used before checking it, and I said yes. The revision was discarded; the sheet was restored
 to my own version from before it (with Claude's form-only fixes), and I did the `NONE` review by hand,
-deciding every field from GetYourGuide's evidence. I considered `slot_id` because the GPT version had it,
-read the docs again, and left it empty: GetYourGuide has no slot identifier. Because I saw the revision
+deciding every field from GetYourGuide's evidence. I considered mapping `slot_id`, read the docs
+again, and left it empty: GetYourGuide has no slot identifier. Because I saw the revision
 before the review, some anchoring cannot be ruled out; the frozen labels are byte-for-byte my restored
 version, with nothing from the revision. No model was used for Viator.
 
