@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, TypeAdapter, field_validator
+from pydantic import BaseModel, TypeAdapter, field_validator, model_validator
 
 from padan.extract import ExtractedField, load_scoped, quote, scoped_fields
 from padan.fetch import sha256_hex
@@ -33,6 +33,7 @@ class Pick(BaseModel):
 
     source: Source
     kind: Literal["direct", "transform", "derived", "ask"]
+    target: str | None = None  # a narrower form of the row's target: fulfilment[kind=voucher].value
     transform: str | None = None
     question: str | None = None
 
@@ -48,6 +49,13 @@ class Row(BaseModel):
             raise ValueError(f"{target!r} is not a Booking schema path")
         return target
 
+    @model_validator(mode="after")
+    def picks_narrow_the_target(self) -> "Row":
+        for pick in self.picks:
+            if pick.target is not None and normalise(pick.target) != self.target:
+                raise ValueError(f"{pick.target!r} is not a form of {self.target!r}")
+        return self
+
 
 ROWS = TypeAdapter(list[Row])
 
@@ -58,6 +66,8 @@ HEADER = """\
 #   picks:
 #     - source: {{endpoint: 'POST /orders', direction: request, paths: ['customer.email']}}
 #       kind: direct                # direct | transform | derived | ask
+#       target: ''                  # optional: the row's target with a filter, e.g. on a fulfilment
+#                                   # row 'fulfilment[kind=voucher].value', as dev gold names it
 #       transform: ''               # transform and derived only, e.g. 'to_e164'
 #       question: ''                # ask only: the question for the partner (target = candidate)
 # Every scoped field that no pick names becomes NONE when you run `make labels SPEC={spec}`.
@@ -113,7 +123,7 @@ def fill(rows: list[Row], fields: list[ExtractedField]) -> list[dict[str, Any]]:
                     raise ValueError(f"{row.target}: {' '.join(key)} is not a scoped field")
             covered |= set(keys)
             first = keys[0]
-            label = label_for(row.target, pick, scoped[first].evidence)
+            label = label_for(pick.target or row.target, pick, scoped[first].evidence)
             placed.setdefault(first, []).append(label)
     entries: list[dict[str, Any]] = []
     for field in fields:
