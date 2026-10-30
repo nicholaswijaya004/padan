@@ -398,6 +398,14 @@ def load_spec(path: Path) -> Node:
     return spec
 
 
+def scoped_fields(entry: ScopedSpec) -> list[ExtractedField]:
+    """The fields in the entry's label scope, read from data/raw/ (pages or a single spec file)."""
+    if entry.urls:
+        pages = [(RAW_DIR / entry.id / page_name(url)).read_text() for url in entry.urls]
+        return extract_pages(pages, entry.scope, entry.exclude)
+    return extract(load_spec(RAW_DIR / f"{entry.id}.yaml"), entry.scope, entry.exclude)
+
+
 def main(argv: list[str]) -> int:
     """`python -m padan.extract SPEC_ID`: write data/scaffolds/SPEC_ID.yaml (not committed)."""
     if len(argv) != 1:
@@ -407,11 +415,7 @@ def main(argv: list[str]) -> int:
     if not entry.scope:
         print(f"{entry.id}: no scope in the manifest")
         return 1
-    if entry.urls:
-        pages = [(RAW_DIR / entry.id / page_name(url)).read_text() for url in entry.urls]
-        fields = extract_pages(pages, entry.scope, entry.exclude)
-    else:
-        fields = extract(load_spec(RAW_DIR / f"{entry.id}.yaml"), entry.scope, entry.exclude)
+    fields = scoped_fields(entry)
     SCAFFOLD_DIR.mkdir(parents=True, exist_ok=True)
     out = SCAFFOLD_DIR / f"{entry.id}.yaml"
     out.write_text(write_scaffold(entry.id, fields))
