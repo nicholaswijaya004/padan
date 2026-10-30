@@ -578,3 +578,72 @@ Rules alone after the bundle: strict 0.40, general 0.60 (gold change A adds two 
 
 **Caveats:** dev only; the dev specs are public and may be in Claude's training data. The test set is
 pre-registered and not yet fetched.
+
+## Day 12
+
+**Goal:** Tier 1 test specs fetched, scoped and set up for labelling; Viator labelled and frozen.
+
+### Fetch (reproducibility)
+
+| Spec | Method | Derived spec | SHA-256 | Same on Nicholas's Mac and Claude's sandbox |
+| --- | --- | --- | --- | --- |
+| viator-partner | `redoc` (4.4 MB page) | 862 KB | `f992d5df…` | yes |
+| getyourguide-partner | `github` (29 files, commit `12c9da4`) | 448 KB | `cf2b7a97…` | yes (tarball vs `git archive`) |
+| musement-partner | `direct` | 425 KB | `3018bde3…` | yes |
+
+Upstream drift detected: 1 (headout-partner, two labelled fields; kept at the locked version).
+
+### Test scope (pre-registered before labelling)
+
+| Spec | Endpoints | Excluded | Fields |
+| --- | --- | --- | --- |
+| viator-partner | 2 | — | 64 |
+| getyourguide-partner | 3 | — | 140 |
+| musement-partner | 3 | `items[].product.` (48) | 164 |
+| **Tier 1 total** | 8 | | **368** |
+
+### Labelling
+
+| Spec | Named | Ask | NONE | Time | Min / field | Frozen |
+| --- | --- | --- | --- | --- | --- | --- |
+| viator-partner | 18 | 2 | 43 | 90 min | 1.41 | yes |
+| getyourguide-partner | | | | | | |
+| musement-partner | | | | | | |
+
+Viator has 63 label entries for 64 fields: one derived label covers two fields (mobile country code and
+number). Day 3 reference: 1.33 min/field, hand-labelling, judgement only.
+
+### Predictions
+
+| Prediction | Result | Right? |
+| --- | --- | --- |
+| Tier 1 hashes match on two machines (Claude) | all three | yes |
+| Scope field counts 64 / 140 / 212 before exclusions (Claude) | 64 / 140 / 212 | yes |
+| Musement under 100 fields after exclusions | 147 with my first two prefixes, 164 final | no |
+
+Predictions asked and not made: failing tests before the blanks, Viator named/ask counts.
+
+### Budget
+
+| Item | Value |
+| --- | --- |
+| Spent today | $0 |
+| **Spent in total** | **$1.81 of $20** |
+| Next paid run | the Tier 1 test run, after all three label files are frozen |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 6 (ADP-47 fetch, ADP-48 scope, ADP-49 label tooling, ADP-50 and ADP-51 tooling fixes, ADP-52 Viator labels) |
+| Tests | 266 → **293** |
+| Blanks filled | 61: 57 by me, 4 by Claude on request |
+| Blanks wrong on the first try | 6 (`github.com` without `/`, `elif` on the method, `not start`, U twice, `Key[...]`, `key[0]`) |
+| Claude tooling bugs caught before labelling | 2 (filtered targets, empty pick keys) |
+| Stray files caught in review | 1 (`opus.json`) |
+| Commits made on the wrong branch | 1 (recovered) |
+| Co-author trailers lost on squash-merge | 5 (ADP-47 to ADP-51) |
+| Block times | Block 4: 90 min; others not measured |
+
+**Caveats:** one labeller; Viator's docs are public and may be in Claude's training data. No rule or
+Claude run has touched test yet.
