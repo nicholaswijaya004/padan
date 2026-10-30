@@ -1,0 +1,355 @@
+# Target-side sheet for getyourguide-partner (ADR-001 Amendments 4 and 6): labelled by hand, no model.
+# For each canonical target, add the partner field(s) that carry it under `picks`; leave [] if none.
+# A pick names an extracted field as the scaffold shows it (a filter like [id=EMAIL] is allowed):
+#   picks:
+#     - source: {endpoint: 'POST /orders', direction: request, paths: ['customer.email']}
+#       kind: direct                # direct | transform | derived | ask
+#       target: ''                  # optional: the row's target with a filter, e.g. on a fulfilment
+#                                   # row 'fulfilment[kind=voucher].value', as dev gold names it
+#       transform: ''               # transform and derived only, e.g. 'to_e164'
+#       question: ''                # ask only: the question for the partner (target = candidate)
+# Every scoped field that no pick names becomes NONE when you run `make labels SPEC=getyourguide-partner`.
+
+- target: 'balance_due_date'
+  # [critical] Date the remaining balance must be paid, if the partner takes a deposit.
+  picks: []
+
+- target: 'booked_at'
+  # When the partner created the booking.
+  picks: []
+
+- target: 'cancellable'
+  # Whether the partner allows this booking to be cancelled now.
+  picks: []
+
+- target: 'cancellation_policy'
+  # [critical] Cancellation terms as given by the partner.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.cancellation_policy_text']}
+      kind: direct
+
+- target: 'contact.email'
+  # Contact email.
+  picks:
+    - source: {endpoint: 'POST /{version}/carts', direction: request, paths: ['data.shopping_cart.billing.email']}
+      kind: direct
+
+- target: 'contact.family_name'
+  # Family name of the booker.
+  picks:
+    - source: {endpoint: 'POST /{version}/carts', direction: request, paths: ['data.shopping_cart.billing.last_name']}
+      kind: direct
+
+- target: 'contact.full_name'
+  # Full name when the partner does not split it.
+  picks: []
+
+- target: 'contact.given_name'
+  # Given name(s) of the booker.
+  picks:
+    - source: {endpoint: 'POST /{version}/carts', direction: request, paths: ['data.shopping_cart.billing.first_name']}
+      kind: direct
+
+- target: 'contact.phones[]'
+  # Contact phone numbers; partners may give several.
+  picks:
+    - source: {endpoint: 'POST /{version}/carts', direction: request, paths: ['data.shopping_cart.billing.phone_number']}
+      kind: direct
+
+- target: 'custom_fields[]'
+  # Partner-specific questions answered for the whole booking.
+  picks: []
+
+- target: 'custom_fields[].field_id'
+  # Partner's identifier for the question, e.g. PICKUP_LOCATION.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.booking_parameters[].name']}
+      kind: direct
+
+- target: 'custom_fields[].label'
+  # Human-readable question text, if the partner gives one.
+  picks: []
+
+- target: 'custom_fields[].value'
+  # The answer given for this booking.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.booking_parameters[].value_1']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_customer_accommodation.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_pick_up_location.full_address']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_flight_details.flight_number']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_flight_details.time_of_arrival']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_child_safety_seat.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_cruise_details.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_drop_off_address.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_medical_conditions.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_mobility_issues.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_shipping_address.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.booking_questions.booking_wheelchair.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.free_text_question']}
+      kind: direct
+
+- target: 'fulfilment[]'
+  # Vouchers and tickets the customer uses to get in; critical field by field (v3.1).
+  picks: []
+
+- target: 'fulfilment[].format'
+  # [critical] How it is delivered; decides whether value is a URL or a code.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.ticket.ticket_url']}
+      kind: derived
+      target: 'fulfilment[kind=ticket].format'
+      transform: 'constant_url'
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.ticket.supplier_booking_codes[].code']}
+      kind: derived
+      target: 'fulfilment[kind=ticket].format'
+      transform: 'constant_code'
+
+- target: 'fulfilment[].kind'
+  # [critical] voucher covers the whole booking; ticket is one entry credential.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.ticket.ticket_hash']}
+      kind: derived
+      target: 'fulfilment[kind=ticket].kind'
+      transform: 'constant_ticket'
+
+- target: 'fulfilment[].partner_id'
+  # Partner's identifier for this document, if any.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.ticket.ticket_hash']}
+      kind: direct
+      target: 'fulfilment[kind=ticket].partner_id'
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.ticket.supplier_booking_codes[].ticket_hash']}
+      kind: direct
+      target: 'fulfilment[kind=ticket].partner_id'
+
+- target: 'fulfilment[].redeemed_at'
+  # [critical] When this voucher or ticket was used at the venue, if the partner reports it.
+  picks: []
+
+- target: 'fulfilment[].value'
+  # [critical] The URL, or the code itself (QR payload, barcode, text code).
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.ticket.ticket_url']}
+      kind: direct
+      target: 'fulfilment[kind=ticket].value'
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.ticket.supplier_booking_codes[].code']}
+      kind: direct
+      target: 'fulfilment[kind=ticket].value'
+
+- target: 'hold_expires_at'
+  # [critical] When an on_hold booking expires if not confirmed.
+  picks: []
+
+- target: 'items[]'
+  # What was bought; at least one item.
+  picks: []
+
+- target: 'items[].activity.service_language'
+  # Language the activity is delivered in.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.conduction_language.value']}
+      kind: direct
+
+- target: 'items[].activity.slot_id'
+  # Partner's identifier of the booked date/time inventory slot.
+  picks: []
+
+- target: 'items[].cruise.cabin_number'
+  # Assigned cabin number, if any.
+  picks: []
+
+- target: 'items[].cruise.deck'
+  # Deck name or number of the cabin.
+  picks: []
+
+- target: 'items[].end_date'
+  # Local end date, if the product spans several days.
+  picks: []
+
+- target: 'items[].end_time'
+  # Local end time, no timezone.
+  picks: []
+
+- target: 'items[].option_id'
+  # Partner's variant of the product: activity option or rate, cruise cabin category.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.option_id']}
+      kind: direct
+
+- target: 'items[].option_name'
+  # Display name of the option.
+  picks: []
+
+- target: 'items[].product_id'
+  # Partner's product (or sailing) identifier.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.tour_id']}
+      kind: direct
+
+- target: 'items[].product_name'
+  # Display name of the product.
+  picks: []
+
+- target: 'items[].start_date'
+  # [critical] Local start date of the experience or sailing.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.datetime']}
+      kind: transform
+      transform: 'date_part'
+
+- target: 'items[].start_time'
+  # Local start time, no timezone; None if the partner gives a date only.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.datetime', 'booking.bookable.datetime_type']}
+      kind: derived
+      transform: 'extract_local_time_if_datetime'
+
+- target: 'net_price.amount'
+  # [critical] Amount in major units of `currency` (e.g. 12.50 EUR, not 1250).
+  picks: []
+
+- target: 'net_price.currency'
+  # [critical] ISO 4217 code, uppercase.
+  picks: []
+
+- target: 'our_booking_id'
+  # padan's own booking ID.
+  picks:
+    - source: {endpoint: 'POST /{version}/bookings', direction: request, paths: ['data.booking.bookable.external_reference_id']}
+      kind: direct
+
+- target: 'partner_booking_id'
+  # [critical] The partner's system identifier for this booking (used in API calls).
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.booking_hash']}
+      kind: direct
+
+- target: 'partner_confirmation_code'
+  # The code a customer quotes to the partner, when it differs from partner_booking_id.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.ticket.booking_reference']}
+      kind: direct
+
+- target: 'redeemed_at'
+  # When the booking was used at the venue, if the partner reports it (support, refunds).
+  picks: []
+
+- target: 'status'
+  # [critical] Booking state. on_hold: reserved, expires unless we confirm; pending: we confirmed, the partner has not yet.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.booking_status']}
+      kind: ask
+      question: 'Which booking state (cancelled, confirmed, failed, on_hold, pending) does each value of booking_status mean?'
+
+- target: 'total_price.amount'
+  # [critical] Amount in major units of `currency` (e.g. 12.50 EUR, not 1250).
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.price']}
+      kind: direct
+
+- target: 'total_price.currency'
+  # [critical] ISO 4217 code, uppercase.
+  picks:
+    - source: {endpoint: 'POST /{version}/bookings', direction: request, paths: ['base_data.currency']}
+      kind: direct
+
+- target: 'travellers[]'
+  # Everyone travelling; exactly one is the lead.
+  picks: []
+
+- target: 'travellers[].age'
+  # Age in years at time of travel.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_age.value']}
+      kind: derived
+      transform: 'to_integer'
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_children_age.value']}
+      kind: derived
+      transform: 'to_integer'
+
+- target: 'travellers[].custom_fields[]'
+  # Partner-specific questions answered per traveller.
+  picks: []
+
+- target: 'travellers[].custom_fields[].field_id'
+  # Partner's identifier for the question, e.g. PICKUP_LOCATION.
+  picks: []
+
+- target: 'travellers[].custom_fields[].label'
+  # Human-readable question text, if the partner gives one.
+  picks: []
+
+- target: 'travellers[].custom_fields[].value'
+  # The answer given for this booking.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_dietary_restrictions.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_diving_level.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_driver_license.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_shoe_size.amount', 'booking.bookable.questions.participant_questions[].traveler_shoe_size.unit']}
+      kind: derived
+      transform: 'combine_amount_and_unit'
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_skill_level.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_height.amount', 'booking.bookable.questions.participant_questions[].traveler_height.unit']}
+      kind: derived
+      transform: 'combine_amount_and_unit'
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_id_details.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_id_number.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_passport_details.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_passport_number.value']}
+      kind: direct
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_weight.amount', 'booking.bookable.questions.participant_questions[].traveler_weight.unit']}
+      kind: derived
+      transform: 'combine_amount_and_unit'
+
+- target: 'travellers[].date_of_birth'
+  # Date of birth, e.g. for cruise manifests.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_date_of_birth.value']}
+      kind: direct
+
+- target: 'travellers[].family_name'
+  # Family name; None for single-name travellers.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_name.last_name']}
+      kind: direct
+
+- target: 'travellers[].full_name'
+  # Full name when the partner does not split it (e.g. Headout NAME).
+  picks: []
+
+- target: 'travellers[].given_name'
+  # Given name(s) as on the travel document.
+  picks:
+    - source: {endpoint: 'GET /{version}/bookings/{booking_hash}', direction: response, paths: ['booking.bookable.questions.participant_questions[].traveler_name.first_name']}
+      kind: direct
+
+- target: 'travellers[].is_lead'
+  # True for the lead traveller of the booking.
+  picks: []
+
+- target: 'travellers[].nationality'
+  # ISO 3166-1 alpha-2 country code, uppercase.
+  picks: []
+
+- target: 'travellers[].traveller_type'
+  # Pricing category of this traveller.
+  picks: []
