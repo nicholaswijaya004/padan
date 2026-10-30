@@ -37,6 +37,11 @@ class Pick(BaseModel):
     transform: str | None = None
     question: str | None = None
 
+    @field_validator("target", "transform", "question", mode="before")
+    @classmethod
+    def empty_is_missing(cls, value: Any) -> Any:
+        return None if value == "" else value
+
 
 class Row(BaseModel):
     target: str

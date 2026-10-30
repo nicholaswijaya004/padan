@@ -82,6 +82,15 @@ def test_a_pick_can_narrow_its_target_with_a_filter() -> None:
     LABELS.validate_python([entry])
 
 
+def test_empty_optional_keys_are_missing() -> None:
+    sheet = "- target: 'contact.email'\n  picks:\n    - source: {endpoint: 'POST /book', "
+    sheet += "direction: request, paths: ['email']}\n      kind: direct\n"
+    sheet += "      target: ''\n      transform: ''\n      question: ''\n"
+    (entry, *_) = fill(rows(sheet), FIELDS)
+    assert entry["target"] == "contact.email"
+    assert "transform" not in entry
+
+
 def test_a_narrowed_target_must_be_a_form_of_its_row() -> None:
     wrong = "- target: 'fulfilment[].value'\n  picks:\n    - source: {endpoint: 'POST /book', "
     wrong += "direction: request, paths: ['email']}\n      kind: direct\n"
