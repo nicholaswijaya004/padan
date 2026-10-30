@@ -992,3 +992,90 @@ wrote the v2 bundle, the scorer fix and Amendment 6, and found its own v1 prompt
 
 Fetch and extract the three Tier 1 specs, set up the test label layout, then start labelling Viator from
 the target side. No rule and no Claude run touches test until every Tier 1 file is labelled and hashed.
+
+## Day 12 — Tier 1 test specs fetched, scoped, and Viator labelled and frozen
+
+**Goal:** Fetch the three Tier 1 test specs reproducibly, fix their label scope in writing, build the
+target-side labelling tools, and label Viator by hand. Spread over three sessions (28–30 October): the
+first started late, and I stopped after Block 2 rather than label test gold tired.
+
+### The assumptions that were wrong
+
+- **"Reading Claude's code is enough for me to learn."** It was not. On the first morning Claude wrote the
+  whole fetcher; I asked for it back. New rule from today: I write all implementation, as
+  fill-in-the-blank; Claude explains, sets the blanks, provides the tests and reviews.
+- **"Every request body is an object."** Musement's `POST /carts/{cartUuid}/items` body is a list, and
+  extraction returned 0 fields. Extraction now walks a top-level list (paths start `[].`). This is a Stage 1
+  change made after the Amendment 6 pre-registration, driven by spec structure only, before any test label
+  or result existed.
+- **"A locked dev spec stays put."** Headout changed upstream inside two labelled fields (the wallet-URL
+  ticket types were removed). The fetcher refused it, as designed; dev stays pinned at the locked version.
+- **"The sheet can say everything the dev gold says."** It could not name a filtered target such as
+  `fulfilment[kind=voucher].value`, so every correct fulfilment answer would have been scored as a critical
+  error. Claude found its own design bug before I labelled; fixed in ADP-50. A second one (an empty
+  `target: ''` rejected) was fixed in ADP-51.
+- **"Labelling from the target side is faster."** Not on the first spec: 1.41 min per field against Day 3's
+  1.33 (which counted judgement only). The tool was new and the block included two rounds of form fixes.
+
+### What cost me time
+
+- Python syntax more than concepts: `str.find` returns -1 (not 0) when nothing is found; a type alias
+  `Key[...]` is not a tuple; a loop variable outlives its loop (`key[0]` instead of `keys[0]` would have
+  made every pick vanish silently).
+- Git: I committed ADP-51 on `main`, then moved `main` back while the branch label pointed elsewhere, which
+  left the commit unlabelled. Recovered with `git merge --ff-only <hash>`. Lesson: read the branch name in
+  the prompt before any branch command.
+- `git add -A` picked up a stray 524-line score report (`opus.json`); caught in review and moved to the
+  ignored `data/predictions/`. I now add files by name.
+
+### Decisions
+
+| Decision | Why |
+| --- | --- |
+| Fetch methods: Musement `direct`, Viator `redoc` (spec embedded in the docs page), GetYourGuide `github` (tarball at a pinned commit, bundled from 29 files) | Each spec's own form; the commit is pinned so the bundle cannot drift |
+| Lock the hash of the derived spec, not of the page or tarball | Page menus and gzip bytes change without the API changing |
+| Bundler fences: refs may not leave the repository; tarballs unpacked with `filter="data"` | Downloaded files must not read or write outside their folder |
+| Headout kept at the locked version; `make fetch` reports it as changed | Day 10–11 dev results stay reproducible. Acknowledging a known drift is in the backlog |
+| Scope Viator: `POST /booking/book` request + `POST /booking/status` response | `status` is the only retrieval looked up by our own distributor references |
+| Scope GetYourGuide: bookings request + carts request + `GET` booking response | The cart step completes the booking, like OCTO's confirm |
+| Scope Musement: cart items request + orders request + `GET` order response; exclude `items[].product.` | `POST /carts` only makes an empty container; the product definition is a catalogue object (Amendment 4) |
+| Keep Musement's `affiliate.` group in scope | Amendment 4 excludes catalogue objects only; excluding more after seeing the spec would widen the rule |
+| Test labels: target-side sheet, `NONE` filled by script, append-only freeze (`frozen.json`) | Amendments 4 and 6 |
+| No Claude draft for test gold, even though I asked for one | Amendment 6: gold drafted by Claude bends toward M2, which is Claude |
+| Viator `status` and `traveller_type`: `ASK_PARTNER` | I could not confirm the codes match our allowed values from the docs |
+
+### What I delegated, and what I decided
+
+I wrote 57 of the 61 blanks (fetcher, bundler, extractor fix, sheet, `NONE` fill, freeze, the two fixes);
+Claude wrote 4 on request (a regex, `str.partition`, a glob pattern, a set name) and wrote the tests and
+plumbing. I chose every scope, exclusion and label. On the Viator sheet Claude made three corrections of
+form, not meaning, at my request: completing one pick's syntax, and changing two picks to `kind: derived`
+(a transform outside the vocabulary; two input fields). It also worded the two partner questions from my
+`ask` decisions. It did not read Viator's field descriptions, and no label came from it.
+
+### Understood
+
+- **Recursion:** each call gets a smaller piece and the same context; plain values stop it.
+- **Cycle detection needs a per-branch trail,** not a shared "visited" set: a schema used twice is not a
+  cycle; a schema inside itself is.
+- **Short-circuiting as a guard:** `name in recorded and recorded[name] != digest`.
+- **A closure adapts a function's shape:** `derive_github` takes one argument and remembers `root`.
+- **Determinism is a property you build:** sorted targets, sorted files, keys in authors' order and a
+  hash of the derived spec. The same bytes came out on my Mac and in Claude's sandbox.
+- **Pre-registration covers scope too:** endpoints, exclusions and their reasons were committed before the
+  first label.
+
+### Still open
+
+- Label GetYourGuide (140 fields) and Musement (164); at today's pace about 3.3 and 3.9 hours.
+- The second labeller (20% of one Tier 1 spec, Amendment 4): not chosen yet.
+- Co-author trailers were lost on the squash-merges of ADP-47 to ADP-51: the squash message keeps only the
+  title. Setting the repository's squash default to "pull request title and commit details" would keep
+  them.
+- Backlog: acknowledge a known upstream drift so `make fetch` can go green; update the funder page; Tier 2
+  extractors; M3.
+
+### Tomorrow
+
+Label GetYourGuide from the target side, review its `NONE` list and freeze it. Rules and Claude still do
+not touch test until all three Tier 1 files are frozen.
