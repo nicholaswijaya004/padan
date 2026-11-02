@@ -1,0 +1,287 @@
+# Target-side sheet for musement-partner (ADR-001 Amendments 4 and 6): labelled by hand, no model.
+# For each canonical target, add the partner field(s) that carry it under `picks`; leave [] if none.
+# A pick names an extracted field as the scaffold shows it (a filter like [id=EMAIL] is allowed):
+#   picks:
+#     - source: {endpoint: 'POST /orders', direction: request, paths: ['customer.email']}
+#       kind: direct                # direct | transform | derived | ask
+#       target: ''                  # optional: the row's target with a filter, e.g. on a fulfilment
+#                                   # row 'fulfilment[kind=voucher].value', as dev gold names it
+#       transform: ''               # transform and derived only, e.g. 'to_e164'
+#       question: ''                # ask only: the question for the partner (target = candidate)
+# Every scoped field that no pick names becomes NONE when you run `make labels SPEC=musement-partner`.
+
+- target: 'balance_due_date'
+  picks: []
+
+- target: 'booked_at'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['date'] }
+      kind: direct
+
+- target: 'cancellable'
+  picks: []
+
+- target: 'cancellation_policy'
+  picks: []
+
+- target: 'contact.email'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['customer.email'] }
+      kind: direct
+
+- target: 'contact.family_name'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['customer.lastname'] }
+      kind: direct
+
+- target: 'contact.full_name'
+  picks: []
+
+- target: 'contact.given_name'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['customer.firstname'] }
+      kind: direct
+
+- target: 'contact.phones[]'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['customer.mobile'] }
+      kind: direct
+
+- target: 'custom_fields[]'
+  picks: []
+
+- target: 'custom_fields[].field_id'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['customer.extra_customer_data'] }
+      kind: ask
+      question: 'What keys does this object contain? Are they identifiers for booking questions?'
+
+- target: 'custom_fields[].label'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].extra_customer_data[].name'] }
+      kind: ask
+      question: 'Is this name the human-readable label of an extra customer question?'
+
+- target: 'custom_fields[].value'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['extra_data'] }
+      kind: ask
+      question: 'Does this JSON contain values for booking questions?'
+
+- target: 'fulfilment[]'
+  picks: []
+
+- target: 'fulfilment[].format'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].vouchers[].url'] }
+      kind: ask
+      target: 'fulfilment[kind=voucher].format'
+      question: 'What format does the voucher download URL provide?'
+
+- target: 'fulfilment[].kind'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].vouchers[].url'] }
+      kind: derived
+      transform: 'constant_voucher'
+      target: 'fulfilment[kind=voucher].kind'
+
+- target: 'fulfilment[].partner_id'
+  picks: []
+
+- target: 'fulfilment[].redeemed_at'
+  picks: []
+
+- target: 'fulfilment[].value'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].vouchers[].url'] }
+      kind: direct
+      target: 'fulfilment[kind=voucher].value'
+
+- target: 'hold_expires_at'
+  picks: []
+
+- target: 'items[]'
+  picks: []
+
+- target: 'items[].activity.service_language'
+  picks:
+    - source: { endpoint: 'POST /carts/{cartUuid}/items', direction: request, paths: ['[].language'] }
+      kind: direct
+
+- target: 'items[].activity.slot_id'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].transaction_code'] }
+      kind: ask
+      question: 'Does transaction_code identify the booked inventory slot, or only the internal reservation?'
+
+- target: 'items[].cruise.cabin_number'
+  picks: []
+
+- target: 'items[].cruise.deck'
+  picks: []
+
+- target: 'items[].end_date'
+  picks: []
+
+- target: 'items[].end_time'
+  picks: []
+
+- target: 'items[].option_id'
+  picks: []
+
+- target: 'items[].option_name'
+  picks: []
+
+- target: 'items[].product_id'
+  picks:
+    - source: { endpoint: 'POST /carts/{cartUuid}/items', direction: request, paths: ['[].product_identifier'] }
+      kind: direct
+
+- target: 'items[].product_name'
+  picks: []
+
+- target: 'items[].start_date'
+  picks: []
+
+- target: 'items[].start_time'
+  picks: []
+
+- target: 'net_price.amount'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['total_supplier_price_in_supplier_currency.value'] }
+      kind: direct
+
+- target: 'net_price.currency'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['total_supplier_price_in_supplier_currency.currency'] }
+      kind: direct
+
+- target: 'our_booking_id'
+  picks: []
+
+- target: 'partner_booking_id'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['uuid'] }
+      kind: direct
+
+- target: 'partner_confirmation_code'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['identifier'] }
+      kind: direct
+
+- target: 'redeemed_at'
+  picks: []
+
+- target: 'status'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['status'] }
+      kind: ask
+      question: 'How should KO map to the canonical status? It can mean a finalization issue or cancellation without refund.'
+
+- target: 'total_price.amount'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['total_price.value'] }
+      kind: direct
+
+- target: 'total_price.currency'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['total_price.currency'] }
+      kind: direct
+
+- target: 'travellers[]'
+  picks: []
+
+- target: 'travellers[].age'
+  picks: []
+
+- target: 'travellers[].custom_fields[]'
+  picks: []
+
+- target: 'travellers[].custom_fields[].field_id'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].salutation'] }
+      kind: derived
+      transform: 'constant_salutation'
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].email'] }
+      kind: derived
+      transform: 'constant_email'
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].passport'] }
+      kind: derived
+      transform: 'constant_passport'
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].passport_expiry_date'] }
+      kind: derived
+      transform: 'constant_passport_expiry_date'
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].medical_notes'] }
+      kind: derived
+      transform: 'constant_medical_notes'
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].address'] }
+      kind: derived
+      transform: 'constant_address'
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].fan_card'] }
+      kind: derived
+      transform: 'constant_fan_card'
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].weight'] }
+      kind: derived
+      transform: 'constant_weight'
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].phone_number'] }
+      kind: derived
+      transform: 'constant_phone_number'
+
+- target: 'travellers[].custom_fields[].label'
+  picks: []
+
+- target: 'travellers[].custom_fields[].value'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].salutation'] }
+      kind: direct
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].email'] }
+      kind: direct
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].passport'] }
+      kind: direct
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].passport_expiry_date'] }
+      kind: direct
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].medical_notes'] }
+      kind: direct
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].address'] }
+      kind: direct
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].fan_card'] }
+      kind: direct
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].weight'] }
+      kind: derived
+      transform: 'to_string'
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].phone_number'] }
+      kind: direct
+
+- target: 'travellers[].date_of_birth'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].date_of_birth'] }
+      kind: transform
+      transform: 'date_part'
+
+- target: 'travellers[].family_name'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].lastname'] }
+      kind: direct
+
+- target: 'travellers[].full_name'
+  picks: []
+
+- target: 'travellers[].given_name'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].firstname'] }
+      kind: direct
+
+- target: 'travellers[].is_lead'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['customer.firstname', 'customer.lastname', 'items[].participants_info[].firstname', 'items[].participants_info[].lastname'] }
+      kind: ask
+      question: 'Is the order customer always the lead traveller? If not, which field identifies the lead?'
+
+- target: 'travellers[].nationality'
+  picks:
+    - source: { endpoint: 'GET /orders/{orderUuid}', direction: response, paths: ['items[].participants_info[].nationality'] }
+      kind: ask
+      question: 'Is this value an ISO 3166-1 alpha-2 country code?'
+
+- target: 'travellers[].traveller_type'
+  picks: []
