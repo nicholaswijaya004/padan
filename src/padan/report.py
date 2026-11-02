@@ -15,6 +15,8 @@ from typing import Any
 from padan.baselines import LABEL_DIR, gold_files
 from padan.labels import load_labels
 from padan.score import Counts, SpecScore, score_spec
+from padan.sheet import TEST_DIR
+from padan.testset import sealed_gold, split_test_flag
 
 
 def score_dir(pred_dir: Path, label_dir: Path = LABEL_DIR) -> dict[str, SpecScore]:
@@ -102,10 +104,13 @@ def as_json(scores: dict[str, SpecScore]) -> dict[str, Any]:
 
 
 def main(argv: list[str]) -> int:
+    test, argv = split_test_flag(argv)
     if len(argv) not in (1, 2):
-        print("usage: python -m padan.report PRED_DIR [JSON_OUT]")
+        print("usage: python -m padan.report PRED_DIR [JSON_OUT] [--test]")
         return 2
-    scores = score_dir(Path(argv[0]))
+    if test:
+        sealed_gold()  # stops unless every test label file is frozen and unchanged
+    scores = score_dir(Path(argv[0]), TEST_DIR if test else LABEL_DIR)
     print(table(scores))
     if len(argv) == 2:
         Path(argv[1]).write_text(json.dumps(as_json(scores), indent=2) + "\n")
