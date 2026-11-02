@@ -687,3 +687,39 @@ Claude run has touched test yet.
 **Caveats:** one labeller; I saw a GPT revision of the GetYourGuide sheet before reviewing `NONE`, so some
 anchoring cannot be ruled out (the frozen sheet contains nothing from it). No rule or Claude run has touched
 test yet.
+
+## Day 14
+
+**Goal:** Musement labelled and frozen; all Tier 1 label files sealed.
+
+### Tier 1 test gold (frozen)
+
+| Spec | Fields | Entries | Named | Ask | NONE | Min / field | Model contact |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| viator-partner | 64 | 63 | 18 | 2 | 43 | 1.41 | none |
+| getyourguide-partner | 140 | 140 | 52 | 1 | 87 | 1.16 | GPT revision seen, discarded before the `NONE` review |
+| musement-partner | 164 | 176 | 36 | 8 | 132 | not measured | GPT used to format the sheet; decisions by hand |
+| **Tier 1** | **368** | **379** | **106** | **11** | **262** | | |
+
+Entries differ from fields: a derived label covers several fields, and one field can carry several targets.
+`frozen.json` seals 6 files; `make verify`: 0 problems.
+
+### Predictions
+
+| Prediction | Result | Right? |
+| --- | --- | --- |
+| Musement: about 70 named | 36 | no (too high) |
+| Musement: slower than 1.16 min/field | not measured | — |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 1 (ADP-56 Musement labels) |
+| Tests | 293 (unchanged) |
+| Sheet versions checked for form | 3 (first: 5 transform names outside the vocabulary, list rows picked, no narrowing; second: valid; third: the same field asked under two rows) |
+| Model use on test gold | 1 (GPT formatting of the Musement sheet; disclosed) |
+| Block times | started 11:30; end times not recorded |
+
+**Caveats:** one labeller; model contact on two of the three specs (disclosed above; Viator-only scores will be
+reported). No rule or Claude run has touched test yet.
