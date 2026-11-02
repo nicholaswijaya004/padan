@@ -25,7 +25,7 @@ def sealed_gold() -> list[Path]:
     recorded: dict[str, str] = json.loads(FROZEN.read_text()) if FROZEN.exists() else {}
     files = sorted(TEST_DIR.glob("*.yaml"))
     problems = verify(TEST_DIR, recorded)
-    problems += [f"not frozen  {path.name}" for path in files if path.name not in recorded]  # E
+    problems += [f"not frozen  {path.name}" for path in files if path.name not in recorded]
     if not files:
         problems.append(f"no label files in {TEST_DIR}")
     if problems:

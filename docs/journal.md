@@ -1225,3 +1225,59 @@ list-row and narrowing conventions, the duplicate ask), and did not point out mi
 
 Day 15: the test-run tooling, as fill-in-the-blank. Nothing runs on test until it exists and the freeze
 verifies.
+
+## Day 15 — The test-set gate
+
+**Goal:** Make every tool that touches the test set check the seal first, show the systems only what
+extraction gives them, run only the frozen system, and run it once. No system ran on test today.
+
+### What was built
+
+| Rule (Amendment 6) | Enforced by |
+| --- | --- |
+| Nothing reads test labels unless every file is frozen and unchanged | `testset.sealed_gold()`, called before predicting and again before scoring |
+| Systems never read the gold | `testset.system_fields()`: on test the field list comes from extraction |
+| Only the frozen system runs on test | `hybrid.FROZEN_SYSTEM` = Opus 5.5, general rules, prompt v2 |
+| The test set runs once | `hybrid` refuses an output folder that already holds a test run |
+
+`baselines`, `engine`, `hybrid` and `report` take `--test`; `make test-baselines`, `test-rules`,
+`test-hybrid` and `test-score` call them.
+
+### The assumptions that were wrong
+
+- **"The systems see the same fields on dev and test."** On dev the field list is built from the gold file
+  (`fields_of`), so for a derived label every field after the first gets the first field's evidence, and the
+  order follows the gold. On test it comes straight from extraction, exactly what the scaffold showed me.
+  This changes the run tooling, not the frozen system (rules, lexicon and prompt are untouched); the dev
+  numbers stay as they were measured.
+- **"`testset.py` is a test file."** It is the gate itself; "test" means the test set. The pytest file is
+  `tests/test_testset.py`.
+
+### What cost me time
+
+- Function versus result: `gold_files` is the function, `gold_files()` its list; both sides of an
+  `if … else` must give the same kind of thing (Day 12's `derive = redoc_spec` wanted the function).
+
+### Decisions
+
+| Decision | Why |
+| --- | --- |
+| Check the seal at both ends, before the run and before the score | A label could change between the two |
+| Check the frozen system before the API key | Works on every machine and in the tests, and refuses before anything can cost money |
+| No test run today | The run is one event, on Day 16, after the predictions are written down |
+
+### What I delegated, and what I decided
+
+Claude designed the gate, wrote the tests and plumbing, and filled blanks A–I in `testset.py` at my request.
+I filled J–S, the wiring in the four tools.
+
+### Understood
+
+- **Guards belong where the data is read,** not only at the start of a pipeline.
+- **A cheap, dependency-free check goes first.**
+- **`glob` versus `rglob`:** the sheets live one level down, and they are working notes, not gold.
+
+### Tomorrow
+
+Day 16, the one run: write down the predictions first (Tier 1 macro F1, silent critical errors, Viator alone
+against the headline), then baselines, rules, the frozen hybrid and the score.

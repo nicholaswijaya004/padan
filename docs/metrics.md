@@ -723,3 +723,19 @@ Entries differ from fields: a derived label covers several fields, and one field
 
 **Caveats:** one labeller; model contact on two of the three specs (disclosed above; Viator-only scores will be
 reported). No rule or Claude run has touched test yet.
+
+## Day 15
+
+**Goal:** The test-set gate in every run tool; no system run on test.
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 1 (ADP-58 test-set gate) |
+| Tests | 293 → **302** |
+| Blanks | 19: 10 by me (J–S), 9 by Claude on request (A–I) |
+| Blanks wrong on the first try | 2 (`gold_files` without `()`, `"*yaml"` without the dot) |
+| Systems run on test | 0 |
+| Budget spent today | $0 (total $1.81 of $20) |
+| Block times | not recorded |
