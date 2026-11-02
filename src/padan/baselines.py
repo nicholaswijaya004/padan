@@ -80,16 +80,20 @@ def dump(entries: list[LabelEntry]) -> str:
 
 
 def main(argv: list[str]) -> int:
+    from padan.testset import sealed_gold, split_test_flag, system_fields  # imports this module
+
+    test, argv = split_test_flag(argv)
     if len(argv) != 1:
-        print("usage: python -m padan.baselines OUT_DIR")
+        print("usage: python -m padan.baselines OUT_DIR [--test]")
         return 2
     out = Path(argv[0])
+    files = sealed_gold() if test else gold_files()
     for name, baseline in BASELINES.items():
         (out / name).mkdir(parents=True, exist_ok=True)
-        for path in gold_files():
-            predicted = baseline(fields_of(load_labels(path)))
-            (out / name / path.name).write_text(dump(predicted))
-    print(f"wrote {', '.join(BASELINES)} for {len(gold_files())} specs to {out}/")
+        for path in files:
+            fields = system_fields(path.stem) if test else fields_of(load_labels(path))
+            (out / name / path.name).write_text(dump(baseline(fields)))
+    print(f"wrote {', '.join(BASELINES)} for {len(files)} specs to {out}/")
     return 0
 
 

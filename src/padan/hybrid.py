@@ -22,6 +22,7 @@ from padan.engine import VARIANTS, Values, predict, question
 from padan.extract import spec_values
 from padan.labels import ASK_PARTNER, NONE, LabelEntry, Source, load_labels
 from padan.llm import PROMPT_VERSION, Mapper, Usage, field_message
+from padan.testset import sealed_gold, split_test_flag, system_fields
 
 
 def entry(field: Field, target: str, **extra: Any) -> LabelEntry:
@@ -125,9 +126,20 @@ def log_run(log: Path, report: dict[str, Any]) -> float:
     return float(sum(spec["dollars"] or 0 for spec in report.values()))
 
 
+FROZEN_SYSTEM = (
+    "claude-opus-5-5",
+    "general",
+    "v2",
+)  # Amendment 6: model, rule base, prompt version
+
+
 def main(argv: list[str]) -> int:
+    test, argv = split_test_flag(argv)
     if len(argv) < 3 or f"rules_{argv[2]}" not in VARIANTS:
-        print("usage: python -m padan.hybrid OUT_DIR MODEL strict|general [SPEC ...]")
+        print("usage: python -m padan.hybrid OUT_DIR MODEL strict|general [SPEC ...] [--test]")
+        return 2
+    if test and (argv[1], argv[2], PROMPT_VERSION) != FROZEN_SYSTEM:
+        print(f"on test only the frozen system runs: {' '.join(FROZEN_SYSTEM)} (Amendment 6)")
         return 2
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print(
@@ -138,14 +150,17 @@ def main(argv: list[str]) -> int:
 
     out_dir, model, base, specs = Path(argv[0]), argv[1], argv[2], set(argv[3:])
     out = out_dir / f"hybrid_{base}_{model}_{PROMPT_VERSION}"
+    if test and any(out.glob("*.yaml")):
+        print(f"{out} already holds a test run; the test set runs once (Amendment 6)")
+        return 2
     out.mkdir(parents=True, exist_ok=True)
     mapper, lexicon = Mapper(anthropic.Anthropic(), model), load_lexicon()
     report: dict[str, Any] = {}
-    for gold_path in gold_files():
+    for gold_path in sealed_gold() if test else gold_files():
         spec = gold_path.stem
         if specs and spec not in specs:
             continue
-        fields = fields_of(load_labels(gold_path))
+        fields = system_fields(spec) if test else fields_of(load_labels(gold_path))
         off = [spec, *VARIANTS[f"rules_{base}"]]
         labels, usages, invalid = hybrid(fields, lexicon, off, mapper, spec_values(spec))
         (out / gold_path.name).write_text(dump(labels))

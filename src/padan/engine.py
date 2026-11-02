@@ -19,6 +19,7 @@ from padan.enums import ENUM_VALUES, enum_map_from
 from padan.extract import spec_values
 from padan.labels import ASK_PARTNER, NONE, LabelEntry, Source, load_labels, normalise
 from padan.score import CRITICAL
+from padan.testset import sealed_gold, split_test_flag, system_fields
 
 
 @dataclass(frozen=True)
@@ -142,21 +143,23 @@ VARIANTS = {"rules_strict": ["general"], "rules_general": []}
 
 
 def main(argv: list[str]) -> int:
+    test, argv = split_test_flag(argv)
     if len(argv) != 1:
-        print("usage: python -m padan.engine OUT_DIR")
+        print("usage: python -m padan.engine OUT_DIR [--test]")
         return 2
     out, lexicon = Path(argv[0]), load_lexicon()
+    files = sealed_gold() if test else gold_files()
     for variant, extra_off in VARIANTS.items():
         (out / variant).mkdir(parents=True, exist_ok=True)
-        for gold_path in gold_files():
-            spec = gold_path.stem
-            fields = fields_of(load_labels(gold_path))
+        for gold_path in files:
+            spec = (
+                gold_path.stem
+            )  # a test spec is in no entry's learnt_from, so leaving it out is a no-op
+            fields = system_fields(spec) if test else fields_of(load_labels(gold_path))
             entries, receipts = predict(fields, lexicon, [spec, *extra_off], spec_values(spec))
             (out / variant / gold_path.name).write_text(dump(entries))
             (out / variant / f"{spec}.rules.json").write_text(json.dumps(receipts, indent=1) + "\n")
-    print(
-        f"wrote {', '.join(VARIANTS)} (leave-one-spec-out) for {len(gold_files())} specs to {out}/"
-    )
+    print(f"wrote {', '.join(VARIANTS)} (leave-one-spec-out) for {len(files)} specs to {out}/")
     return 0
 
 

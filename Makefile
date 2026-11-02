@@ -1,4 +1,4 @@
-.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules hybrid sheet labels freeze verify
+.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules hybrid sheet labels freeze verify test-baselines test-rules test-hybrid test-score
 
 check: lint typecheck test
 
@@ -45,3 +45,16 @@ rules:
 
 hybrid:
 	uv run --env-file .env python -m padan.hybrid data/predictions $(MODEL) $(BASE) $(SPECS)
+
+# Test set (Amendment 6): every target checks the freeze first and reads data/labels/test/.
+test-baselines:
+	uv run python -m padan.baselines data/predictions/test --test
+
+test-rules:
+	uv run python -m padan.engine data/predictions/test --test
+
+test-hybrid:
+	uv run --env-file .env python -m padan.hybrid data/predictions/test claude-opus-5-5 general --test
+
+test-score:
+	uv run python -m padan.report $(PRED) --test
