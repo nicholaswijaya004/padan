@@ -1281,3 +1281,88 @@ I filled J–S, the wiring in the four tools.
 
 Day 16, the one run: write down the predictions first (Tier 1 macro F1, silent critical errors, Viator alone
 against the headline), then baselines, rules, the frozen hybrid and the score.
+
+## Day 16 — The one test run: 0.64 macro F1, 5 critical errors
+
+**Goal:** Run every system once on the sealed Tier 1 gold, score it, and understand the result. The
+predictions were written down in the session before anything ran.
+
+### Predictions against results
+
+| Prediction (before the run) | Result | Right? |
+| --- | --- | --- |
+| Frozen system macro F1 0.85 | **0.64** | no (too high) |
+| 1 silent critical error | **5** | no (too low) |
+| Viator alone higher than the headline | 0.74 against 0.64 | yes |
+
+### The run
+
+- Pre-flight: tests green, `make verify` 6 frozen files and 0 problems, the three raw specs present, the
+  API key in `.env`, a clean working tree.
+- Baselines and both rule sets ran once, free and deterministic.
+- The frozen system (general rules + Claude Opus 5.5, prompt v2) ran with `make test-hybrid`. **It was
+  started twice:** the first start was stopped after 34 seconds, having fetched 6 GetYourGuide replies, so it
+  could be restarted under `caffeinate` (keeps the laptop awake). The restart read those 6 replies from the
+  disk cache (same model, prompt and field, so the same answers) and asked the other 334. Every prediction
+  comes from the one frozen system. The "runs once" guard did not notice the first start, because it looks
+  for finished prediction files and an interrupted start leaves none: a known gap, recorded here.
+- Cost: $1.3966 logged, plus about $0.03 for the 6 first-start calls; 0 invalid replies.
+
+### The result, and why
+
+| System | Macro F1 | Critical | Esc P / R |
+| --- | --- | --- | --- |
+| all_none | 0.00 | 0 | — / 0.00 |
+| name_match | 0.09 | 4 | — / 0.00 |
+| rules_strict | 0.15 | 1 | 0.03 / 0.04 |
+| rules_general | 0.22 | 1 | 0.20 / 0.38 |
+| **rules + Opus v2 (frozen)** | **0.64** | **5** | **0.07 / 0.21** |
+
+Dev was 0.89 with 0 critical errors; the rules alone fell from 0.60 to 0.22 as well, so the drop is not
+about the paid run. Reading the errors by cause:
+
+- **My gold, GetYourGuide's create request:** I left `POST /{version}/bookings` (49 fields) almost all
+  `NONE`, although my own gold maps the same data in the GET response and I labelled Viator's create
+  request field by field. The system mapped them; it agrees with my gold on 13 of the 49. This explains 39
+  of GetYourGuide's 48 false positives and one critical error. I did it by hand on Day 13 (the frozen sheet
+  predates the GPT revision), most likely by checking each target against the response only, late at
+  night. **I declare it a labelling slip**, found by looking at the system's output.
+- **Conventions:** where one value spans two fields (mobile number, amount + unit) my gold has one derived
+  label and the system maps each field; Musement's custom-field IDs carry an extra derived label in my gold
+  that the system never writes; GetYourGuide's custom-field values are `direct` in my gold and
+  `construct(field_id=…)` in the system's. Transforms scored 1/19 mostly for this reason.
+- **Escalation:** the system asks about money where I mapped it (GetYourGuide price and currency) and asks
+  about many of Musement's price groups; it matched 2 of my 11 asks.
+- **The system's own errors:** GetYourGuide `booking_status` mapped where I asked, `ticket_url` called a
+  voucher where GetYourGuide calls it a ticket, `booking_id` chosen over `booking_hash`; Musement's total
+  taken from a different price group.
+
+### Decisions
+
+| Decision | Why |
+| --- | --- |
+| The headline stays 0.64 with 5 critical errors | It is the pre-registered number, produced once |
+| GetYourGuide's create request is a declared slip | Left `NONE` by oversight; the same data is mapped elsewhere in my gold |
+| Corrections go in a separate, separately frozen file; the original stays sealed | Both numbers must stay reproducible |
+| Fix by hand from the docs; my reading wins where it differs from the system's | The system's answers are not the answer key |
+| Report the corrected score beside 0.64, never instead, with each change counted as model-prompted | Amendment 6; I have seen the system's answers, so the correction leans toward it |
+| Review the other candidates fresh: GetYourGuide carts `traveler.*`, Viator `bookingQuestionAnswers[]`, Viator `booked_at` | Only real slips are fixed |
+| Conventions and escalation differences are findings, not fixes | Changing conventions after the result is what pre-registration rules out |
+
+### What I delegated, and what I decided
+
+I wrote the predictions, ran every command and judged the slip. Claude set up the run steps, explained
+the cached replies, read the errors by cause and built the side-by-side comparison of the create request.
+
+### Understood
+
+- **A generalisation gap is a finding,** not a failure: dev tuned the lexicon and the prompt on what we had
+  seen.
+- **The answer key can be the weak part.** Comparing my gold with the system's output side by side showed
+  a rule I applied on one spec and not on another.
+- **Interrupting a paid run is safe with a cache, but it has to be written down.**
+
+### Tomorrow
+
+Day 17: tooling for corrected labels (a separate sealed file, scored before and after), then the slip
+review by hand, fresh.
