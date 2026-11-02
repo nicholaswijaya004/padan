@@ -739,3 +739,63 @@ reported). No rule or Claude run has touched test yet.
 | Systems run on test | 0 |
 | Budget spent today | $0 (total $1.81 of $20) |
 | Block times | not recorded |
+
+## Day 16
+
+**Goal:** The one test run on the sealed Tier 1 gold.
+
+### Tier 1 test (headline, as run)
+
+| System | Macro F1 | Map P / R (macro) | Esc P / R (macro) | Transforms (micro) | Critical errors |
+| --- | --- | --- | --- | --- | --- |
+| all_none | 0.00 | — / 0.00 | — / 0.00 | 0/0 | 0 |
+| name_match | 0.09 | 0.37 / 0.05 | — / 0.00 | 0/1 | 4 |
+| rules_strict | 0.15 | 0.60 / 0.09 | 0.03 / 0.04 | 0/1 | 1 |
+| rules_general | 0.22 | 0.55 / 0.14 | 0.20 / 0.38 | 0/1 | 1 |
+| **rules + Claude Opus 5.5 v2 (frozen)** | **0.64** | **0.62 / 0.73** | **0.07 / 0.21** | **1/19** | **5** |
+
+| Frozen system per spec | Map TP / FP / FN | Map F1 | Esc TP / FP / FN | Critical |
+| --- | --- | --- | --- | --- |
+| getyourguide-partner | 41 / 48 / 11 | 0.58 | 0 / 5 / 1 | 4 |
+| musement-partner | 18 / 6 / 18 | 0.60 | 1 / 14 / 7 | 1 |
+| **viator-partner (no model contact in the gold)** | 16 / 9 / 2 | **0.74** | 1 / 6 / 1 | 0 |
+
+Dev for comparison (Day 11): frozen system 0.89 with 0 critical errors; general rules 0.60.
+
+### Critical errors
+
+| Spec | Field | System | Gold | Owner |
+| --- | --- | --- | --- | --- |
+| getyourguide | `booking.booking_id` | `partner_booking_id` | `booking.booking_hash` is | disagreement |
+| getyourguide | `booking.booking_status` | `status` | `ASK_PARTNER` | Claude |
+| getyourguide | `booking.ticket.ticket_url` | `fulfilment[kind=voucher].value` | `[kind=ticket]` | Claude |
+| getyourguide | create request `datetime` | `items[].start_date` | `NONE` | gold (declared slip) |
+| musement | `total_retail_price_in_order_currency.value` | `total_price.amount` | `total_price.value` is | disagreement |
+
+### Predictions
+
+| Prediction | Result | Right? |
+| --- | --- | --- |
+| Macro F1 0.85 | 0.64 | no |
+| 1 critical error | 5 | no |
+| Viator alone higher than the headline | 0.74 vs 0.64 | yes |
+
+### Budget
+
+| Item | Value |
+| --- | --- |
+| Test run | $1.40 logged + about $0.03 (first start) |
+| **Spent in total** | **about $3.23 of $20** |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 1 (ADP-60 results as run) |
+| Tests | 302 (unchanged) |
+| Starts of the paid run | 2 (the first stopped after 34 s; 6 replies reused from the cache) |
+| Gold slips declared | 1 (GetYourGuide create request); 3 more candidates to review |
+| GetYourGuide create request, gold vs system | agree on 13 of 49 fields |
+
+**Caveats:** one labeller; model contact in the GetYourGuide and Musement gold (disclosed); the specs are
+public and may be in Claude's training data. Corrected labels, when they exist, are reported beside 0.64.
