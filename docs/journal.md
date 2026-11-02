@@ -1152,3 +1152,76 @@ targets: that would have put its judgement, the same model as M2, into the gold.
 
 Label Musement from the target side, by hand, critical rows first, in shorter sittings if needed. When it is
 frozen, all three Tier 1 label files are sealed and the one test run can be prepared.
+
+## Day 14 — Musement labelled and frozen; all three Tier 1 files sealed
+
+**Goal:** Take stock of what is left, then label Musement (164 fields) from the target side, review its
+`NONE` list and freeze it, so that every Tier 1 label file is sealed before any test run.
+
+### What is left, and one decision
+
+Before starting I asked what remains: test-run tooling (a test mode that refuses to run unless the freeze
+verifies), the one test run, the results and slip check, the second labeller, M3 (code generation without an
+LLM) and the write-up; about 8–10 working days. **Tier 2 (Rezdy ×2, FareHarbor) is skipped:** Amendment 6
+only reports it if it is done before the Tier 1 run, and three HTML extractors plus three more specs would
+cost 4–6 days that M3 needs more. The report will say "Tier 2 not attempted".
+
+### The assumptions that were wrong
+
+- **"About 70 named."** 36. Musement keeps most of a booking's detail in nested price groups, participant
+  info and extra customer data, and much of it I could not match from the docs, so it became `ask` (8).
+- **"An `ask` can sit under every row it might belong to."** It cannot: an ask always becomes
+  `ASK_PARTNER` with one candidate, so asking about one field under two rows is the same label twice.
+  `load_labels` refused it. One escalation per field; choosing the candidate is part of the judgement.
+- **"Using GPT to tidy the format is harmless."** It changes no decision, but on test gold any model contact
+  has to be disclosed, and a tool that does not know where form ends and meaning begins is the wrong one for
+  the job. Tidying goes through Claude now, form only.
+- **"My first sheet follows the conventions."** It picked the list rows and did not narrow the voucher
+  targets, unlike Viator and GetYourGuide; I fixed both in the second version.
+
+### Model contact
+
+GPT was used to format the Musement sheet (YAML layout). Claude asked before the form check, as on Day 13.
+Every pick, every `ask`, every empty row and every question is my own decision and wording; the `NONE`
+review was done by hand, and it is where I added the asks on `customer.extra_customer_data`, `extra_data`,
+`items[].extra_customer_data[].name` and `items[].transaction_code`. Option A: keep my revision and disclose,
+rather than relabel, since relabelling after seeing the sheet would not remove the anchoring.
+
+Because two of the three specs had some model contact, the test report will also give the scores on Viator
+alone, the one spec no model touched, next to the Tier 1 headline.
+
+### Decisions
+
+| Decision | Why |
+| --- | --- |
+| Tier 2 skipped | Only reportable if done before the Tier 1 run; the days go to M3 |
+| `status`: `ASK_PARTNER` on `status` alone | `KO` can mean a finalisation problem or a cancellation without refund |
+| List rows empty; voucher picks narrowed to `fulfilment[kind=voucher]…` | The same conventions as Viator and GetYourGuide |
+| `travellers[].date_of_birth`: `date_part`; other conversions `derived` | Only vocabulary names are scored as transforms |
+| One `ask` per field, under the row I suspect most | One escalation per field |
+| Musement: keep my revision and disclose the GPT formatting (option A) | Decisions are mine; the record is exact |
+| Report Viator-only scores beside the Tier 1 headline | A check that model contact did not bend the result |
+
+### What I delegated, and what I decided
+
+Every label is mine. Claude checked three versions of my sheet for form only (paths, vocabulary, the
+list-row and narrowing conventions, the duplicate ask), and did not point out missed or wrong targets.
+
+### Understood
+
+- **A sealed gold set is a set of decisions plus their record:** where a rule was bent, the bend is written
+  down next to it, and a check (Viator alone) is planned to measure it.
+- **One field, one escalation;** many targets for a mapping are fine, many candidates for a question are not.
+
+### Still open
+
+- Test-run tooling: a test mode for baselines, rules, hybrid and report that reads `data/labels/test/` and
+  refuses to run unless `make verify` passes.
+- The one test run, the slip check and the Viator-only check.
+- The second labeller (20% of one Tier 1 spec).
+- M3 (code generation), the write-up, the funder page; the squash-merge setting for co-author lines.
+
+### Tomorrow
+
+Day 15: the test-run tooling, as fill-in-the-blank. Nothing runs on test until it exists and the freeze
+verifies.
