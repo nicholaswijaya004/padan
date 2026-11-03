@@ -1,0 +1,57 @@
+# Canonical targets
+
+- balance_due_date [critical]: Date the remaining balance must be paid, if the partner takes a deposit.
+- booked_at: When the partner created the booking.
+- cancellable: Whether the partner allows this booking to be cancelled now.
+- cancellation_policy [critical]: Cancellation terms as given by the partner.
+- contact.email: Contact email.
+- contact.family_name: Family name of the booker.
+- contact.full_name: Full name when the partner does not split it.
+- contact.given_name: Given name(s) of the booker.
+- contact.phones[]: Contact phone numbers; partners may give several.
+- custom_fields[]: Partner-specific questions answered for the whole booking.
+- custom_fields[].field_id: Partner's identifier for the question, e.g. PICKUP_LOCATION.
+- custom_fields[].label: Human-readable question text, if the partner gives one.
+- custom_fields[].value: The answer given for this booking.
+- fulfilment[]: Vouchers and tickets the customer uses to get in; critical field by field (v3.1).
+- fulfilment[].format [critical]: How it is delivered; decides whether value is a URL or a code. Allowed values: barcode, html_url, other, pdf_url, qrcode, text, wallet_url.
+- fulfilment[].kind [critical]: voucher covers the whole booking; ticket is one entry credential. Allowed values: ticket, voucher.
+- fulfilment[].partner_id: Partner's identifier for this document, if any.
+- fulfilment[].redeemed_at [critical]: When this voucher or ticket was used at the venue, if the partner reports it.
+- fulfilment[].value [critical]: The URL, or the code itself (QR payload, barcode, text code).
+- hold_expires_at [critical]: When an on_hold booking expires if not confirmed.
+- items[]: What was bought; at least one item.
+- items[].activity.service_language: Language the activity is delivered in.
+- items[].activity.slot_id: Partner's identifier of the booked date/time inventory slot.
+- items[].cruise.cabin_number: Assigned cabin number, if any.
+- items[].cruise.deck: Deck name or number of the cabin.
+- items[].end_date: Local end date, if the product spans several days.
+- items[].end_time: Local end time, no timezone.
+- items[].option_id: Partner's variant of the product: activity option or rate, cruise cabin category.
+- items[].option_name: Display name of the option.
+- items[].product_id: Partner's product (or sailing) identifier.
+- items[].product_name: Display name of the product.
+- items[].start_date [critical]: Local start date of the experience or sailing.
+- items[].start_time: Local start time, no timezone; None if the partner gives a date only.
+- net_price.amount [critical]: Amount in major units of `currency` (e.g. 12.50 EUR, not 1250).
+- net_price.currency [critical]: ISO 4217 code, uppercase.
+- our_booking_id: padan's own booking reference, which we send to the partner and the partner echoes back (e.g. reseller reference, client reference, partner reference).
+- partner_booking_id [critical]: The partner's system identifier for this booking (used in API calls).
+- partner_confirmation_code: The code a customer quotes to the partner, when it differs from partner_booking_id.
+- redeemed_at: When the booking was used at the venue, if the partner reports it (support, refunds).
+- status [critical]: Booking state. on_hold: reserved, expires unless we confirm; pending: we confirmed, the partner has not yet. Allowed values: cancelled, confirmed, failed, on_hold, pending.
+- total_price.amount [critical]: Amount in major units of `currency` (e.g. 12.50 EUR, not 1250).
+- total_price.currency [critical]: ISO 4217 code, uppercase.
+- travellers[]: Everyone travelling; exactly one is the lead.
+- travellers[].age: Age in years at time of travel.
+- travellers[].custom_fields[]: Partner-specific questions answered per traveller.
+- travellers[].custom_fields[].field_id: Partner's identifier for the question, e.g. PICKUP_LOCATION.
+- travellers[].custom_fields[].label: Human-readable question text, if the partner gives one.
+- travellers[].custom_fields[].value: The answer given for this booking.
+- travellers[].date_of_birth: Date of birth, e.g. for cruise manifests.
+- travellers[].family_name: Family name; None for single-name travellers.
+- travellers[].full_name: Full name when the partner does not split it (e.g. Headout NAME).
+- travellers[].given_name: Given name(s) as on the travel document.
+- travellers[].is_lead: True for the lead traveller of the booking.
+- travellers[].nationality: ISO 3166-1 alpha-2 country code, uppercase.
+- travellers[].traveller_type: Pricing category of this traveller. Allowed values: adult, child, infant, other, senior, student, youth.
