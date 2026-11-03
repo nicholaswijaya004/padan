@@ -119,4 +119,66 @@ def test_a_generated_client_maps_a_payload_and_lists_its_todos() -> None:
         "travellers[].is_lead",
     ]
     assert "# TODO ask: travellers[].is_lead <- lead: Which traveller is the lead?" in code
-    assert "def to_" not in code  # request functions come on Day 21
+    assert namespace["to_post_b"]({"our_booking_id": "P-1"}) == {"ref": "P-1"}
+
+
+def test_request_steps_reverse_what_can_be_reversed_and_todo_the_rest() -> None:
+    post = "POST /orders"
+    plan = Plan(
+        "demo",
+        [
+            Step(post, "request", ("ref",), "our_booking_id", "direct"),
+            Step(
+                post,
+                "request",
+                ("state",),
+                "status",
+                "transform",
+                "enum_map(A=confirmed, B=confirmed)",
+            ),
+            Step(
+                post,
+                "request",
+                ("cents",),
+                "total_price.amount",
+                "transform",
+                "minor_units_to_decimal(cur)",
+            ),
+            Step(post, "request", ("when",), "items[].start_date", "transform", "date_part"),
+        ],
+    )
+    code = generate(plan, "demo.yaml")
+    namespace: dict[str, Any] = {}
+    exec(compile(code, "client_demo", "exec"), namespace)
+    booking = {
+        "our_booking_id": "P-1",
+        "status": "confirmed",
+        "total_price": {"amount": "42.50", "currency": "EUR"},
+        "items": [{"start_date": "2026-11-05", "activity": {"service_language": "en"}}],
+    }
+    assert namespace["to_post_orders"](booking) == {
+        "ref": "P-1",
+        "state": "A",
+        "cents": 4250,
+    }
+    assert "# TODO transform: when <- items[].start_date: date_part cannot be reversed" in code
+
+
+def test_a_list_body_comes_back_as_a_list() -> None:
+    plan = Plan(
+        "demo",
+        [
+            Step(
+                "POST /items",
+                "request",
+                ("[].lang",),
+                "items[].activity.service_language",
+                "direct",
+            )
+        ],
+    )
+    namespace: dict[str, Any] = {}
+    exec(compile(generate(plan, "x"), "client_demo", "exec"), namespace)
+    assert namespace["to_post_items"]({"items": [{"activity": {"service_language": "en"}}]}) == [
+        {"lang": "en"}
+    ]

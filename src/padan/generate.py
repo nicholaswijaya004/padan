@@ -1,7 +1,9 @@
 """M3, step 2: write a partner client from a mapping plan, with templates and no LLM (ADR §6).
 
 For each response operation in the plan, the client gets `from_<operation>(payload) -> dict`, one
-line per step: read the partner path, apply the step's transform, write the canonical path.
+line per step: read the partner path, apply the step's transform, write the canonical path. For each
+request operation it gets `to_<operation>(booking) -> dict`: the same steps the other way round,
+from a canonical booking (`Booking.model_dump(mode="json")`) to the partner's request body.
 `derived` and `ask` steps are not guessed: each becomes a commented TODO, listed in `TODOS`, and its
 target is left for a person to fill. The output is plain Python a reviewer can read line by line.
 """
@@ -22,6 +24,7 @@ from typing import Any
 
 from padan.runtime import (
     date_part,
+    decimal_to_minor_units,
     enum_map,
     first,
     get,
@@ -76,6 +79,37 @@ def lines_for(step: Step) -> list[str]:
     return [f"    put(record, {target!r}, [{transform.name}(v) for v in {read}])"]
 
 
+def request_lines_for(step: Step) -> list[str]:
+    """The code for one request step: canonical value -> partner field, or a TODO comment.
+
+    Only transforms with an exact reverse are reversed: enum_map (our value back to the partner's
+    code; the first code listed wins when several map to one value), minor units, and the ones that
+    copy (to_e164, construct). A date or time part cannot rebuild the partner's whole value alone.
+    """
+    source, target = step.sources[0], step.target
+    todo = f"    # TODO {step.kind}: {' + '.join(step.sources)} <- {target}: "
+    if step.kind in ("derived", "ask") or len(step.sources) > 1:
+        return [todo + (step.detail or "").replace("\n", " ")]
+    read = f"get(booking, {target!r})"
+    if step.kind == "direct":
+        return [f"    put(payload, {source!r}, {read}, index_last=True)"]
+    transform = parse_transform(step.detail or "")
+    if transform.name == "enum_map":
+        back: dict[str, str] = {}
+        for code, value in transform.args:
+            back.setdefault(value, code)
+        values = f"[enum_map(v, {back!r}) for v in {read}]"
+        return [f"    put(payload, {source!r}, {values}, index_last=True)"]
+    if transform.name == "minor_units_to_decimal":
+        currency = f"first(get(booking, {sibling(target, 'currency')!r}))"
+        return [
+            f"    put(payload, {source!r}, [decimal_to_minor_units(v, {currency}) for v in {read}])"
+        ]
+    if transform.name in ("to_e164", "construct"):
+        return [f"    put(payload, {source!r}, {read}, index_last=True)"]
+    return [todo + f"{transform.name} cannot be reversed from {target} alone"]
+
+
 def todos(plan: Plan) -> list[dict[str, str]]:
     return [
         {
@@ -91,21 +125,34 @@ def todos(plan: Plan) -> list[dict[str, str]]:
 
 
 def generate(plan: Plan, source: str) -> str:
-    """The client module for `plan`: one from_… function per response operation."""
+    """The client module for `plan`: from_… per response operation, to_… per request operation."""
     listed = todos(plan)
     out = [HEADER.format(spec_id=plan.spec_id, source=source, todos=len(listed), todo_list=listed)]
     for endpoint, direction in plan.operations():
-        if direction != "response":
-            continue  # requests: to_… functions, Day 21
-        out += [
-            "",
-            f"def {function_name(endpoint, direction)}(payload: Any) -> dict[str, Any]:",
-            f'    """{endpoint} response -> a canonical booking record (validate with Booking)."""',
-            "    record: dict[str, Any] = {}",
-        ]
-        for step in plan.for_operation(endpoint, direction):
-            out += lines_for(step)
-        out.append("    return record")
+        steps = plan.for_operation(endpoint, direction)
+        name = function_name(endpoint, direction)
+        if direction == "response":
+            out += [
+                "",
+                f"def {name}(payload: Any) -> dict[str, Any]:",
+                f'    """{endpoint} response -> a canonical record (check with Booking)."""',
+                "    record: dict[str, Any] = {}",
+            ]
+            for step in steps:
+                out += lines_for(step)
+            out.append("    return record")
+        else:
+            out += [
+                "",
+                f"def {name}(booking: dict[str, Any]) -> Any:",
+                f'    """A canonical booking (as JSON) -> the {endpoint} request body."""',
+                "    payload: dict[str, Any] = {}",
+            ]
+            for step in steps:
+                out += request_lines_for(step)
+            out.append(
+                '    return payload[""] if "" in payload else payload  # a body that is a list'
+            )
     return "\n".join(out) + "\n"
 
 

@@ -93,3 +93,22 @@ def test_put_deeper_list_levels_get_a_new_element_per_value() -> None:
             {"custom_fields": [{"value": "diet B"}]},
         ]
     }
+
+
+def test_put_into_a_partner_request_indexes_the_last_list_level() -> None:
+    payload: dict[str, Any] = {}
+    put(payload, "activities[].paxes[].name", ["Ana", "Ben"], index_last=True)
+    put(payload, "activities[].paxes[].surname", ["Lima", "Lima"], index_last=True)
+    assert payload == {
+        "activities": [
+            {"paxes": [{"name": "Ana", "surname": "Lima"}, {"name": "Ben", "surname": "Lima"}]}
+        ]
+    }
+
+
+def test_selectors_compare_booleans_as_json_text_and_new_elements_get_booleans() -> None:
+    payload = {"customers": [{"isPrimary": False, "v": "b"}, {"isPrimary": True, "v": "a"}]}
+    assert get(payload, "customers[isPrimary=true].v") == ["a"]
+    record: dict[str, Any] = {}
+    put(record, "customers[isPrimary=true].email", ["a@x.io"], index_last=True)
+    assert record == {"customers": [{"isPrimary": True, "email": "a@x.io"}]}
