@@ -306,3 +306,21 @@ escalation precision and recall beside it, and the cost of the run.
 
 **Before publishing,** a second person labels a 20% sample of one Tier 1 spec, and agreement is reported
 (Amendment 4).
+
+## Amendment 7 — 2026-11-03: the second labeller
+
+Written before the sample is drawn or sent, as Amendment 6 asks ("before publishing, a second person
+labels a 20% sample of one Tier 1 spec").
+
+- **Spec:** `viator-partner`, the only Tier 1 spec whose gold had no model contact.
+- **Sample:** 13 of its 64 scoped fields (20%), stratified by the gold's class in proportion: 4 mapped,
+  1 `ASK_PARTNER`, 8 `NONE`. Drawn once by `python -m padan.agreement sample viator-partner` (seed
+  20261103); the list of drawn fields is committed before the sheet is sent.
+- **The second labeller** labels each field from its evidence alone, field by field: a canonical target,
+  `NONE` or `ASK_PARTNER`. They see the blank sheet and the list of canonical targets, and not the gold,
+  the system's output or any result. No AI tools. Their time is recorded.
+- **Measures:** raw agreement and Cohen's kappa on the target (list positions and filters read as `[]`),
+  overall and per stratum, with every disagreement listed. `kind` and transforms are not scored.
+- **Use:** reported beside the headline as a measure of how reliable one labeller's gold is. The gold is
+  not changed because of a disagreement; a clear slip found this way is handled as in Amendment 6
+  (counted, reported before and after).
