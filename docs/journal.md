@@ -1507,3 +1507,34 @@ on request, in the date and money transforms). I took the design recommendations
 - Day 23: fill padan-owned fields (its booking ID, the vertical, a lead-traveller rule) and cast types
   by the partner's schema, re-run `make m3`, and write the M3 milestone note.
 - The write-up: README, results report, funder page.
+
+## Day 23 — M3 finished: padan's own fields and casting to the partner's types
+
+**Goal:** Turn two of Day 22's named gaps into fixes, re-measure, and declare M3.
+
+### What changed
+
+- **`integration.to_booking`** adds what only padan knows: its own booking ID (noting when the partner
+  echoes a different one), the vertical (activity), and the lead traveller by rule B, which I chose:
+  the traveller whose name matches the contact, else the first. Every choice is returned as a note.
+- **`cast`** turns request values into the partner schema's types (text to integer, number or boolean)
+  where it can do so exactly; the generator wraps a value in `cast` when the extracted field type says so.
+- **The sample booking's catalogue IDs** changed from `P-100`/`OPT-1` to `1001`/`2002`: IDs come from the
+  partner's catalogue, and many partners (GetYourGuide included) issue digits. They stay text in padan.
+
+### Result
+
+`our_booking_id` is no longer missing anywhere; GetYourGuide's type problems went from 2 to 0 (gold) and
+1 to 0 (predicted). Valid counts did not move: what is left is partner-only fields, TODOs, and data the
+example responses do not contain. M3 is declared in `docs/milestones/M3.md`.
+
+### Understood
+
+- **`is` versus `==`:** two travellers called Ana are still two people.
+- **Never fabricate a value:** `enum_map` raises on an unknown code; `cast` passes through what it
+  cannot reshape, and the schema check names it.
+
+### Still open
+
+- Send the second labeller's pack.
+- The write-up: README, results report, funder page.
