@@ -1538,3 +1538,22 @@ example responses do not contain. M3 is declared in `docs/milestones/M3.md`.
 
 - Send the second labeller's pack.
 - The write-up: README, results report, funder page.
+
+## Day 24 — The write-up
+
+**Goal:** Say what padan is and what it showed, in the README and one results report.
+
+- **README** rewritten: what padan does, the dev and test results side by side, the pipeline, how to run
+  it, the test gate, and where everything lives.
+- **`docs/report.md`**: the question and the one-line answer; data; how the test was protected; dev and
+  test results; the slip, before and after; why test is lower than dev; generated clients; cost;
+  integrity notes (every model contact, the discarded correction attempt, the double start of the paid
+  run, one labeller); limitations and next steps.
+- **The funder page** updated from a plan to measured results and costs.
+
+Drafted by Claude at my request, from the journal, the metrics and the milestone notes; reviewed by me.
+
+### Still open
+
+- Send the second labeller's pack; score it (`python -m padan.agreement score viator-partner FILE`) and
+  add the agreement to the report.
