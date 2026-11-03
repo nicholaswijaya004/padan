@@ -914,3 +914,8 @@ Full table: `docs/milestones/M3.md`.
 | Blanks | 10, all by me |
 | Decisions | lead-traveller rule B |
 | Budget spent | $0 (total about $3.23 of $20) |
+
+## Day 24
+
+**Goal:** README, results report, funder page. No code changed; tests 349. Budget spent: $0 (total about
+$3.23 of $20).
