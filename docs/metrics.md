@@ -846,3 +846,48 @@ The headline is 0.64; 0.72 is reported beside it.
 | Blanks | 9, all by me |
 | Budget spent today | $0 (total about $3.23 of $20) |
 | Block times | first attempt 10:00–10:40 (discarded); the fix not timed |
+
+## Days 18–22
+
+**Goal:** The second labeller's pack; M3 built and measured.
+
+### M3: generated clients (sample booking for requests; spec examples for responses)
+
+| Spec | Labels | Steps d/t/dv/ask | TODOs | Requests valid | Problems missing / type / other | Example → Booking |
+| --- | --- | --- | --- | --- | --- | --- |
+| headout-partner | gold | 29/9/2/5 | 7 | 0/1 | 1 / 0 / 0 | no example |
+| octo-core | gold | 37/7/3/0 | 3 | 0/2 | 3 / 0 / 0 | 0/1 |
+| hotelbeds-activities | gold | 12/1/0/1 | 1 | 0/1 | 11 / 0 / 0 | no example |
+| viator-partner | gold | 16/0/2/2 | 4 | **1/1** | 0 / 0 / 0 | 0/1 |
+| getyourguide-partner | gold | 70/2/14/1 | 15 | 0/2 | 9 / 2 / 0 | no example |
+| musement-partner | gold | 24/1/11/8 | 19 | 0/1 | 2 / 0 / 0 | no example |
+| headout-partner | predicted | 24/8/0/7 | 7 | 0/1 | 1 / 0 / 0 | no example |
+| octo-core | predicted | 36/8/0/0 | 0 | 0/2 | 3 / 0 / 0 | 0/1 |
+| hotelbeds-activities | predicted | 12/0/0/0 | 0 | 0/1 | 12 / 0 / 0 | no example |
+| viator-partner | predicted | 19/6/0/7 | 7 | **1/1** | 0 / 0 / 0 | 0/1 |
+| getyourguide-partner | predicted | 50/39/0/5 | 5 | 0/2 | 9 / 1 / 0 | no example |
+| musement-partner | predicted | 19/5/0/15 | 15 | 0/2 | 3 / 0 / 0 | no example |
+
+Gold is the corrected copy for test specs; predicted is the frozen system (Day 11 dev, Day 16 test).
+HX is HTML and has no schema to check against.
+
+### Second labeller (Amendment 7)
+
+| Measure | Value |
+| --- | --- |
+| Spec, sample | viator-partner, 13 of 64 fields (4 mapped, 1 ask, 8 NONE), seed 20261103 |
+| Sample reproducible from the frozen gold | yes |
+| Pack sent | not yet |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 6 (ADP-65 agreement and Amendment 7, ADP-66 sample, ADP-67 plan and runtime, ADP-68 generator, ADP-69 requests and conformance, ADP-70 measurement) |
+| Tests | 312 → **339** |
+| Blanks | 54: 51 by me, 3 by Claude on request |
+| Blanks wrong on the first try | 4 (`none`, compare without `str`, `[None]` for `values[:1]`, `time_part` on `Z`) |
+| Runtime bugs found by partner schemas | 2 (boolean filters, nested partner lists) |
+| New dependency | jsonschema (+ types-jsonschema for mypy) |
+| Budget spent | $0 (total about $3.23 of $20) |
+| Block times | not recorded |
