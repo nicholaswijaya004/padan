@@ -891,3 +891,26 @@ HX is HTML and has no schema to check against.
 | New dependency | jsonschema (+ types-jsonschema for mypy) |
 | Budget spent | $0 (total about $3.23 of $20) |
 | Block times | not recorded |
+
+## Day 23
+
+**Goal:** M3's padan-owned fields and request casting; M3 declared.
+
+| Change since Day 22 | Gold | Predicted |
+| --- | --- | --- |
+| `our_booking_id` missing in example responses | 2 specs → 0 | 2 specs → 0 |
+| GetYourGuide request type problems | 2 → 0 | 1 → 0 |
+| Requests valid | 1 of 8 (Viator) | 1 of 9 (Viator) |
+| Example responses → valid Booking | 0 of 2 | 0 of 2 |
+
+Full table: `docs/milestones/M3.md`.
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 1 (ADP-72) |
+| Tests | 339 → **349** |
+| Blanks | 10, all by me |
+| Decisions | lead-traveller rule B |
+| Budget spent | $0 (total about $3.23 of $20) |
