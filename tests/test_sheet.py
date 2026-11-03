@@ -158,3 +158,30 @@ def test_dev_tooling_never_reads_test_labels(tmp_path: Path) -> None:
     (tmp_path / "dev.yaml").write_text("[]\n")
     (tmp_path / "test" / "viator-partner.yaml").write_text("[]\n")
     assert gold_files(tmp_path) == [tmp_path / "dev.yaml"]
+
+
+def test_a_correction_starts_from_the_frozen_sheet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    original = tmp_path / "data/labels/test/sheets/demo.yaml"
+    original.parent.mkdir(parents=True)
+    original.write_text("my frozen labels\n")
+    assert main(["new", "demo", "--corrected"]) == 0
+    copy = tmp_path / "data/labels/test-corrected/sheets/demo.yaml"
+    assert copy.read_text() == "my frozen labels\n"
+    copy.write_text("my fix\n")
+    assert main(["new", "demo", "--corrected"]) == 1
+    assert copy.read_text() == "my fix\n"
+
+
+def test_the_corrected_copy_is_frozen_on_its_own(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    for folder in ("data/labels/test", "data/labels/test-corrected"):
+        (tmp_path / folder).mkdir(parents=True)
+        (tmp_path / folder / "a.yaml").write_text(f"{folder}\n")
+    assert main(["freeze", "--corrected"]) == 0
+    assert (tmp_path / "data/labels/test-corrected/frozen.json").exists()
+    assert not (tmp_path / "data/labels/test/frozen.json").exists()
