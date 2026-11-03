@@ -15,7 +15,7 @@ from typing import Any
 from padan.baselines import LABEL_DIR, gold_files
 from padan.labels import load_labels
 from padan.score import Counts, SpecScore, score_spec
-from padan.sheet import TEST_DIR
+from padan.sheet import CORRECTED_DIR, CORRECTED_FLAG, TEST_DIR
 from padan.testset import sealed_gold, split_test_flag
 
 
@@ -105,12 +105,17 @@ def as_json(scores: dict[str, SpecScore]) -> dict[str, Any]:
 
 def main(argv: list[str]) -> int:
     test, argv = split_test_flag(argv)
-    if len(argv) not in (1, 2):
-        print("usage: python -m padan.report PRED_DIR [JSON_OUT] [--test]")
+    corrected = CORRECTED_FLAG in argv
+    argv = [arg for arg in argv if arg != CORRECTED_FLAG]
+    if len(argv) not in (1, 2) or (corrected and not test):
+        print("usage: python -m padan.report PRED_DIR [JSON_OUT] [--test [--corrected]]")
         return 2
     if test:
         sealed_gold()  # stops unless every test label file is frozen and unchanged
-    scores = score_dir(Path(argv[0]), TEST_DIR if test else LABEL_DIR)
+    if corrected:
+        sealed_gold(corrected=True)  # and the corrected copy too, sealed on its own
+    label_dir = (CORRECTED_DIR if corrected else TEST_DIR) if test else LABEL_DIR
+    scores = score_dir(Path(argv[0]), label_dir)
     print(table(scores))
     if len(argv) == 2:
         Path(argv[1]).write_text(json.dumps(as_json(scores), indent=2) + "\n")

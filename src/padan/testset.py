@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 from padan.extract import load_scoped, scoped_fields
-from padan.sheet import FROZEN, TEST_DIR, verify
+from padan.sheet import CORRECTED_DIR, FROZEN, TEST_DIR, verify
 
 SystemField = tuple[str, str, str, str]  # endpoint, direction, path, evidence (baselines.Field)
 FLAG = "--test"
@@ -20,14 +20,17 @@ def split_test_flag(argv: list[str]) -> tuple[bool, list[str]]:
     return FLAG in argv, [arg for arg in argv if arg != FLAG]
 
 
-def sealed_gold() -> list[Path]:
-    """The test label files, if every one is frozen and unchanged; otherwise stop, with reasons."""
-    recorded: dict[str, str] = json.loads(FROZEN.read_text()) if FROZEN.exists() else {}
-    files = sorted(TEST_DIR.glob("*.yaml"))
-    problems = verify(TEST_DIR, recorded)
+def sealed_gold(corrected: bool = False) -> list[Path]:
+    """The test label files (or their corrected copy), if every one is frozen and unchanged;
+    otherwise stop, with reasons."""
+    test_dir = CORRECTED_DIR if corrected else TEST_DIR
+    frozen = test_dir / "frozen.json" if corrected else FROZEN
+    recorded: dict[str, str] = json.loads(frozen.read_text()) if frozen.exists() else {}
+    files = sorted(test_dir.glob("*.yaml"))
+    problems = verify(test_dir, recorded)
     problems += [f"not frozen  {path.name}" for path in files if path.name not in recorded]
     if not files:
-        problems.append(f"no label files in {TEST_DIR}")
+        problems.append(f"no label files in {test_dir}")
     if problems:
         raise SystemExit("test labels are not sealed:\n  " + "\n  ".join(problems))
     return files

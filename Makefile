@@ -1,4 +1,4 @@
-.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules hybrid sheet labels freeze verify test-baselines test-rules test-hybrid test-score
+.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules hybrid sheet labels freeze verify test-baselines test-rules test-hybrid test-score sheet-fix labels-fix freeze-fix verify-fix test-score-fix
 
 check: lint typecheck test
 
@@ -58,3 +58,20 @@ test-hybrid:
 
 test-score:
 	uv run python -m padan.report $(PRED) --test
+
+# Slip fixes after the run (Amendment 6): a full copy of the test set in data/labels/test-corrected/,
+# sealed on its own. The original stays sealed; report scores both.
+sheet-fix:
+	uv run python -m padan.sheet new $(SPEC) --corrected
+
+labels-fix:
+	uv run python -m padan.sheet fill $(SPEC) --corrected
+
+freeze-fix:
+	uv run python -m padan.sheet freeze --corrected
+
+verify-fix:
+	uv run python -m padan.sheet verify --corrected
+
+test-score-fix:
+	uv run python -m padan.report $(PRED) --test --corrected

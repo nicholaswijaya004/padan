@@ -97,3 +97,24 @@ def test_hybrid_runs_test_once(
     (done / "viator-partner.yaml").write_text("[]\n")
     assert hybrid.main([str(tmp_path), "claude-opus-5-5", "general", "--test"]) == 2
     assert "runs once" in capsys.readouterr().out
+
+
+def test_sealed_gold_checks_the_corrected_copy_on_its_own(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seal(tmp_path, monkeypatch, ["a.yaml"])
+    fixed = tmp_path / "fixed"
+    fixed.mkdir()
+    (fixed / "a.yaml").write_text("fixed\n")
+    monkeypatch.setattr(testset, "CORRECTED_DIR", fixed)
+    with pytest.raises(SystemExit, match="not frozen"):
+        sealed_gold(corrected=True)
+    (fixed / "frozen.json").write_text(json.dumps(freeze(fixed, {})))
+    assert sealed_gold(corrected=True) == [fixed / "a.yaml"]
+
+
+def test_report_scores_the_corrected_copy_only_on_test(capsys: pytest.CaptureFixture[str]) -> None:
+    from padan import report
+
+    assert report.main(["pred", "--corrected"]) == 2
+    assert "usage" in capsys.readouterr().out
