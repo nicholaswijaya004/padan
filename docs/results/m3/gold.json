@@ -1,0 +1,207 @@
+{
+ "headout-partner": {
+  "steps": {
+   "direct": 29,
+   "derived": 2,
+   "transform": 9,
+   "ask": 5
+  },
+  "todos": 7,
+  "requests": {
+   "POST /api/public/v2/bookings/": {
+    "valid": false,
+    "problems": {
+     "missing": 1,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "(body): 'price' is a required property"
+    ]
+   }
+  },
+  "responses": {
+   "GET /api/public/v2/bookings/{bookingId}/": []
+  }
+ },
+ "octo-core": {
+  "steps": {
+   "direct": 37,
+   "derived": 3,
+   "transform": 7
+  },
+  "todos": 3,
+  "requests": {
+   "POST /bookings": {
+    "valid": false,
+    "problems": {
+     "missing": 1,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "(body): 'unitItems' is a required property"
+    ]
+   },
+   "POST /bookings/{uuid}/confirm": {
+    "valid": false,
+    "problems": {
+     "missing": 2,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "unitItems/0: 'unitId' is a required property",
+     "unitItems/1: 'unitId' is a required property"
+    ]
+   }
+  },
+  "responses": {
+   "GET /bookings/{uuid}": [
+    {
+     "valid": false,
+     "fields": [
+      "our_booking_id",
+      "travellers"
+     ]
+    }
+   ]
+  }
+ },
+ "hotelbeds-activities": {
+  "steps": {
+   "direct": 12,
+   "ask": 1,
+   "transform": 1
+  },
+  "todos": 1,
+  "requests": {
+   "PUT /bookings": {
+    "valid": false,
+    "problems": {
+     "missing": 11,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "(body): 'language' is a required property",
+     "activities/0/paxes/0: 'age' is a required property",
+     "activities/0/paxes/1: 'age' is a required property",
+     "activities/0: 'preferedLanguage' is a required property",
+     "activities/0: 'to' is a required property",
+     "holder: 'address' is a required property",
+     "holder: 'country' is a required property",
+     "holder: 'mailUpdDate' is a required property",
+     "holder: 'mailing' is a required property",
+     "holder: 'title' is a required property",
+     "holder: 'zipCode' is a required property"
+    ]
+   }
+  },
+  "responses": {}
+ },
+ "viator-partner": {
+  "steps": {
+   "direct": 16,
+   "derived": 2,
+   "ask": 2
+  },
+  "todos": 4,
+  "requests": {
+   "POST /booking/book": {
+    "valid": true,
+    "problems": {
+     "missing": 0,
+     "type": 0,
+     "other": 0
+    },
+    "list": []
+   }
+  },
+  "responses": {
+   "POST /booking/status": [
+    {
+     "valid": false,
+     "fields": [
+      "contact",
+      "items",
+      "our_booking_id",
+      "status",
+      "travellers"
+     ]
+    }
+   ]
+  }
+ },
+ "getyourguide-partner": {
+  "steps": {
+   "direct": 70,
+   "transform": 2,
+   "derived": 14,
+   "ask": 1
+  },
+  "todos": 15,
+  "requests": {
+   "POST /{version}/bookings": {
+    "valid": false,
+    "problems": {
+     "missing": 5,
+     "type": 2,
+     "other": 0
+    },
+    "list": [
+     "data/booking/bookable/option_id: 'OPT-1' is not of type 'integer'",
+     "data/booking/bookable/price: '120.50' is not of type 'number'",
+     "data/booking/bookable/questions/conduction_language: 'type' is a required property",
+     "data/booking/bookable/questions/participant_questions/0: 'category_id' is a required property",
+     "data/booking/bookable/questions/participant_questions/1: 'category_id' is a required property",
+     "data/booking/bookable: 'categories' is a required property",
+     "data/booking/bookable: 'datetime' is a required property"
+    ]
+   },
+   "POST /{version}/carts": {
+    "valid": false,
+    "problems": {
+     "missing": 4,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "data/shopping_cart/billing: 'country_code' is a required property",
+     "data/shopping_cart: 'payment' is a required property",
+     "data/shopping_cart: 'shopping_cart_hash' is a required property",
+     "data/shopping_cart: 'traveler' is a required property"
+    ]
+   }
+  },
+  "responses": {
+   "GET /{version}/bookings/{booking_hash}": []
+  }
+ },
+ "musement-partner": {
+  "steps": {
+   "direct": 24,
+   "ask": 8,
+   "derived": 11,
+   "transform": 1
+  },
+  "todos": 19,
+  "requests": {
+   "POST /carts/{cartUuid}/items": {
+    "valid": false,
+    "problems": {
+     "missing": 2,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "0: 'quantity' is a required property",
+     "0: 'type' is a required property"
+    ]
+   }
+  },
+  "responses": {
+   "GET /orders/{orderUuid}": []
+  }
+ }
+}

@@ -1,0 +1,212 @@
+{
+ "headout-partner": {
+  "steps": {
+   "direct": 24,
+   "transform": 8,
+   "ask": 7
+  },
+  "todos": 7,
+  "requests": {
+   "POST /api/public/v2/bookings/": {
+    "valid": false,
+    "problems": {
+     "missing": 1,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "(body): 'price' is a required property"
+    ]
+   }
+  },
+  "responses": {
+   "GET /api/public/v2/bookings/{bookingId}/": []
+  }
+ },
+ "octo-core": {
+  "steps": {
+   "direct": 36,
+   "transform": 8
+  },
+  "todos": 0,
+  "requests": {
+   "POST /bookings": {
+    "valid": false,
+    "problems": {
+     "missing": 1,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "(body): 'unitItems' is a required property"
+    ]
+   },
+   "POST /bookings/{uuid}/confirm": {
+    "valid": false,
+    "problems": {
+     "missing": 2,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "unitItems/0: 'unitId' is a required property",
+     "unitItems/1: 'unitId' is a required property"
+    ]
+   }
+  },
+  "responses": {
+   "GET /bookings/{uuid}": [
+    {
+     "valid": false,
+     "fields": [
+      "our_booking_id",
+      "travellers"
+     ]
+    }
+   ]
+  }
+ },
+ "hotelbeds-activities": {
+  "steps": {
+   "direct": 12
+  },
+  "todos": 0,
+  "requests": {
+   "PUT /bookings": {
+    "valid": false,
+    "problems": {
+     "missing": 12,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "(body): 'language' is a required property",
+     "activities/0/paxes/0: 'age' is a required property",
+     "activities/0/paxes/1: 'age' is a required property",
+     "activities/0: 'preferedLanguage' is a required property",
+     "activities/0: 'rateKey' is a required property",
+     "activities/0: 'to' is a required property",
+     "holder: 'address' is a required property",
+     "holder: 'country' is a required property",
+     "holder: 'mailUpdDate' is a required property",
+     "holder: 'mailing' is a required property",
+     "holder: 'title' is a required property",
+     "holder: 'zipCode' is a required property"
+    ]
+   }
+  },
+  "responses": {}
+ },
+ "viator-partner": {
+  "steps": {
+   "direct": 19,
+   "transform": 6,
+   "ask": 7
+  },
+  "todos": 7,
+  "requests": {
+   "POST /booking/book": {
+    "valid": true,
+    "problems": {
+     "missing": 0,
+     "type": 0,
+     "other": 0
+    },
+    "list": []
+   }
+  },
+  "responses": {
+   "POST /booking/status": [
+    {
+     "valid": false,
+     "fields": [
+      "contact",
+      "items",
+      "our_booking_id",
+      "status",
+      "travellers"
+     ]
+    }
+   ]
+  }
+ },
+ "getyourguide-partner": {
+  "steps": {
+   "ask": 5,
+   "direct": 50,
+   "transform": 39
+  },
+  "todos": 5,
+  "requests": {
+   "POST /{version}/bookings": {
+    "valid": false,
+    "problems": {
+     "missing": 6,
+     "type": 1,
+     "other": 0
+    },
+    "list": [
+     "data/booking/bookable/option_id: 'OPT-1' is not of type 'integer'",
+     "data/booking/bookable/questions/conduction_language: 'type' is a required property",
+     "data/booking/bookable/questions/participant_questions/0: 'category_id' is a required property",
+     "data/booking/bookable/questions/participant_questions/1: 'category_id' is a required property",
+     "data/booking/bookable: 'categories' is a required property",
+     "data/booking/bookable: 'datetime' is a required property",
+     "data/booking/bookable: 'price' is a required property"
+    ]
+   },
+   "POST /{version}/carts": {
+    "valid": false,
+    "problems": {
+     "missing": 3,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "data/shopping_cart/billing: 'country_code' is a required property",
+     "data/shopping_cart: 'payment' is a required property",
+     "data/shopping_cart: 'shopping_cart_hash' is a required property"
+    ]
+   }
+  },
+  "responses": {
+   "GET /{version}/bookings/{booking_hash}": []
+  }
+ },
+ "musement-partner": {
+  "steps": {
+   "direct": 19,
+   "transform": 5,
+   "ask": 15
+  },
+  "todos": 15,
+  "requests": {
+   "POST /carts/{cartUuid}/items": {
+    "valid": false,
+    "problems": {
+     "missing": 2,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "0: 'quantity' is a required property",
+     "0: 'type' is a required property"
+    ]
+   },
+   "POST /orders": {
+    "valid": false,
+    "problems": {
+     "missing": 1,
+     "type": 0,
+     "other": 0
+    },
+    "list": [
+     "(body): 'cart_uuid' is a required property"
+    ]
+   }
+  },
+  "responses": {
+   "GET /orders/{orderUuid}": []
+  }
+ }
+}
