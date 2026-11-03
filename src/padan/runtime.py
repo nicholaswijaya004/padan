@@ -2,11 +2,13 @@
 
 Paths are the label paths: dotted names, `[]` for every element of a list, `[n]` for one position
 and `[key=value]` for the elements whose key has that value. Reading flattens:
-`items[].travellers[].x` gives every traveller's `x` across all items, in order. Writing into a
-canonical record follows one rule: the first list level in the target takes value i into element i
-(a `[key=value]` level counts only the elements with that value, and gives new ones that value);
-deeper list levels get one new element per value. A target with no list level takes the first value
-only.
+`items[].travellers[].x` gives every traveller's `x` across all items, in order. Writing follows
+one rule: one list level in the target takes value i into element i (a `[key=value]` level counts
+only the elements with that value, and gives new ones that value). Which level depends on the
+direction. Into a canonical record (`from_…`) it is the first: travellers[i], and deeper lists such
+as a traveller's custom_fields get one new element per value. Into a partner request (`to_…`) it is
+the last: items[0].travellers[i], since a partner's outer lists (items, activities) hold the one
+thing being booked. A target with no list level takes the first value only.
 """
 
 import re
@@ -29,6 +31,13 @@ def parts(path: str) -> list[tuple[str, str | None]]:
     return found
 
 
+def as_text(value: Any) -> str:
+    """How a selector compares a payload value: True -> 'true', 1 -> '1', 'x' -> 'x'."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
+
+
 def selected(items: list[Any], select: str) -> list[Any]:
     """The list elements a selector keeps: all, one position, or those with key == value."""
     if select == "":
@@ -36,7 +45,7 @@ def selected(items: list[Any], select: str) -> list[Any]:
     if select.isdigit():
         return items[int(select) : int(select) + 1]
     key, _, value = select.partition("=")
-    return [item for item in items if isinstance(item, dict) and str(item.get(key)) == value]
+    return [item for item in items if isinstance(item, dict) and as_text(item.get(key)) == value]
 
 
 def get(payload: Any, path: str) -> list[Any]:
@@ -60,26 +69,31 @@ def get(payload: Any, path: str) -> list[Any]:
 def constant(select: str) -> Record:
     """What a new list element gets from its selector: [kind=voucher] -> {'kind': 'voucher'}."""
     key, sep, value = select.partition("=")
-    return {key: value} if sep else {}
+    if not sep:
+        return {}
+    return {key: {"true": True, "false": False}.get(value, value)}
 
 
-def put(record: Record, path: str, values: list[Any]) -> None:
-    """Write `values` at a canonical path, by the rule in the module docstring."""
+def put(record: Record, path: str, values: list[Any], index_last: bool = False) -> None:
+    """Write `values` at a path, by the rule in the module docstring: the first list level takes
+    value i, or the last one with `index_last` (partner requests); outer levels then use their
+    first element."""
     *inner, (last, last_select) = parts(path)
-    has_list = any(select is not None for _, select in inner) or last_select is not None
+    levels = [n for n, (_, select) in enumerate(inner) if select is not None]
+    has_list = bool(levels) or last_select is not None
+    indexed = (levels[-1] if index_last else levels[0]) if levels else None
     for i, value in enumerate(values if has_list else values[:1]):
-        node, first = record, True
-        for name, select in inner:
+        node = record
+        for n, (name, select) in enumerate(inner):
             if select is None:
                 node = node.setdefault(name, {})
                 continue
             elements: list[Record] = node.setdefault(name, [])
-            if first:
-                first = False
-                matching = selected(elements, select)
-                if i < len(matching):
-                    node = matching[i]
-                    continue
+            matching = selected(elements, select)
+            wanted = i if n == indexed else 0
+            if (n == indexed or index_last) and wanted < len(matching):
+                node = matching[wanted]
+                continue
             node = constant(select)
             elements.append(node)
         if last_select is None:
@@ -143,3 +157,10 @@ def enum_map(value: Any, mapping: dict[str, str]) -> str:
     if str(value) not in mapping:
         raise ValueError(f"unmapped code {value!r}; known: {', '.join(mapping)}")
     return mapping[str(value)]
+
+
+def decimal_to_minor_units(value: Any, currency: Any) -> int:
+    """The reverse of minor_units_to_decimal: '123.45' with EUR -> 12345."""
+    code = str(currency or "").upper()
+    exponent = 0 if code in ZERO_DECIMALS else 3 if code in THREE_DECIMALS else 2
+    return int(Decimal(str(value)).scaleb(exponent))
