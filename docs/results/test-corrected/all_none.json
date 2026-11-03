@@ -1,0 +1,1134 @@
+{
+  "getyourguide-partner": {
+    "mapping": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 86,
+      "p": null,
+      "r": 0.0,
+      "f1": 0.0
+    },
+    "escalation": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "p": null,
+      "r": 0.0,
+      "f1": 0.0
+    },
+    "transforms": {
+      "right": 0,
+      "total": 0
+    },
+    "critical_errors": [],
+    "errors": [
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.booking_parameters[].name",
+        "target": "custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.booking_parameters[].value_1",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.cancellation_policy_text",
+        "target": "cancellation_policy"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.datetime",
+        "target": "items[].start_date"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.datetime + booking.bookable.datetime_type",
+        "target": "items[].start_time"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.option_id",
+        "target": "items[].option_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.price",
+        "target": "total_price.amount"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_child_safety_seat.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_cruise_details.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_customer_accommodation.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_drop_off_address.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_flight_details.flight_number",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_flight_details.time_of_arrival",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_medical_conditions.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_mobility_issues.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_pick_up_location.full_address",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_shipping_address.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.booking_questions.booking_wheelchair.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.conduction_language.value",
+        "target": "items[].activity.service_language"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.free_text_question",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_age.value",
+        "target": "travellers[].age"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_children_age.value",
+        "target": "travellers[].age"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_date_of_birth.value",
+        "target": "travellers[].date_of_birth"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_dietary_restrictions.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_diving_level.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_driver_license.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_height.amount + booking.bookable.questions.participant_questions[].traveler_height.unit",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_id_details.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_id_number.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_name.first_name",
+        "target": "travellers[].given_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_name.last_name",
+        "target": "travellers[].family_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_passport_details.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_passport_number.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_shoe_size.amount + booking.bookable.questions.participant_questions[].traveler_shoe_size.unit",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_skill_level.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.questions.participant_questions[].traveler_weight.amount + booking.bookable.questions.participant_questions[].traveler_weight.unit",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.bookable.tour_id",
+        "target": "items[].product_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.booking_hash",
+        "target": "partner_booking_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.ticket.booking_reference",
+        "target": "partner_confirmation_code"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.ticket.supplier_booking_codes[].code",
+        "target": "fulfilment[kind=ticket].format"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.ticket.supplier_booking_codes[].code",
+        "target": "fulfilment[kind=ticket].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.ticket.supplier_booking_codes[].ticket_hash",
+        "target": "fulfilment[kind=ticket].partner_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.ticket.ticket_hash",
+        "target": "fulfilment[kind=ticket].kind"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.ticket.ticket_hash",
+        "target": "fulfilment[kind=ticket].partner_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.ticket.ticket_url",
+        "target": "fulfilment[kind=ticket].format"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.ticket.ticket_url",
+        "target": "fulfilment[kind=ticket].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "base_data.currency",
+        "target": "total_price.currency"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.booking_parameters[].name",
+        "target": "custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.booking_parameters[].value_1",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.datetime",
+        "target": "items[].start_date"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.external_reference_id",
+        "target": "our_booking_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.option_id",
+        "target": "items[].option_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.price",
+        "target": "total_price.amount"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_child_safety_seat.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_cruise_details.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_customer_accommodation.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_drop_off_address.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_flight_details.flight_number",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_flight_details.time_of_arrival",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_medical_conditions.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_mobility_issues.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_pick_up_location.full_address",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_shipping_address.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.booking_questions.booking_wheelchair.value",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.conduction_language.value",
+        "target": "items[].activity.service_language"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.free_text_question",
+        "target": "custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_age.value",
+        "target": "travellers[].age"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_children_age.value",
+        "target": "travellers[].age"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_date_of_birth.value",
+        "target": "travellers[].date_of_birth"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_dietary_restrictions.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_diving_level.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_driver_license.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_height.amount + data.booking.bookable.questions.participant_questions[].participant_answers.traveler_height.unit",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_id_details.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_id_number.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_name.first_name",
+        "target": "travellers[].given_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_name.last_name",
+        "target": "travellers[].family_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_passport_details.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_passport_number.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_shoe_size.amount + data.booking.bookable.questions.participant_questions[].participant_answers.traveler_shoe_size.unit",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_skill_level.value",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/bookings",
+        "direction": "request",
+        "path": "data.booking.bookable.questions.participant_questions[].participant_answers.traveler_weight.amount + data.booking.bookable.questions.participant_questions[].participant_answers.traveler_weight.unit",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/carts",
+        "direction": "request",
+        "path": "data.shopping_cart.billing.email",
+        "target": "contact.email"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/carts",
+        "direction": "request",
+        "path": "data.shopping_cart.billing.first_name",
+        "target": "contact.given_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/carts",
+        "direction": "request",
+        "path": "data.shopping_cart.billing.last_name",
+        "target": "contact.family_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /{version}/carts",
+        "direction": "request",
+        "path": "data.shopping_cart.billing.phone_number",
+        "target": "contact.phones[]"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "GET /{version}/bookings/{booking_hash}",
+        "direction": "response",
+        "path": "booking.booking_status",
+        "target": "ASK_PARTNER"
+      }
+    ]
+  },
+  "musement-partner": {
+    "mapping": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 36,
+      "p": null,
+      "r": 0.0,
+      "f1": 0.0
+    },
+    "escalation": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 8,
+      "p": null,
+      "r": 0.0,
+      "f1": 0.0
+    },
+    "transforms": {
+      "right": 0,
+      "total": 0
+    },
+    "critical_errors": [],
+    "errors": [
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "customer.email",
+        "target": "contact.email"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "customer.firstname",
+        "target": "contact.given_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "customer.lastname",
+        "target": "contact.family_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "customer.mobile",
+        "target": "contact.phones[]"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "date",
+        "target": "booked_at"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "identifier",
+        "target": "partner_confirmation_code"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].address",
+        "target": "travellers[].custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].address",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].date_of_birth",
+        "target": "travellers[].date_of_birth"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].email",
+        "target": "travellers[].custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].email",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].fan_card",
+        "target": "travellers[].custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].fan_card",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].firstname",
+        "target": "travellers[].given_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].lastname",
+        "target": "travellers[].family_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].medical_notes",
+        "target": "travellers[].custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].medical_notes",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].passport",
+        "target": "travellers[].custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].passport",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].passport_expiry_date",
+        "target": "travellers[].custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].passport_expiry_date",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].phone_number",
+        "target": "travellers[].custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].phone_number",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].salutation",
+        "target": "travellers[].custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].salutation",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].weight",
+        "target": "travellers[].custom_fields[].field_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].weight",
+        "target": "travellers[].custom_fields[].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].vouchers[].url",
+        "target": "fulfilment[kind=voucher].kind"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].vouchers[].url",
+        "target": "fulfilment[kind=voucher].value"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "total_price.currency",
+        "target": "total_price.currency"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "total_price.value",
+        "target": "total_price.amount"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "total_supplier_price_in_supplier_currency.currency",
+        "target": "net_price.currency"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "total_supplier_price_in_supplier_currency.value",
+        "target": "net_price.amount"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "uuid",
+        "target": "partner_booking_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /carts/{cartUuid}/items",
+        "direction": "request",
+        "path": "[].language",
+        "target": "items[].activity.service_language"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /carts/{cartUuid}/items",
+        "direction": "request",
+        "path": "[].product_identifier",
+        "target": "items[].product_id"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "customer.extra_customer_data",
+        "target": "ASK_PARTNER"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "customer.firstname + customer.lastname + items[].participants_info[].firstname + items[].participants_info[].lastname",
+        "target": "ASK_PARTNER"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "extra_data",
+        "target": "ASK_PARTNER"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].extra_customer_data[].name",
+        "target": "ASK_PARTNER"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].participants_info[].nationality",
+        "target": "ASK_PARTNER"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].transaction_code",
+        "target": "ASK_PARTNER"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "items[].vouchers[].url",
+        "target": "ASK_PARTNER"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "GET /orders/{orderUuid}",
+        "direction": "response",
+        "path": "status",
+        "target": "ASK_PARTNER"
+      }
+    ]
+  },
+  "viator-partner": {
+    "mapping": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 18,
+      "p": null,
+      "r": 0.0,
+      "f1": 0.0
+    },
+    "escalation": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "p": null,
+      "r": 0.0,
+      "f1": 0.0
+    },
+    "transforms": {
+      "right": 0,
+      "total": 0
+    },
+    "critical_errors": [],
+    "errors": [
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "booker.cellPhoneCountryCode + booker.cellPhone",
+        "target": "contact.phones[]"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "booker.email",
+        "target": "contact.email"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "booker.firstname",
+        "target": "contact.given_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "booker.homePhone",
+        "target": "contact.phones[]"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "booker.surname",
+        "target": "contact.family_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "currencyCode",
+        "target": "net_price.currency"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "items[].languageOptionCode",
+        "target": "items[].activity.service_language"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "items[].productCode",
+        "target": "items[].product_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "items[].tourGradeCode",
+        "target": "items[].option_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "items[].travelDate",
+        "target": "items[].start_date"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "items[].travellers[].firstname",
+        "target": "travellers[].given_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "items[].travellers[].leadTraveller",
+        "target": "travellers[].is_lead"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "items[].travellers[].surname",
+        "target": "travellers[].family_name"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "partnerDetail.distributorRef",
+        "target": "our_booking_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/status",
+        "direction": "response",
+        "path": "data.distributorRef",
+        "target": "our_booking_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/status",
+        "direction": "response",
+        "path": "data.itemSummaries[].itemId",
+        "target": "partner_booking_id"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/status",
+        "direction": "response",
+        "path": "data.itemSummaries[].travelDate",
+        "target": "items[].start_date"
+      },
+      {
+        "kind": "FN",
+        "endpoint": "POST /booking/status",
+        "direction": "response",
+        "path": "dateStamp",
+        "target": "booked_at"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "POST /booking/book",
+        "direction": "request",
+        "path": "items[].travellers[].bandId",
+        "target": "ASK_PARTNER"
+      },
+      {
+        "kind": "ESC_FN",
+        "endpoint": "POST /booking/status",
+        "direction": "response",
+        "path": "data.bookingStatus.type",
+        "target": "ASK_PARTNER"
+      }
+    ]
+  }
+}
