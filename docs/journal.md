@@ -1366,3 +1366,73 @@ the cached replies, read the errors by cause and built the side-by-side comparis
 
 Day 17: tooling for corrected labels (a separate sealed file, scored before and after), then the slip
 review by hand, fresh.
+
+## Day 17 — The slip fixed in a sealed copy: 0.64 before, 0.72 after
+
+**Goal:** Fix the declared slip (GetYourGuide's create request, Day 16) without touching the sealed
+gold, and report the frozen system's score before and after (Amendment 6).
+
+### What was built
+
+A second, separately sealed copy of the whole test set, `data/labels/test-corrected/`. A correction
+starts from the frozen sheet (`make sheet-fix`), never from a blank one; `labels-fix`, `freeze-fix` and
+`verify-fix` work on the copy; `report --test --corrected` checks both seals and scores the same Day 16
+predictions against it. Nothing ran again. I filled the 9 blanks.
+
+### The first attempt, discarded
+
+I revised the GetYourGuide and Viator copies with the help of an AI tool, because relabelling the request
+side felt very repetitive. Claude asked whether a tool had been used, and I said yes. That revision did
+not fix the slip (the create request still had two picks) and changed about a dozen other labels, several
+of them exactly where the system had disagreed with my gold (GetYourGuide price, `valid_until`, ticket
+types; Viator status, references). That is relabelling after seeing the answers, which Amendment 6 does not
+allow, so the whole revision was discarded and the copies restored from the frozen sheets.
+
+### The fix
+
+- **GetYourGuide create request:** 34 picks on 11 rows, mirrored by `scripts/mirror_gyg_request.py` from
+  my own frozen GET-response labels (a request field whose path, without `data.` and `.participant_answers`,
+  is a response field I picked gets the same label; asks are not mirrored). No model. I reviewed each pick
+  against the request field's evidence and kept all 34. Anyone can re-run the script on the frozen sheet
+  and get the corrected sheet byte for byte.
+- **Reviewed and not slips:** GetYourGuide `carts.traveler.*`, Viator `bookingQuestionAnswers[]`, Viator
+  `booked_at` ← `dateStamp`. Unchanged.
+- Viator and Musement in the corrected copy are byte for byte the frozen files.
+
+### Before and after
+
+| Frozen system | Before (headline) | After |
+| --- | --- | --- |
+| Macro F1 | **0.64** | **0.72** |
+| Critical errors | 5 | 4 |
+| GetYourGuide F1 (precision) | 0.58 (0.46) | 0.81 (0.80) |
+
+All of the change is GetYourGuide's precision; the other two specs could not move and did not. **0.64
+stays the headline.** 0.72 is reported beside it: the fix was found by looking at the system's output,
+and every changed label is counted as model-prompted (34).
+
+### Decisions
+
+| Decision | Why |
+| --- | --- |
+| Discard the AI-assisted revision entirely | It changed judgements, not just the slip |
+| Fix the slip with a deterministic script over my own frozen labels, then review by hand | The repetition is mechanical; the decisions stay mine and are reproducible |
+| Commit the script with the corrected labels | The 34 picks are only checkable if their rule is |
+| Changes I would now make elsewhere go in the report as reconsidered, not into the gold | The test score may only differ from 0.64 by slips |
+
+### What I delegated, and what I decided
+
+Claude designed the corrections tooling and wrote the mirror script and the review helper; I filled the
+tooling's blanks, reviewed the 34 mirrored picks and judged the three candidates.
+
+### Understood
+
+- **A slip fix must be narrow.** The question is "what was a mistake", not "what would I label now".
+- **Repetitive, rule-shaped work belongs in a script,** not in a model: a script's rule can be read and
+  re-run; a model's choices cannot.
+- **The remaining gap (0.89 on dev, 0.72 after) is conventions, escalation and four real errors.**
+
+### Still open
+
+- The second labeller (20% of one Tier 1 spec).
+- M3 (code generation), the write-up, the funder page.
