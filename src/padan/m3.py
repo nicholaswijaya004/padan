@@ -18,10 +18,10 @@ import yaml
 from pydantic import ValidationError
 
 from padan.conformance import SAMPLE_BOOKING, request_problems
-from padan.extract import RAW_DIR, load_spec
-from padan.generate import function_name, generate, todos
+from padan.extract import RAW_DIR, load_scoped, load_spec, scoped_fields
+from padan.generate import Types, function_name, generate, todos
+from padan.integration import to_booking
 from padan.plan import load_plan
-from padan.schema import Booking
 from padan.sheet import CORRECTED_DIR
 
 DEV = ["headout-partner", "octo-core", "hotelbeds-activities"]  # hx-swota is HTML: no schema
@@ -84,10 +84,21 @@ def kind_of(problem: str) -> str:
     return "other"
 
 
+def field_types(spec_id: str) -> Types:
+    """Each scoped field's type label, so requests can be cast to the partner's types; none for a
+    spec that is not in the manifest."""
+    try:
+        fields = scoped_fields(load_scoped(spec_id))
+    except KeyError:
+        return {}
+    return {(f.endpoint, f.direction, f.path): f.type for f in fields}
+
+
 def measure(spec_id: str, labels: Path) -> dict[str, Any]:
     plan = load_plan(spec_id, labels)
     client: dict[str, Any] = {}
-    exec(compile(generate(plan, labels.as_posix()), f"client_{spec_id}", "exec"), client)
+    code = generate(plan, labels.as_posix(), field_types(spec_id))
+    exec(compile(code, f"client_{spec_id}", "exec"), client)
     spec = load_spec(RAW_DIR / f"{spec_id}.yaml")
     typed_spec = yaml.load((RAW_DIR / f"{spec_id}.yaml").read_text(), Loader=JSONLike)
     report: dict[str, Any] = {
@@ -113,8 +124,8 @@ def measure(spec_id: str, labels: Path) -> dict[str, Any]:
         results = []
         for body in examples(typed_spec, endpoint):
             try:
-                Booking.model_validate(function(body))
-                results.append({"valid": True, "fields": []})
+                _, notes = to_booking(function(body), our_booking_id="PADAN-M3")
+                results.append({"valid": True, "fields": [], "notes": notes})
             except ValidationError as error:
                 fields = sorted({str(e["loc"][0]) for e in error.errors() if e["loc"]})
                 results.append({"valid": False, "fields": fields})

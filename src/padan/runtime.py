@@ -164,3 +164,23 @@ def decimal_to_minor_units(value: Any, currency: Any) -> int:
     code = str(currency or "").upper()
     exponent = 0 if code in ZERO_DECIMALS else 3 if code in THREE_DECIMALS else 2
     return int(Decimal(str(value)).scaleb(exponent))
+
+
+def cast(values: list[Any], kind: str) -> list[Any]:
+    """Values as the partner's schema types them: '42' -> 42 for an integer, '120.50' -> 120.5 for a
+    number, 'true' -> True for a boolean. A value that does not fit (an ID like 'OPT-1' where the
+    partner wants an integer) is left as it is, so the schema check still reports it."""
+    out = []
+    for value in values:
+        try:
+            if kind == "integer" and not isinstance(value, bool):
+                number = Decimal(str(value))
+                value = int(number) if number == number.to_integral_value() else value
+            elif kind == "number" and not isinstance(value, bool):
+                value = float(Decimal(str(value)))
+            elif kind == "boolean" and isinstance(value, str) and value in ("true", "false"):
+                value = value == "true"
+        except ArithmeticError:
+            pass
+        out.append(value)
+    return out

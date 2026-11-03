@@ -43,8 +43,8 @@ SAMPLE_BOOKING: dict[str, Any] = {
     "total_price": {"amount": "120.50", "currency": "EUR"},
     "items": [
         {
-            "product_id": "P-100",
-            "option_id": "OPT-1",
+            "product_id": "1001",  # catalogue IDs as many partners issue them: digits, kept as text
+            "option_id": "2002",
             "start_date": "2026-12-01",
             "start_time": "09:30:00",
             "activity": {"slot_id": "SLOT-1", "service_language": "en"},

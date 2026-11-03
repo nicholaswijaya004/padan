@@ -61,7 +61,6 @@
     {
      "valid": false,
      "fields": [
-      "our_booking_id",
       "travellers"
      ]
     }
@@ -125,7 +124,6 @@
      "fields": [
       "contact",
       "items",
-      "our_booking_id",
       "status",
       "travellers"
      ]
@@ -146,12 +144,10 @@
     "valid": false,
     "problems": {
      "missing": 5,
-     "type": 2,
+     "type": 0,
      "other": 0
     },
     "list": [
-     "data/booking/bookable/option_id: 'OPT-1' is not of type 'integer'",
-     "data/booking/bookable/price: '120.50' is not of type 'number'",
      "data/booking/bookable/questions/conduction_language: 'type' is a required property",
      "data/booking/bookable/questions/participant_questions/0: 'category_id' is a required property",
      "data/booking/bookable/questions/participant_questions/1: 'category_id' is a required property",
