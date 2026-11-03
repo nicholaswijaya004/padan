@@ -1,0 +1,75 @@
+{
+ "seed": 20261103,
+ "sizes": {
+  "mapped": 4,
+  "ask": 1,
+  "none": 8
+ },
+ "fields": [
+  [
+   "POST /booking/book",
+   "request",
+   "booker.email"
+  ],
+  [
+   "POST /booking/book",
+   "request",
+   "booker.homePhone"
+  ],
+  [
+   "POST /booking/book",
+   "request",
+   "booker.surname"
+  ],
+  [
+   "POST /booking/status",
+   "response",
+   "data.itemSummaries[].itemId"
+  ],
+  [
+   "POST /booking/book",
+   "request",
+   "items[].travellers[].bandId"
+  ],
+  [
+   "POST /booking/status",
+   "response",
+   "extraObject"
+  ],
+  [
+   "POST /booking/status",
+   "response",
+   "vmid"
+  ],
+  [
+   "POST /booking/book",
+   "request",
+   "items[].travellers[].title"
+  ],
+  [
+   "POST /booking/book",
+   "request",
+   "items[].bookingQuestionAnswers[].questionId"
+  ],
+  [
+   "POST /booking/status",
+   "response",
+   "errorMessageText"
+  ],
+  [
+   "POST /booking/status",
+   "response",
+   "data.bookingStatus.status"
+  ],
+  [
+   "POST /booking/status",
+   "response",
+   "extraInfo"
+  ],
+  [
+   "POST /booking/status",
+   "response",
+   "errorCodes[]"
+  ]
+ ]
+}
