@@ -1,4 +1,4 @@
-.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules hybrid sheet labels freeze verify test-baselines test-rules test-hybrid test-score sheet-fix labels-fix freeze-fix verify-fix test-score-fix
+.PHONY: check lint typecheck test fmt fetch scaffold baselines score rules hybrid sheet labels freeze verify test-baselines test-rules test-hybrid test-score sheet-fix labels-fix freeze-fix verify-fix test-score-fix m3
 
 check: lint typecheck test
 
@@ -75,3 +75,7 @@ verify-fix:
 
 test-score-fix:
 	uv run python -m padan.report $(PRED) --test --corrected
+
+# M3: generated clients for every OpenAPI spec, from the gold and from the predictions
+m3:
+	uv run python -m padan.m3
