@@ -799,3 +799,50 @@ Dev for comparison (Day 11): frozen system 0.89 with 0 critical errors; general 
 
 **Caveats:** one labeller; model contact in the GetYourGuide and Musement gold (disclosed); the specs are
 public and may be in Claude's training data. Corrected labels, when they exist, are reported beside 0.64.
+
+## Day 17
+
+**Goal:** The declared slip fixed in a separately sealed copy; scores before and after.
+
+### Tier 1 test, before and after the slip fix
+
+| System | Macro F1 before | Macro F1 after | Critical before | Critical after |
+| --- | --- | --- | --- | --- |
+| name_match | 0.09 | 0.08 | 4 | 4 |
+| rules_strict | 0.15 | 0.16 | 1 | 1 |
+| rules_general | 0.22 | 0.22 | 1 | 1 |
+| **rules + Opus v2 (frozen)** | **0.64** | **0.72** | **5** | **4** |
+
+| Frozen system per spec | F1 before | F1 after | Map P before | Map P after |
+| --- | --- | --- | --- | --- |
+| getyourguide-partner | 0.58 | 0.81 | 0.46 | 0.80 |
+| musement-partner | 0.60 | 0.60 | 0.75 | 0.75 |
+| viator-partner | 0.74 | 0.74 | 0.64 | 0.64 |
+
+The headline is 0.64; 0.72 is reported beside it.
+
+### Corrections
+
+| Measure | Value |
+| --- | --- |
+| Labels changed (all model-prompted) | 34 picks added on 11 rows, GetYourGuide create request |
+| How | mirrored by `scripts/mirror_gyg_request.py` from my frozen GET labels; reviewed by hand, all kept |
+| Candidates reviewed and not changed | 3 |
+| Corrected copy identical to the frozen gold | Viator and Musement, byte for byte |
+| AI-assisted revisions | 1, discarded before the fix |
+
+### Predictions
+
+| Prediction | Result | Right? |
+| --- | --- | --- |
+| Frozen system after the fix: 0.75 | 0.72 | close (slightly high) |
+
+### Process
+
+| Measure | Value |
+| --- | --- |
+| PRs merged | 2 (ADP-62 corrections tooling, ADP-63 slip fix and scores) |
+| Tests | 302 → **306** |
+| Blanks | 9, all by me |
+| Budget spent today | $0 (total about $3.23 of $20) |
+| Block times | first attempt 10:00–10:40 (discarded); the fix not timed |
