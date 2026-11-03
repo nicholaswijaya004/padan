@@ -116,7 +116,7 @@ def measure(spec_id: str, labels: Path) -> dict[str, Any]:
                 Booking.model_validate(function(body))
                 results.append({"valid": True, "fields": []})
             except ValidationError as error:
-                fields = sorted({str(e["loc"][0]) for e in error.errors() if e["loc"] and e["loc"]})
+                fields = sorted({str(e["loc"][0]) for e in error.errors() if e["loc"]})
                 results.append({"valid": False, "fields": fields})
         report["responses"][endpoint] = results
     return report

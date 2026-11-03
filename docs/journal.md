@@ -1436,3 +1436,74 @@ tooling's blanks, reviewed the 34 mirrored picks and judged the three candidates
 
 - The second labeller (20% of one Tier 1 spec).
 - M3 (code generation), the write-up, the funder page.
+
+## Days 18–22 — The second labeller's pack, and M3: generated clients in both directions
+
+**Goal:** Prepare the second labeller (Amendment 6) while building M3, the part that turns labels into a
+working partner client with templates and no LLM (ADR §6), and measure whether it works.
+
+### Day 18 — the second labeller, pre-registered
+
+- **Amendment 7**, written before the draw: `viator-partner` (the one Tier 1 spec whose gold had no
+  model contact), 13 of 64 fields (20%), stratified by the gold's class in proportion (4 mapped,
+  1 ask, 8 NONE), seed 20261103, drawn once; field-by-field labelling from the evidence alone, no AI
+  tools; raw agreement and Cohen's kappa on the target, overall and per stratum.
+- `padan.agreement` draws the sample and scores a returned sheet. The committed sample re-draws exactly
+  from the frozen gold, and the blank sheet carries no gold.
+- **The pack has been ready since Day 18 and is not sent yet.** Agreement is the last number the report
+  needs from outside.
+
+### Days 19–22 — M3
+
+| Day | Built | Result |
+| --- | --- | --- |
+| 19 | `plan.py` (labels → steps; NONE dropped, ask and derived become TODOs) and `runtime.py` (`get` reads partner paths, `put` writes canonical ones) | tested on fixtures |
+| 20 | the 7 vocabulary transforms and `generate.py`: one `from_…` function per response operation, plain readable Python | the client generated from OCTO's dev gold turned OCTO's own example response into a canonical record; only `our_booking_id` and a lead traveller were missing |
+| 21 | `to_…` request functions (with the transforms that reverse exactly), and `conformance.py`: every request body checked against the partner's own request schema with jsonschema | Viator's generated create request is valid against Viator's schema; the checks also caught two runtime bugs (boolean filters, nested partner lists) |
+| 22 | `m3.py`: every OpenAPI spec, from the gold and from the frozen system's predictions | the table below |
+
+**Design decisions (Day 19):** generate from any label file; plain Python from templates, no template
+library; `derived` and `ask` are never guessed but written as TODOs and listed; lists are flattened
+when read and filled element by element when written (the first list level into a canonical record,
+the last into a partner request).
+
+### What the M3 table says
+
+- **The generator gives the same outcome from human gold and from model predictions.** Viator's
+  request is valid from both; everywhere else both fail on the same fields.
+- **Every failure is named, and of four kinds:** fields the partner requires that padan's schema does
+  not hold (Hotelbeds' holder address, Musement's quantity); TODOs (OCTO's unit IDs, Headout's price);
+  fields only padan knows (its own booking ID, the vertical it sells, which traveller is the lead);
+  and types (GetYourGuide wants integers where padan keeps text).
+- **Predicted labels differ in shape, not outcome:** the system never writes `derived` (its reply has
+  map, none and ask), so all its TODOs are asks; it uses many more transforms on GetYourGuide.
+- **No example response becomes a valid `Booking` yet**, because of the padan-owned fields.
+
+### The assumptions that were wrong
+
+- **"A list path is a list path."** Writing into a canonical record and into a partner request need
+  different list rules: `travellers[i]` in ours, `activities[0].paxes[i]` in theirs.
+- **"`[isPrimary=true]` matches `True`."** `str(True)` is `'True'`; selectors now compare JSON spelling.
+- **"Every transform can be reversed."** Enum maps, minor units and copies can; a date part cannot
+  rebuild the partner's date-time alone, so it is a TODO in the request.
+
+### What I delegated, and what I decided
+
+Claude designed M3 and wrote the plumbing and the tests; I filled 51 of the 54 blanks (Claude filled 3
+on request, in the date and money transforms). I took the design recommendations as given.
+
+### Understood
+
+- **A generator is a program whose variables hold code:** `read = "get(payload, 'uuid')"`, and `!r`
+  writes safe literals.
+- **Unknown codes must fail loudly** (`enum_map` raises): the same rule as never guessing a critical
+  field, now in code.
+- **For money, go through text, never float:** `Decimal(str(value))`.
+- **A partner's schema is the best test of a generated request:** it found bugs no fixture had.
+
+### Still open
+
+- Send the second labeller's pack; score it when it comes back.
+- Day 23: fill padan-owned fields (its booking ID, the vertical, a lead-traveller rule) and cast types
+  by the partner's schema, re-run `make m3`, and write the M3 milestone note.
+- The write-up: README, results report, funder page.
